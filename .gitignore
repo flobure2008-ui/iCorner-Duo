@@ -2,3 +2,4 @@ settings.json
 *.pdb
 *.user
 *_debug.exe
+*.zip

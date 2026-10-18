@@ -134,7 +134,14 @@ namespace iCornerDuo
         WebMusic = 2,
         YouTube = 3,
         DesktopPlayer = 4,
-        SystemSound = 5
+        SystemSound = 5,
+        AppleMusic = 6,
+        Deezer = 7,
+        SoundCloud = 8,
+        Tidal = 9,
+        VLC = 10,
+        AmazonMusic = 11,
+        MediaPlayer = 12
     }
 
     // =========================================================================
@@ -175,6 +182,9 @@ namespace iCornerDuo
         public bool IslandExpandOnHover = true;
         public bool IslandShowClockWhenIdle = true;
         public bool IslandAutoAdaptBrandColor = true;
+        public bool TrackChangeAnimation = true;
+        public bool FullscreenMorph = true;
+        public bool ShowDetectedAppBadge = true;
 
         // 4. Companion Settings
         public CompanionEntity Companion = CompanionEntity.LuminaOrb;
@@ -240,6 +250,9 @@ namespace iCornerDuo
                 sb.AppendFormat("  \"IslandExpandOnHover\": {0},\n", IslandExpandOnHover.ToString().ToLower());
                 sb.AppendFormat("  \"IslandShowClockWhenIdle\": {0},\n", IslandShowClockWhenIdle.ToString().ToLower());
                 sb.AppendFormat("  \"IslandAutoAdaptBrandColor\": {0},\n", IslandAutoAdaptBrandColor.ToString().ToLower());
+                sb.AppendFormat("  \"TrackChangeAnimation\": {0},\n", TrackChangeAnimation.ToString().ToLower());
+                sb.AppendFormat("  \"FullscreenMorph\": {0},\n", FullscreenMorph.ToString().ToLower());
+                sb.AppendFormat("  \"ShowDetectedAppBadge\": {0},\n", ShowDetectedAppBadge.ToString().ToLower());
                 sb.AppendFormat("  \"Companion\": {0},\n", (int)Companion);
                 sb.AppendFormat("  \"CompanionPos\": {0},\n", (int)CompanionPos);
                 sb.AppendFormat("  \"CompanionScalePercent\": {0},\n", CompanionScalePercent);
@@ -299,6 +312,9 @@ namespace iCornerDuo
                     s.IslandExpandOnHover = ReadBool(json, "IslandExpandOnHover", s.IslandExpandOnHover);
                     s.IslandShowClockWhenIdle = ReadBool(json, "IslandShowClockWhenIdle", s.IslandShowClockWhenIdle);
                     s.IslandAutoAdaptBrandColor = ReadBool(json, "IslandAutoAdaptBrandColor", s.IslandAutoAdaptBrandColor);
+                    s.TrackChangeAnimation = ReadBool(json, "TrackChangeAnimation", s.TrackChangeAnimation);
+                    s.FullscreenMorph = ReadBool(json, "FullscreenMorph", s.FullscreenMorph);
+                    s.ShowDetectedAppBadge = ReadBool(json, "ShowDetectedAppBadge", s.ShowDetectedAppBadge);
                     s.Companion = (CompanionEntity)ClampInt(ReadInt(json, "Companion", (int)s.Companion), 0, 6);
                     s.CompanionPos = (CompanionAnchor)ClampInt(ReadInt(json, "CompanionPos", (int)s.CompanionPos), 0, 2);
                     s.CompanionScalePercent = ClampInt(ReadInt(json, "CompanionScalePercent", s.CompanionScalePercent), 70, 165);
@@ -423,9 +439,16 @@ namespace iCornerDuo
         {
             switch (src)
             {
-                case AudioAppSource.Spotify: return Color.FromArgb(255, 55, 215, 120);
+                case AudioAppSource.Spotify: return Color.FromArgb(255, 30, 215, 96);
+                case AudioAppSource.AppleMusic: return Color.FromArgb(255, 250, 45, 85); // Vibrant Apple Music Pink/Red
+                case AudioAppSource.YouTube: return Color.FromArgb(255, 255, 30, 45);
+                case AudioAppSource.Deezer: return Color.FromArgb(255, 162, 56, 255);
+                case AudioAppSource.SoundCloud: return Color.FromArgb(255, 255, 85, 0);
+                case AudioAppSource.Tidal: return Color.FromArgb(255, 0, 235, 220);
+                case AudioAppSource.VLC: return Color.FromArgb(255, 255, 136, 0);
+                case AudioAppSource.AmazonMusic: return Color.FromArgb(255, 37, 211, 238);
+                case AudioAppSource.MediaPlayer: return Color.FromArgb(255, 0, 120, 215);
                 case AudioAppSource.WebMusic: return Color.FromArgb(255, 245, 90, 125);
-                case AudioAppSource.YouTube: return Color.FromArgb(255, 250, 75, 95);
                 default: return fallback;
             }
         }
@@ -1163,6 +1186,61 @@ namespace iCornerDuo
         [DllImport("user32.dll")]
         public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
+        [DllImport("dwmapi.dll")]
+        public static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr GetForegroundWindow();
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct RECT { public int Left; public int Top; public int Right; public int Bottom; }
+
+        [DllImport("user32.dll")]
+        public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
+
+        [DllImport("user32.dll")]
+        public static extern bool IsWindowVisible(IntPtr hWnd);
+
+        public static bool IsForegroundFullscreen(Rectangle screenBounds, out string appTitle)
+        {
+            appTitle = "";
+            try
+            {
+                IntPtr fg = GetForegroundWindow();
+                if (fg == IntPtr.Zero || !IsWindowVisible(fg)) return false;
+
+                StringBuilder cls = new StringBuilder(64);
+                GetClassName(fg, cls, 64);
+                string cname = cls.ToString();
+                if (cname == "Progman" || cname == "WorkerW" || cname == "Shell_TrayWnd") return false;
+
+                RECT r;
+                if (!GetWindowRect(fg, out r)) return false;
+
+                // Check if foreground window covers or exceeds the screen bounds
+                bool covers = (r.Left <= screenBounds.Left + 2 &&
+                               r.Top <= screenBounds.Top + 2 &&
+                               r.Right >= screenBounds.Right - 2 &&
+                               r.Bottom >= screenBounds.Bottom - 2);
+                if (covers)
+                {
+                    StringBuilder sb = new StringBuilder(128);
+                    GetWindowText(fg, sb, 128);
+                    appTitle = sb.ToString();
+                    if (string.IsNullOrEmpty(appTitle)) appTitle = "Plein Écran";
+                    return true;
+                }
+            }
+            catch { }
+            return false;
+        }
+
         public static void SendMediaKey(byte vk)
         {
             try
@@ -1278,6 +1356,27 @@ namespace iCornerDuo
             }
         }
 
+        public int TrackVersion = 0;
+
+        public static string GetSourceName(AudioAppSource src)
+        {
+            switch (src)
+            {
+                case AudioAppSource.Spotify: return "Spotify";
+                case AudioAppSource.AppleMusic: return "Apple Music";
+                case AudioAppSource.YouTube: return "YouTube";
+                case AudioAppSource.Deezer: return "Deezer";
+                case AudioAppSource.SoundCloud: return "SoundCloud";
+                case AudioAppSource.Tidal: return "Tidal";
+                case AudioAppSource.VLC: return "VLC";
+                case AudioAppSource.AmazonMusic: return "Amazon Music";
+                case AudioAppSource.MediaPlayer: return "Lecteur Windows";
+                case AudioAppSource.WebMusic: return "Lecteur Web";
+                case AudioAppSource.SystemSound: return "Audio Système";
+                default: return "Nova";
+            }
+        }
+
         private void ScanMediaWindowsAsync()
         {
             ThreadPool.QueueUserWorkItem(_ =>
@@ -1303,6 +1402,25 @@ namespace iCornerDuo
                         catch { continue; }
                         finally { try { p.Dispose(); } catch { } }
 
+                        // Apple Music (Native app or iTunes)
+                        if (pname == "applemusic" || pname == "itunes")
+                        {
+                            foundSource = AudioAppSource.AppleMusic;
+                            if (wtitle.Contains(" - "))
+                            {
+                                int dash = wtitle.IndexOf(" - ");
+                                foundArtist = wtitle.Substring(0, dash).Trim();
+                                foundTitle = wtitle.Substring(dash + 3).Trim();
+                            }
+                            else
+                            {
+                                foundTitle = wtitle;
+                                foundArtist = "Apple Music";
+                            }
+                            break;
+                        }
+
+                        // Spotify
                         if (pname == "spotify")
                         {
                             foundSource = AudioAppSource.Spotify;
@@ -1325,15 +1443,52 @@ namespace iCornerDuo
                             break;
                         }
 
+                        // VLC Media Player
+                        if (pname == "vlc")
+                        {
+                            foundSource = AudioAppSource.VLC;
+                            foundTitle = wtitle.Replace(" - Lecteur multimédia VLC", "").Replace(" - VLC media player", "").Trim();
+                            foundArtist = "VLC";
+                            break;
+                        }
+
+                        // Deezer native
+                        if (pname == "deezer")
+                        {
+                            foundSource = AudioAppSource.Deezer;
+                            foundTitle = wtitle;
+                            foundArtist = "Deezer";
+                            break;
+                        }
+
+                        // Tidal native
+                        if (pname == "tidal")
+                        {
+                            foundSource = AudioAppSource.Tidal;
+                            foundTitle = wtitle;
+                            foundArtist = "Tidal";
+                            break;
+                        }
+
+                        // Web Browsers
                         if (pname == "chrome" || pname == "msedge" || pname == "firefox" || pname == "brave" || pname == "opera" || pname == "vivaldi")
                         {
                             string clean = StripBrowserSuffix(wtitle);
-                            if (clean.IndexOf("YouTube", StringComparison.OrdinalIgnoreCase) >= 0)
+                            if (clean.IndexOf("Apple Music", StringComparison.OrdinalIgnoreCase) >= 0 || clean.IndexOf("music.apple.com", StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                foundSource = AudioAppSource.AppleMusic;
+                                foundTitle = clean.Replace("- Apple Music", "").Replace("Apple Music", "").Trim();
+                                if (string.IsNullOrEmpty(foundTitle)) foundTitle = "Apple Music";
+                                foundArtist = "Apple Music Web";
+                                break;
+                            }
+                            else if (clean.IndexOf("YouTube", StringComparison.OrdinalIgnoreCase) >= 0)
                             {
                                 foundSource = AudioAppSource.YouTube;
                                 foundTitle = clean.Replace("- YouTube Music", "").Replace("YouTube Music", "").Replace("- YouTube", "").Replace("YouTube", "").Trim();
                                 if (string.IsNullOrEmpty(foundTitle)) foundTitle = "YouTube";
                                 foundArtist = "Flux YouTube";
+                                break;
                             }
                             else if (clean.IndexOf("Spotify", StringComparison.OrdinalIgnoreCase) >= 0)
                             {
@@ -1341,10 +1496,30 @@ namespace iCornerDuo
                                 foundTitle = clean.Replace("- Spotify", "").Replace("Spotify", "").Trim();
                                 if (string.IsNullOrEmpty(foundTitle)) foundTitle = "Spotify Web";
                                 foundArtist = "Spotify";
+                                break;
                             }
-                            else if (clean.IndexOf("Deezer", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                     clean.IndexOf("SoundCloud", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                     clean.IndexOf("Music", StringComparison.OrdinalIgnoreCase) >= 0)
+                            else if (clean.IndexOf("Deezer", StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                foundSource = AudioAppSource.Deezer;
+                                foundTitle = clean.Replace("- Deezer", "").Trim();
+                                foundArtist = "Deezer Web";
+                                break;
+                            }
+                            else if (clean.IndexOf("SoundCloud", StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                foundSource = AudioAppSource.SoundCloud;
+                                foundTitle = clean.Replace("- SoundCloud", "").Trim();
+                                foundArtist = "SoundCloud";
+                                break;
+                            }
+                            else if (clean.IndexOf("Tidal", StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                foundSource = AudioAppSource.Tidal;
+                                foundTitle = clean;
+                                foundArtist = "Tidal Web";
+                                break;
+                            }
+                            else if (clean.IndexOf("Music", StringComparison.OrdinalIgnoreCase) >= 0)
                             {
                                 foundSource = AudioAppSource.WebMusic;
                                 foundTitle = clean;
@@ -1355,12 +1530,18 @@ namespace iCornerDuo
 
                     if (foundSource != AudioAppSource.None)
                     {
+                        if (foundTitle != TrackTitle || foundArtist != TrackArtist || foundSource != ActiveSource)
+                            TrackVersion++;
+
                         ActiveSource = foundSource;
                         TrackTitle = foundTitle;
                         TrackArtist = foundArtist;
                     }
                     else if (IsAudioActive)
                     {
+                        if (ActiveSource != AudioAppSource.SystemSound)
+                            TrackVersion++;
+
                         ActiveSource = AudioAppSource.SystemSound;
                         TrackTitle = "Flux Audio Actif";
                         TrackArtist = "Sortie Système";
@@ -1406,6 +1587,20 @@ namespace iCornerDuo
                     }
                     try { Process.Start("spotify:"); return; } catch { }
                     Process.Start("https://open.spotify.com");
+                }
+                else if (service == "applemusic")
+                {
+                    Process[] ap = Process.GetProcessesByName("AppleMusic");
+                    if (ap.Length == 0) ap = Process.GetProcessesByName("iTunes");
+                    if (ap.Length > 0 && ap[0].MainWindowHandle != IntPtr.Zero)
+                    {
+                        NativeMethods.ShowWindow(ap[0].MainWindowHandle, 9);
+                        NativeMethods.SetForegroundWindow(ap[0].MainWindowHandle);
+                        return;
+                    }
+                    try { Process.Start("itms:"); return; } catch { }
+                    try { Process.Start("music:"); return; } catch { }
+                    Process.Start("https://music.apple.com");
                 }
                 else if (service == "youtube")
                 {
@@ -1854,6 +2049,17 @@ namespace iCornerDuo
         private long transientBannerUntilTicks = 0;
         private GlassAiChatPopup activeAiDialog = null;
 
+        // Music track change, app badge animation, and fullscreen morphing states
+        private float trackAnim = 0f;
+        private float appBadgeAnim = 0f;
+        private int lastTrackVersion = -1;
+        private AudioAppSource lastSource = AudioAppSource.None;
+        private long lastFsCheckTicks = 0;
+        private bool fsActive = false;
+        private long fsHoldUntilTicks = 0;
+        private float fsProgress = 0f;
+        private long lastWantVisibleTicks = 0;
+
         // Cached Fonts to avoid per-frame allocations
         private Font fontSmallBold = new Font("Segoe UI Semibold", 8.0f, FontStyle.Bold);
         private Font fontMedBold = new Font("Segoe UI Semibold", 9.0f, FontStyle.Bold);
@@ -1906,29 +2112,79 @@ namespace iCornerDuo
 
             if (transitionBoost > 0f) transitionBoost = Math.Max(0f, transitionBoost - 0.03f);
 
+            // --- Track change & app detection ---
+            bool realSource = media.ActiveSource != AudioAppSource.None && media.ActiveSource != AudioAppSource.SystemSound;
+            if (media.TrackVersion != lastTrackVersion)
+            {
+                if (lastTrackVersion >= 0 && settings.TrackChangeAnimation && realSource)
+                    trackAnim = 1f;
+                lastTrackVersion = media.TrackVersion;
+            }
+            if (media.ActiveSource != lastSource)
+            {
+                if (realSource && settings.ShowDetectedAppBadge)
+                {
+                    appBadgeAnim = 1f;
+                    ShowTransientBanner(LiveMediaAndAudioTracker.GetSourceName(media.ActiveSource) + " détecté", 1700);
+                }
+                lastSource = media.ActiveSource;
+            }
+            if (trackAnim > 0f) trackAnim = Math.Max(0f, trackAnim - 0.011f);
+            if (appBadgeAnim > 0f) appBadgeAnim = Math.Max(0f, appBadgeAnim - 0.02f);
+
             Rectangle targetScreen = (settings.IslandPlacement == CapsuleScreenPlacement.PrimaryMonitorFixed)
                 ? primaryScreenBounds : activeScreenBounds;
 
+            // --- Fullscreen (immersive) detection every 400 ms ---
+            long nowT = DateTime.UtcNow.Ticks;
+            if (nowT - lastFsCheckTicks > 4000000L)
+            {
+                lastFsCheckTicks = nowT;
+                string app = "";
+                bool fs = settings.FullscreenMorph && NativeMethods.IsForegroundFullscreen(targetScreen, out app);
+                if (fs && !fsActive)
+                {
+                    fsActive = true;
+                    fsHoldUntilTicks = nowT + 17000000L;
+                    ShowTransientBanner("Mode Immersif  •  " + app, 1600);
+                    transitionBoost = 0.8f;
+                }
+                else if (!fs && fsActive)
+                {
+                    fsActive = false;
+                    transitionBoost = 1.0f;
+                    ShowTransientBanner("Retour au bureau", 1300);
+                }
+            }
+            bool peekTop = cursorPos.Y <= targetScreen.Top + 8 && Math.Abs(cursorPos.X - (targetScreen.Left + targetScreen.Width / 2)) < 220;
+            float fsTarget = (fsActive && nowT > fsHoldUntilTicks && !peekTop && expandProgress < 0.05f) ? 1f : 0f;
+            fsProgress += (fsTarget - fsProgress) * 0.10f;
+            if (Math.Abs(fsTarget - fsProgress) < 0.003f) fsProgress = fsTarget;
+
             bool wantVisible = true;
             if (settings.IslandMode == CapsuleVisibilityMode.TransitionOnly)
-                wantVisible = (transitionBoost > 0.02f || TimerEngine.FinishedAlertActive);
+                wantVisible = (transitionBoost > 0.02f || TimerEngine.FinishedAlertActive || trackAnim > 0f);
             else if (settings.IslandMode == CapsuleVisibilityMode.SmartContextual)
-                wantVisible = (media.IsAudioActive || media.ActiveSource != AudioAppSource.None ||
+                wantVisible = (media.IsAudioActive || realSource ||
                                TimerEngine.IsRunning || TimerEngine.FinishedAlertActive ||
                                CompanionEngine.HasActiveSpeech || transitionBoost > 0.02f);
             else if (settings.IslandMode == CapsuleVisibilityMode.TopEdgeHoverWake)
             {
                 bool nearTop = (cursorPos.Y <= targetScreen.Top + 42 &&
                                 Math.Abs(cursorPos.X - (targetScreen.Left + targetScreen.Width / 2)) < 280);
-                wantVisible = nearTop || expandProgress > 0.05f || transitionBoost > 0.02f || TimerEngine.FinishedAlertActive;
+                wantVisible = nearTop || expandProgress > 0.05f || transitionBoost > 0.02f || TimerEngine.FinishedAlertActive || trackAnim > 0f;
             }
+
+            // Hysteresis: stay visible 2.5 s after the last "wanted" frame => no blinking
+            if (wantVisible) lastWantVisibleTicks = nowT;
+            else if (nowT - lastWantVisibleTicks < 25000000L) wantVisible = true;
 
             float targetSpawn = wantVisible ? 1.0f : 0.0f;
             spawnFactor = spawnFactor * 0.82f + targetSpawn * 0.18f;
             if (spawnFactor <= 0.015f && !wantVisible)
             {
                 spawnFactor = 0f;
-                capsuleForm.Hide();
+                if (capsuleForm.Visible) capsuleForm.Hide();
                 return;
             }
 
@@ -2000,6 +2256,25 @@ namespace iCornerDuo
             float curPillW = Math.Max(40f, rawPillW * spawnScaleX);
             float curPillH = Math.Max(16f, rawPillH * spawnScaleY);
 
+            // Track change: capsule "breathes" wider for a moment
+            if (trackAnim > 0f)
+            {
+                float bump = (float)Math.Sin((1f - trackAnim) * Math.PI);
+                curPillW += 52f * scale * bump * (1f - expandProgress);
+                curPillH += 5f * scale * bump * (1f - expandProgress);
+            }
+
+            // Fullscreen: capsule morphs into a slim luminous "immersive line"
+            if (fsProgress > 0.001f)
+            {
+                float e = fsProgress < 0.5f ? 2f * fsProgress * fsProgress : 1f - (float)Math.Pow(-2f * fsProgress + 2f, 2) / 2f;
+                float wPhase = Math.Min(1f, e * 1.4f);           // width shrinks first
+                float hPhase = Math.Max(0f, (e - 0.25f) / 0.75f); // then height collapses
+                curPillW = curPillW + (130f * scale - curPillW) * wPhase;
+                curPillH = curPillH + (5f * scale - curPillH) * hPhase;
+            }
+            spawnOffsetY -= 7f * scale * fsProgress;
+
             // Generous canvas margins so companion, aura, and speech bubble NEVER clip!
             int padX = (settings.Companion != CompanionEntity.None) ? (int)(115 * scale) : 28;
             int padTop = (settings.Companion != CompanionEntity.None && settings.CompanionPos == CompanionAnchor.PerchedOnTop)
@@ -2052,9 +2327,11 @@ namespace iCornerDuo
                 }
 
                 float cornerRad = Math.Min(curPillH / 2f, (18f + 10f * expandProgress) * scale);
+                float contentK = Math.Max(0f, 1f - fsProgress * 2.2f);
 
                 // 1. Soft Ambient Outer Aura (Glassmorphic Diffuse Shadow/Glow)
-                DrawCapsuleAmbientAura(g, pillRect, cornerRad, settings.IslandBorder, accent1, accent2, palette, globalTime, media.CurrentAudioPeak, transitionBoost);
+                if (contentK > 0.02f)
+                    DrawCapsuleAmbientAura(g, pillRect, cornerRad, settings.IslandBorder, accent1, accent2, palette, globalTime, media.CurrentAudioPeak, transitionBoost + (float)Math.Sin(trackAnim * Math.PI) * 0.5f);
 
                 // 2. Frosted Glass Capsule Surface
                 GlassThemeEngine.DrawFrostedGlassSurface(g, pillRect, cornerRad, Color.FromArgb(10, 12, 18), accent1, 244, 1.0f);
@@ -2062,7 +2339,7 @@ namespace iCornerDuo
                 // 3. Compact vs Expanded Content
                 if (expandProgress < 0.42f)
                 {
-                    float cAlpha = (1.0f - expandProgress / 0.42f) * spawnFactor;
+                    float cAlpha = (1.0f - expandProgress / 0.42f) * spawnFactor * contentK;
                     DrawCompactCapsule(g, pillRect, scale, cAlpha, media, accent1, accent2, globalTime, settings);
                 }
                 else
@@ -2071,8 +2348,12 @@ namespace iCornerDuo
                     DrawExpandedGlassHub(g, pillRect, scale, eAlpha, media, accent1, accent2, globalTime, settings, cursorPos, companionScreenCenter);
                 }
 
+                // 3b. Immersive fullscreen line
+                if (fsProgress > 0.35f)
+                    DrawImmersiveLine(g, pillRect, (fsProgress - 0.35f) / 0.65f, globalTime, media.CurrentAudioPeak, accent1, accent2, palette);
+
                 // 4. Companion Entity (when anchored outside capsule)
-                if (settings.Companion != CompanionEntity.None && settings.CompanionPos != CompanionAnchor.IntegratedInside)
+                if (fsProgress < 0.2f && settings.Companion != CompanionEntity.None && settings.CompanionPos != CompanionAnchor.IntegratedInside)
                 {
                     CompanionEngine.DrawCompanion(
                         g, companionRect, settings.Companion, cursorPos, companionScreenCenter,
@@ -2084,9 +2365,9 @@ namespace iCornerDuo
                     }
                 }
 
-                if (!capsuleForm.Visible) capsuleForm.Show();
-                byte masterAlpha = (byte)Math.Max(0, Math.Min(255, (int)(spawnFactor * 255)));
+                byte masterAlpha = (byte)Math.Max(0, Math.Min(255, (int)(spawnFactor * 255 * (1f - 0.25f * fsProgress))));
                 capsuleForm.SetBitmap(bmp, winX, winY, masterAlpha);
+                if (!capsuleForm.Visible) capsuleForm.Show();
             }
         }
 
@@ -2149,20 +2430,31 @@ namespace iCornerDuo
             }
             else
             {
-                float orbSize = pill.Height * 0.52f;
+                float orbSize = pill.Height * 0.62f;
                 float oy = pill.Y + (pill.Height - orbSize) / 2f;
-                using (LinearGradientBrush orbBrush = new LinearGradientBrush(
-                    new RectangleF(leftOffset, oy, orbSize, orbSize),
-                    Color.FromArgb(alpha, accent1), Color.FromArgb(alpha, accent2), (globalTime * 90f) % 360f))
+                bool hasApp = settings.ShowDetectedAppBadge && media.ActiveSource != AudioAppSource.None && media.ActiveSource != AudioAppSource.SystemSound;
+                if (hasApp)
                 {
-                    g.FillEllipse(orbBrush, leftOffset, oy, orbSize, orbSize);
+                    float pop = (float)Math.Sin(Math.Max(appBadgeAnim, trackAnim) * Math.PI) * 3f * scale;
+                    DrawAppBadge(g, new RectangleF(leftOffset - pop / 2f, oy - pop / 2f, orbSize + pop, orbSize + pop), media.ActiveSource, accent1, accent2, alpha, orbSize * 0.30f);
                 }
+                else
+                {
+                    using (LinearGradientBrush orbBrush = new LinearGradientBrush(
+                        new RectangleF(leftOffset, oy, orbSize, orbSize),
+                        Color.FromArgb(alpha, accent1), Color.FromArgb(alpha, accent2), (globalTime * 90f) % 360f))
+                    {
+                        g.FillEllipse(orbBrush, leftOffset + orbSize * 0.08f, oy + orbSize * 0.08f, orbSize * 0.84f, orbSize * 0.84f);
+                    }
+                }
+                if (trackAnim > 0f) DrawTrackChangeFx(g, new PointF(leftOffset + orbSize / 2f, oy + orbSize / 2f), pill, scale, accent1, accent2, alphaF);
                 leftOffset += orbSize + 9f * scale;
             }
 
             // Center Label
             string centerText = media.TrackTitle;
-            Color textColor = Color.FromArgb(alpha, 238, 242, 252);
+            float slide = 0f;
+            float textFade = 1f;
 
             if (transientBannerText != null && DateTime.UtcNow.Ticks < transientBannerUntilTicks)
                 centerText = transientBannerText;
@@ -2170,32 +2462,135 @@ namespace iCornerDuo
                 centerText = TimerEngine.FormattedTime + "  •  " + TimerEngine.TimerLabel;
             else if (media.ActiveSource == AudioAppSource.None && !media.IsAudioActive && settings.IslandShowClockWhenIdle)
                 centerText = DateTime.Now.ToString("HH:mm") + "   •   " + settings.CompanionName;
+            else if (trackAnim > 0f)
+            {
+                centerText = "♪  " + media.TrackTitle;
+                float k = Math.Max(0f, (trackAnim - 0.55f) / 0.45f); // first 45% of the anim: slide-in
+                slide = 26f * scale * k * k;
+                textFade = 1f - k;
+            }
 
             if (centerText.Length > 26) centerText = centerText.Substring(0, 25) + "…";
 
-            using (SolidBrush tb = new SolidBrush(textColor))
+            using (SolidBrush tb = new SolidBrush(Color.FromArgb((int)(alpha * textFade), 238, 242, 252)))
             {
                 SizeF tsz = g.MeasureString(centerText, fontMedBold);
-                g.DrawString(centerText, fontMedBold, tb, leftOffset, pill.Y + (pill.Height - tsz.Height) / 2f);
+                g.DrawString(centerText, fontMedBold, tb, leftOffset + slide, pill.Y + (pill.Height - tsz.Height) / 2f);
             }
 
-            // Right Minimalist 5-Bar Equalizer
+            // Right Minimalist 5-Bar Equalizer (bursts on track change)
             int barCount = 5;
             float barW = 2.6f * scale;
             float barGap = 2.8f * scale;
             float waveStartX = pill.Right - barCount * (barW + barGap) - 12f * scale;
             float maxBarH = pill.Height * 0.48f;
+            float burst = 1f + 0.8f * (float)Math.Sin(trackAnim * Math.PI);
 
             for (int i = 0; i < barCount; i++)
             {
-                float bh = Math.Max(3.5f * scale, maxBarH * media.SpectrumBars[i * 2]);
+                float bh = Math.Min(pill.Height * 0.72f, Math.Max(3.5f * scale, maxBarH * media.SpectrumBars[i * 2] * burst));
                 float bx = waveStartX + i * (barW + barGap);
                 float by = pill.Y + (pill.Height - bh) / 2f;
                 Color barCol = GlassThemeEngine.Interpolate(accent1, accent2, i / (float)(barCount - 1));
+                using (GraphicsPath bp = GlassThemeEngine.CreateRoundedRect(new RectangleF(bx, by, barW, bh), barW / 2f))
                 using (SolidBrush bb = new SolidBrush(Color.FromArgb(alpha, barCol)))
                 {
-                    g.FillRectangle(bb, bx, by, barW, bh);
+                    g.FillPath(bb, bp);
                 }
+            }
+        }
+
+        private Font fontBadge = new Font("Segoe UI Semibold", 9f, FontStyle.Bold);
+        private Font fontNotes = new Font("Segoe UI Symbol", 10f, FontStyle.Bold);
+
+        private static string GetAppGlyph(AudioAppSource src)
+        {
+            switch (src)
+            {
+                case AudioAppSource.Spotify: return "S";
+                case AudioAppSource.AppleMusic: return "♫";
+                case AudioAppSource.YouTube: return "▶";
+                case AudioAppSource.Deezer: return "D";
+                case AudioAppSource.SoundCloud: return "☁";
+                case AudioAppSource.Tidal: return "◆";
+                case AudioAppSource.VLC: return "▲";
+                case AudioAppSource.AmazonMusic: return "a";
+                case AudioAppSource.MediaPlayer: return "▷";
+                case AudioAppSource.WebMusic: return "♪";
+                default: return "♪";
+            }
+        }
+
+        private void DrawAppBadge(Graphics g, RectangleF r, AudioAppSource src, Color accent1, Color accent2, int alpha, float radius)
+        {
+            Color brand = GlassThemeEngine.GetAudioSourceColor(src, accent1);
+            Color brand2 = GlassThemeEngine.Interpolate(brand, src == AudioAppSource.None ? accent2 : Color.Black, 0.35f);
+            using (GraphicsPath p = GlassThemeEngine.CreateRoundedRect(r, radius))
+            {
+                using (LinearGradientBrush b = new LinearGradientBrush(r, Color.FromArgb(alpha, GlassThemeEngine.Interpolate(brand, Color.White, 0.12f)), Color.FromArgb(alpha, brand2), 60f))
+                    g.FillPath(b, p);
+                using (Pen rim = new Pen(Color.FromArgb(alpha / 3, 255, 255, 255), 1f))
+                    g.DrawPath(rim, p);
+            }
+            string glyph = GetAppGlyph(src);
+            using (Font f = new Font(glyph.Length == 1 && char.IsLetter(glyph[0]) ? "Segoe UI Black" : "Segoe UI Symbol", Math.Max(6f, r.Height * 0.42f), FontStyle.Bold, GraphicsUnit.Pixel))
+            using (SolidBrush wb = new SolidBrush(Color.FromArgb(alpha, Color.White)))
+            {
+                SizeF sz = g.MeasureString(glyph, f);
+                g.DrawString(glyph, f, wb, r.X + (r.Width - sz.Width) / 2f + 0.5f, r.Y + (r.Height - sz.Height) / 2f);
+            }
+        }
+
+        private void DrawTrackChangeFx(Graphics g, PointF center, RectangleF pill, float scale, Color accent1, Color accent2, float alphaF)
+        {
+            float p = 1f - trackAnim; // 0 -> 1
+            // Expanding glass ripples
+            for (int ring = 0; ring < 2; ring++)
+            {
+                float rp = p * 1.3f - ring * 0.25f;
+                if (rp <= 0f || rp >= 1f) continue;
+                float rad = (8f + 42f * rp) * scale;
+                int a = (int)((1f - rp) * 170 * alphaF);
+                using (Pen pen = new Pen(Color.FromArgb(Math.Max(0, a), ring == 0 ? accent1 : accent2), (2.2f - 1.4f * rp) * scale))
+                    g.DrawEllipse(pen, center.X - rad, center.Y - rad, rad * 2f, rad * 2f);
+            }
+            // Floating music notes rising above the capsule
+            string[] notes = new string[] { "♪", "♫", "♪", "♬" };
+            for (int i = 0; i < notes.Length; i++)
+            {
+                float np = p * 1.25f - i * 0.12f;
+                if (np <= 0f || np >= 1f) continue;
+                float nx = center.X + (14f + i * 16f) * scale + (float)Math.Sin(np * 6.0 + i) * 5f * scale;
+                float ny = pill.Y + pill.Height * 0.5f - np * (pill.Height * 0.5f + 20f * scale);
+                int a = (int)(Math.Sin(np * Math.PI) * 240 * alphaF);
+                using (SolidBrush nb = new SolidBrush(Color.FromArgb(Math.Max(0, a), GlassThemeEngine.Interpolate(accent1, accent2, i / 3f))))
+                    g.DrawString(notes[i], fontNotes, nb, nx, ny);
+            }
+        }
+
+        private void DrawImmersiveLine(Graphics g, RectangleF pill, float k, float globalTime, float audioPeak, Color accent1, Color accent2, Color[] palette)
+        {
+            if (k <= 0.01f) return;
+            int a = (int)(Math.Min(1f, k) * 255);
+            float shift = (float)((globalTime * 0.6) % 1.0);
+            using (GraphicsPath p = GlassThemeEngine.CreateRoundedRect(pill, pill.Height / 2f))
+            using (LinearGradientBrush lg = new LinearGradientBrush(pill, accent1, accent2, 0f))
+            {
+                ColorBlend cb = new ColorBlend(5);
+                Color c0 = palette[0], c1 = palette[1 % palette.Length], c2 = palette[2 % palette.Length];
+                cb.Colors = new Color[] { Color.FromArgb(a, c0), Color.FromArgb(a, c1), Color.FromArgb(a, c2), Color.FromArgb(a, c1), Color.FromArgb(a, c0) };
+                cb.Positions = new float[] { 0f, 0.1f + shift * 0.35f, 0.5f, Math.Max(0.51f, Math.Min(0.99f, 0.9f - shift * 0.4f)), 1f };
+                lg.InterpolationColors = cb;
+                g.FillPath(lg, p);
+            }
+            // audio-reactive glow halo under the line
+            float glow = 3f + audioPeak * 10f;
+            using (GraphicsPath gp = GlassThemeEngine.CreateRoundedRect(RectangleF.Inflate(pill, glow, glow * 0.6f), pill.Height / 2f + glow))
+            using (PathGradientBrush pg = new PathGradientBrush(gp))
+            {
+                pg.CenterColor = Color.FromArgb((int)(a * 0.35f), accent1);
+                pg.SurroundColors = new Color[] { Color.FromArgb(0, accent1) };
+                g.FillPath(pg, gp);
             }
         }
 
@@ -2253,14 +2648,12 @@ namespace iCornerDuo
             float pad = 18f * scale;
             float bodyTop = pill.Y + 44f * scale;
 
-            // Minimalist Glass Disc Card
+            // App artwork tile (detected app badge + track-change pulse)
             float artSize = 46f * scale;
             RectangleF artRect = new RectangleF(pill.X + pad, bodyTop, artSize, artSize);
-            GlassThemeEngine.DrawFrostedGlassSurface(g, artRect, 12f * scale, Color.FromArgb(20, 24, 36), accent1, alpha, 0.8f);
-            using (SolidBrush wb = new SolidBrush(Color.FromArgb(alpha, accent1)))
-            {
-                g.FillEllipse(wb, artRect.X + artSize * 0.34f, artRect.Y + artSize * 0.34f, artSize * 0.32f, artSize * 0.32f);
-            }
+            float pulse = (float)Math.Sin(trackAnim * Math.PI);
+            RectangleF artAnim = RectangleF.Inflate(artRect, pulse * 4f * scale, pulse * 4f * scale);
+            DrawAppBadge(g, artAnim, media.ActiveSource, accent1, accent2, alpha, 12f * scale);
 
             // Track Metadata
             float textLeft = artRect.Right + 12f * scale;
@@ -2290,7 +2683,7 @@ namespace iCornerDuo
             }
 
             RectangleF[] btns = GetActionButtonsForCurrentTab(pill, scale);
-            string[] labels = new string[] { "⏮", "⏯", "⏭", "🔉", "🔊", "Spotify", "YouTube", "Web Audio", "Palette" };
+            string[] labels = new string[] { "⏮", "⏯", "⏭", "🔉", "🔊", "Spotify", "Apple Music", "YouTube", "Palette" };
             DrawGlassButtonsGrid(g, btns, labels, alpha, accent1, 1);
         }
 
@@ -2524,8 +2917,8 @@ namespace iCornerDuo
                     case 3: NativeMethods.SendMediaKey(NativeMethods.VK_VOLUME_DOWN); NativeMethods.SendMediaKey(NativeMethods.VK_VOLUME_DOWN); break;
                     case 4: NativeMethods.SendMediaKey(NativeMethods.VK_VOLUME_UP); NativeMethods.SendMediaKey(NativeMethods.VK_VOLUME_UP); break;
                     case 5: media.LaunchOrFocusService("spotify"); break;
-                    case 6: media.LaunchOrFocusService("youtube"); break;
-                    case 7: media.LaunchOrFocusService("webmusic"); break;
+                    case 6: media.LaunchOrFocusService("applemusic"); break;
+                    case 7: media.LaunchOrFocusService("youtube"); break;
                     case 8: if (OnCycleThemeRequested != null) OnCycleThemeRequested(); break;
                 }
             }
@@ -2622,14 +3015,9 @@ namespace iCornerDuo
 
         private static string GetAudioSourceLabel(AudioAppSource src)
         {
-            switch (src)
-            {
-                case AudioAppSource.Spotify: return "SPOTIFY AUDIO";
-                case AudioAppSource.WebMusic: return "STREAMING WEB";
-                case AudioAppSource.YouTube: return "YOUTUBE MEDIA";
-                case AudioAppSource.SystemSound: return "FLUX SYSTÈME";
-                default: return "NOVA AUDIO";
-            }
+            if (src == AudioAppSource.None) return "NOVA AUDIO";
+            if (src == AudioAppSource.SystemSound) return "FLUX SYSTÈME";
+            return LiveMediaAndAudioTracker.GetSourceName(src).ToUpperInvariant() + "  •  EN LECTURE";
         }
 
         public void EnsureTopMost()
@@ -2809,8 +3197,8 @@ namespace iCornerDuo
                 if (style == PortalTransitionStyle.LaserHorizonLine)
                     DrawHorizonOpticLine(g, winW, winH, edge, centerAlong, bulgeAmount, alphaFactor, scale, palette);
 
-                if (!form.Visible) form.Show();
                 form.SetBitmap(bmp, winX, winY, 255);
+                if (!form.Visible) form.Show();
             }
         }
 
@@ -2989,6 +3377,98 @@ namespace iCornerDuo
     // =========================================================================
     // CUSTOM GLASSMORPHIC UI CONTROLS FOR STUDIO SETTINGS WINDOW (NO FLICKER!)
     // =========================================================================
+    public class DoubleBufferedPanel : Panel
+    {
+        public DoubleBufferedPanel()
+        {
+            SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.ResizeRedraw, true);
+            UpdateStyles();
+        }
+    }
+
+    public class GlassButton : Control
+    {
+        private bool hover, pressed;
+        private Color tint;
+        public GlassButton(string text, int x, int y, int w, int h, Color bg)
+        {
+            SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.ResizeRedraw | ControlStyles.SupportsTransparentBackColor, true);
+            Text = text; Location = new Point(x, y); Size = new Size(w, h);
+            tint = bg; ForeColor = Color.White; Cursor = Cursors.Hand;
+            Font = new Font("Segoe UI Semibold", 9.0f, FontStyle.Bold);
+        }
+        public override Color BackColor { get { return tint; } set { tint = value; Invalidate(); } }
+        protected override void OnMouseEnter(EventArgs e) { hover = true; Invalidate(); base.OnMouseEnter(e); }
+        protected override void OnMouseLeave(EventArgs e) { hover = false; pressed = false; Invalidate(); base.OnMouseLeave(e); }
+        protected override void OnMouseDown(MouseEventArgs e) { pressed = true; Invalidate(); base.OnMouseDown(e); }
+        protected override void OnMouseUp(MouseEventArgs e) { pressed = false; Invalidate(); base.OnMouseUp(e); }
+        protected override void OnPaintBackground(PaintEventArgs e)
+        {
+            Color under = Parent != null ? Parent.BackColor : Color.FromArgb(18, 21, 32);
+            if (Parent is GlassCardPanel) under = Color.FromArgb(18, 21, 32);
+            e.Graphics.Clear(under);
+        }
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            Graphics g = e.Graphics;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+            RectangleF r = new RectangleF(0.5f, 0.5f + (pressed ? 1f : 0f), Width - 1.5f, Height - 1.5f - (pressed ? 1f : 0f));
+            Color top = GlassThemeEngine.Interpolate(tint, Color.White, hover ? 0.22f : 0.10f);
+            Color bot = GlassThemeEngine.Interpolate(tint, Color.Black, 0.18f);
+            using (GraphicsPath p = GlassThemeEngine.CreateRoundedRect(r, Math.Min(12f, r.Height / 2f)))
+            {
+                using (LinearGradientBrush b = new LinearGradientBrush(r, top, bot, 90f)) g.FillPath(b, p);
+                using (Pen rim = new Pen(Color.FromArgb(hover ? 120 : 55, 255, 255, 255), 1f)) g.DrawPath(rim, p);
+            }
+            TextRenderer.DrawText(g, Text, Font, Rectangle.Round(r), ForeColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+        }
+    }
+
+    public class GlassNavButton : Control
+    {
+        private bool hover, selected;
+        private string glyph;
+        private Font glyphFont = new Font("Segoe UI Symbol", 11f);
+        public bool Selected { get { return selected; } set { selected = value; Invalidate(); } }
+        public GlassNavButton(string glyphText, string text, int x, int y, int w, int h)
+        {
+            SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.ResizeRedraw, true);
+            glyph = glyphText; Text = text; Location = new Point(x, y); Size = new Size(w, h);
+            Cursor = Cursors.Hand; Font = new Font("Segoe UI Semibold", 9.4f, FontStyle.Bold);
+        }
+        protected override void OnMouseEnter(EventArgs e) { hover = true; Invalidate(); base.OnMouseEnter(e); }
+        protected override void OnMouseLeave(EventArgs e) { hover = false; Invalidate(); base.OnMouseLeave(e); }
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            Graphics g = e.Graphics;
+            g.Clear(Color.FromArgb(13, 15, 23));
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+            RectangleF r = new RectangleF(0.5f, 0.5f, Width - 1.5f, Height - 1.5f);
+            if (selected || hover)
+            {
+                using (GraphicsPath p = GlassThemeEngine.CreateRoundedRect(r, 12f))
+                {
+                    if (selected)
+                    {
+                        using (LinearGradientBrush b = new LinearGradientBrush(r, Color.FromArgb(70, 80, 170, 255), Color.FromArgb(25, 160, 110, 255), 0f)) g.FillPath(b, p);
+                        using (Pen rim = new Pen(Color.FromArgb(90, 140, 210, 255), 1f)) g.DrawPath(rim, p);
+                    }
+                    else using (SolidBrush b = new SolidBrush(Color.FromArgb(14, 255, 255, 255))) g.FillPath(b, p);
+                }
+            }
+            if (selected)
+                using (SolidBrush ind = new SolidBrush(Color.FromArgb(255, 120, 210, 255)))
+                using (GraphicsPath ip = GlassThemeEngine.CreateRoundedRect(new RectangleF(4, Height / 2f - 9, 3.5f, 18), 1.75f))
+                    g.FillPath(ind, ip);
+            Color fc = selected ? Color.White : Color.FromArgb(hover ? 225 : 165, 180, 195, 225);
+            using (SolidBrush gb = new SolidBrush(selected ? Color.FromArgb(130, 215, 255) : fc))
+                g.DrawString(glyph, glyphFont, gb, 16, (Height - 20) / 2f);
+            TextRenderer.DrawText(g, Text, Font, new Rectangle(44, 0, Width - 48, Height), fc, TextFormatFlags.VerticalCenter | TextFormatFlags.Left | TextFormatFlags.EndEllipsis);
+        }
+    }
+
     public class GlassCardPanel : Panel
     {
         public string CardTitle = "";
@@ -2999,8 +3479,9 @@ namespace iCornerDuo
             Location = new Point(x, y);
             Size = new Size(w, h);
             CardTitle = title;
-            BackColor = Color.Transparent;
-            DoubleBuffered = true;
+            BackColor = Color.FromArgb(11, 13, 20);
+            SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.ResizeRedraw, true);
+            UpdateStyles();
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -3449,7 +3930,7 @@ namespace iCornerDuo
     public class SettingsForm : Form
     {
         private OverlayController controller;
-        private Button[] navButtons = new Button[5];
+        private GlassNavButton[] navButtons = new GlassNavButton[5];
         private Panel[] pages = new Panel[5];
         private int activePageIndex = 0;
 
@@ -3478,69 +3959,82 @@ namespace iCornerDuo
 
             BuildMinimalGlassStudio();
 
-            uiPreviewTimer = new System.Windows.Forms.Timer { Interval = 55 };
+            uiPreviewTimer = new System.Windows.Forms.Timer { Interval = 40 };
             uiPreviewTimer.Tick += (s, e) =>
             {
-                if (Visible)
+                if (Visible && WindowState != FormWindowState.Minimized)
                 {
                     if (activePageIndex == 0 && cornerPreviewBox != null) cornerPreviewBox.Invalidate();
                     if (activePageIndex == 3 && companionPreviewBox != null) companionPreviewBox.Invalidate();
+                    if (headerPanel != null) headerPanel.Invalidate(new Rectangle(0, headerPanel.Height - 3, headerPanel.Width, 3));
                 }
             };
             uiPreviewTimer.Start();
         }
 
+        private Panel headerPanel;
+
         private void BuildMinimalGlassStudio()
         {
             // 1. Minimalist Frosted Header
-            Panel header = new Panel
+            Font hdrTitleFont = new Font("Segoe UI Semibold", 16f, FontStyle.Bold);
+            Font hdrSubFont = new Font("Segoe UI", 8.8f);
+            DoubleBufferedPanel header = new DoubleBufferedPanel
             {
                 Dock = DockStyle.Top,
                 Height = 74,
-                BackColor = Color.FromArgb(14, 17, 26)
+                BackColor = Color.FromArgb(12, 14, 22)
             };
             header.Paint += (s, e) =>
             {
-                e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-                using (LinearGradientBrush grad = new LinearGradientBrush(
-                    header.ClientRectangle, Color.FromArgb(28, 110, 215, 255), Color.FromArgb(18, 180, 130, 255), 10f))
+                Graphics g = e.Graphics;
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+                Rectangle r = header.ClientRectangle;
+                using (LinearGradientBrush grad = new LinearGradientBrush(r, Color.FromArgb(14, 18, 30), Color.FromArgb(20, 14, 32), 0f))
+                    g.FillRectangle(grad, r);
+                // Halo doux derrière l'icône
+                using (GraphicsPath hp = new GraphicsPath())
                 {
-                    e.Graphics.FillRectangle(grad, header.ClientRectangle);
+                    hp.AddEllipse(-10, -40, 180, 150);
+                    using (PathGradientBrush pg = new PathGradientBrush(hp))
+                    {
+                        pg.CenterColor = Color.FromArgb(55, 110, 200, 255);
+                        pg.SurroundColors = new Color[] { Color.FromArgb(0, 110, 200, 255) };
+                        g.FillPath(pg, hp);
+                    }
                 }
-                using (Pen bottomLine = new Pen(Color.FromArgb(35, 255, 255, 255), 1f))
+                // Ligne aurore animée
+                float t = controller.GlobalTimeSeconds;
+                Color[] pal = GlassThemeEngine.GetPalette(controller.Settings, t);
+                using (LinearGradientBrush line = new LinearGradientBrush(new Rectangle(0, r.Height - 2, r.Width, 2), pal[0], pal[1 % pal.Length], 0f))
                 {
-                    e.Graphics.DrawLine(bottomLine, 0, header.Height - 1, header.Width, header.Height - 1);
+                    ColorBlend cb = new ColorBlend(4);
+                    float shift = (float)(0.5 + 0.4 * Math.Sin(t * 1.2));
+                    cb.Colors = new Color[] { Color.FromArgb(0, pal[0]), pal[0], pal[1 % pal.Length], Color.FromArgb(0, pal[2 % pal.Length]) };
+                    cb.Positions = new float[] { 0f, Math.Max(0.05f, shift - 0.25f), Math.Min(0.95f, shift + 0.25f), 1f };
+                    line.InterpolationColors = cb;
+                    g.FillRectangle(line, 0, r.Height - 2, r.Width, 2);
                 }
-                if (Icon != null) e.Graphics.DrawIcon(Icon, new Rectangle(20, 13, 48, 48));
+                if (Icon != null) g.DrawIcon(Icon, new Rectangle(20, 13, 48, 48));
+                using (SolidBrush wb = new SolidBrush(Color.White))
+                using (SolidBrush sb = new SolidBrush(Color.FromArgb(160, 175, 205)))
+                {
+                    g.DrawString("iCorner Duo", hdrTitleFont, wb, 80, 12);
+                    SizeF tsz = g.MeasureString("iCorner Duo", hdrTitleFont);
+                    using (SolidBrush ab = new SolidBrush(pal[0]))
+                        g.DrawString("Studio", hdrTitleFont, ab, 80 + tsz.Width - 6, 12);
+                    g.DrawString("Coins arrondis • Transitions • Capsule Nova • Musique • Compagnon & IA", hdrSubFont, sb, 83, 45);
+                }
             };
 
-            Label titleLbl = new Label
-            {
-                Text = "iCorner Duo  •  Glass Studio",
-                Font = new Font("Segoe UI Semibold", 15.5f, FontStyle.Bold),
-                ForeColor = Color.White,
-                AutoSize = true,
-                BackColor = Color.Transparent,
-                Location = new Point(80, 13)
-            };
-            Label subLbl = new Label
-            {
-                Text = "Bords arrondis adaptatifs • Transitions optiques • Capsule Nova (Audio & Minuteur) • Compagnon & IA",
-                Font = new Font("Segoe UI", 8.8f),
-                ForeColor = Color.FromArgb(165, 180, 210),
-                AutoSize = true,
-                BackColor = Color.Transparent,
-                Location = new Point(82, 43)
-            };
-
-            Button testTransBtn = CreateGlassBtn("Tester la Transition", 845, 18, 170, 38, Color.FromArgb(40, 115, 215), () => controller.TriggerDemoTransition());
-            header.Controls.Add(titleLbl);
-            header.Controls.Add(subLbl);
+            Control testTransBtn = CreateGlassBtn("Tester la Transition", 845, 18, 170, 38, Color.FromArgb(40, 115, 215), () => controller.TriggerDemoTransition());
             header.Controls.Add(testTransBtn);
             Controls.Add(header);
+            headerPanel = header;
 
             // 2. Left Glass Sidebar
-            Panel sidebar = new Panel
+            DoubleBufferedPanel sidebar = new DoubleBufferedPanel
             {
                 Location = new Point(0, 74),
                 Size = new Size(235, 635),
@@ -3561,31 +4055,22 @@ namespace iCornerDuo
                 "5.  Intelligence IA (API)"
             };
 
+            string[] navGlyphs = new string[] { "◜", "⇄", "◉", "✦", "◈" };
             for (int i = 0; i < 5; i++)
             {
                 int idx = i;
-                Button nb = new Button
-                {
-                    Text = navLabels[i],
-                    TextAlign = ContentAlignment.MiddleLeft,
-                    Padding = new Padding(14, 0, 0, 0),
-                    Location = new Point(14, 18 + i * 50),
-                    Size = new Size(206, 42),
-                    FlatStyle = FlatStyle.Flat,
-                    Font = new Font("Segoe UI Semibold", 9.3f, FontStyle.Bold),
-                    Cursor = Cursors.Hand
-                };
-                nb.FlatAppearance.BorderSize = 1;
+                GlassNavButton nb = new GlassNavButton(navGlyphs[i], navLabels[i].Substring(4), 12, 18 + i * 52, 210, 44);
                 nb.Click += (s, e) => SwitchPage(idx);
                 navButtons[i] = nb;
                 sidebar.Controls.Add(nb);
             }
 
             GlassToggleSwitch startupToggle = new GlassToggleSwitch("Démarrer avec Windows", 16, 515, 204, IsStartupEnabled());
+            startupToggle.BackColor = Color.FromArgb(13, 15, 23);
             startupToggle.CheckedChanged += (s, e) => SetStartup(startupToggle.Checked);
             sidebar.Controls.Add(startupToggle);
 
-            Button hideTrayBtn = CreateGlassBtn("Réduire en tâche de fond", 14, 558, 206, 36, Color.FromArgb(26, 31, 46), () => Hide());
+            Control hideTrayBtn = CreateGlassBtn("Réduire en tâche de fond", 14, 558, 206, 36, Color.FromArgb(26, 31, 46), () => Hide());
             sidebar.Controls.Add(hideTrayBtn);
 
             // 3. Pages
@@ -3601,14 +4086,37 @@ namespace iCornerDuo
 
         private void SwitchPage(int idx)
         {
+            SuspendLayout();
             activePageIndex = idx;
             for (int i = 0; i < 5; i++)
             {
                 pages[i].Visible = (i == idx);
-                navButtons[i].BackColor = (i == idx) ? Color.FromArgb(35, 95, 195) : Color.FromArgb(19, 22, 34);
-                navButtons[i].ForeColor = (i == idx) ? Color.White : Color.FromArgb(175, 185, 210);
-                navButtons[i].FlatAppearance.BorderColor = (i == idx) ? Color.FromArgb(110, 195, 255) : Color.FromArgb(28, 34, 50);
+                navButtons[i].Selected = (i == idx);
             }
+            ResumeLayout(false);
+        }
+
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                CreateParams cp = base.CreateParams;
+                cp.ExStyle |= 0x02000000; // WS_EX_COMPOSITED : rendu composé de toute la fenêtre => zéro clignotement
+                return cp;
+            }
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            try
+            {
+                int dark = 1;
+                NativeMethods.DwmSetWindowAttribute(Handle, 20, ref dark, 4); // barre de titre sombre
+                int round = 2;
+                NativeMethods.DwmSetWindowAttribute(Handle, 33, ref round, 4); // coins arrondis Windows 11
+            }
+            catch { }
         }
 
         private Panel BuildPage1Corners()
@@ -3701,7 +4209,7 @@ namespace iCornerDuo
             rightCard.Controls.Add(spSlider);
 
             rightCard.Controls.Add(CreateLabel("Aperçu temps réel :", 18, 360));
-            cornerPreviewBox = new Panel { Location = new Point(18, 386), Size = new Size(336, 125), BackColor = Color.FromArgb(22, 26, 40) };
+            cornerPreviewBox = new DoubleBufferedPanel { Location = new Point(18, 386), Size = new Size(336, 125), BackColor = Color.FromArgb(22, 26, 40) };
             cornerPreviewBox.Paint += (s, e) =>
             {
                 Graphics g = e.Graphics;
@@ -3796,11 +4304,11 @@ namespace iCornerDuo
             rightCard.Controls.Add(themeCombo);
 
             rightCard.Controls.Add(CreateLabel("Teintes personnalisées :", 18, 128));
-            Button c1Btn = CreateGlassBtn("Teinte 1", 18, 154, 162, 36, Color.FromArgb(255, Color.FromArgb(controller.Settings.CustomColor1Argb)), null);
+            Control c1Btn = CreateGlassBtn("Teinte 1", 18, 154, 162, 36, Color.FromArgb(255, Color.FromArgb(controller.Settings.CustomColor1Argb)), null);
             c1Btn.ForeColor = Color.Black;
             c1Btn.Click += (s, e) => PickCustomColor(1, c1Btn);
 
-            Button c2Btn = CreateGlassBtn("Teinte 2", 192, 154, 162, 36, Color.FromArgb(255, Color.FromArgb(controller.Settings.CustomColor2Argb)), null);
+            Control c2Btn = CreateGlassBtn("Teinte 2", 192, 154, 162, 36, Color.FromArgb(255, Color.FromArgb(controller.Settings.CustomColor2Argb)), null);
             c2Btn.Click += (s, e) => PickCustomColor(2, c2Btn);
             rightCard.Controls.Add(c1Btn);
             rightCard.Controls.Add(c2Btn);
@@ -3890,9 +4398,22 @@ namespace iCornerDuo
             rightCard.Controls.Add(CreateGlassBtn("Réinitialiser", 242, 168, 112, 34, Color.FromArgb(28, 34, 52), () => controller.DynamicIsland.TimerEngine.Reset()));
 
             rightCard.Controls.Add(CreateLabel("Contrôles Audio Universels :", 18, 224));
-            rightCard.Controls.Add(CreateGlassBtn("Spotify", 18, 250, 106, 34, Color.FromArgb(24, 95, 65), () => controller.MediaTracker.LaunchOrFocusService("spotify")));
-            rightCard.Controls.Add(CreateGlassBtn("YouTube", 133, 250, 106, 34, Color.FromArgb(115, 32, 48), () => controller.MediaTracker.LaunchOrFocusService("youtube")));
-            rightCard.Controls.Add(CreateGlassBtn("Web Audio", 248, 250, 106, 34, Color.FromArgb(38, 46, 68), () => controller.MediaTracker.LaunchOrFocusService("webmusic")));
+            rightCard.Controls.Add(CreateGlassBtn("Spotify", 18, 250, 80, 34, Color.FromArgb(24, 95, 65), () => controller.MediaTracker.LaunchOrFocusService("spotify")));
+            rightCard.Controls.Add(CreateGlassBtn("Apple Music", 104, 250, 100, 34, Color.FromArgb(150, 40, 70), () => controller.MediaTracker.LaunchOrFocusService("applemusic")));
+            rightCard.Controls.Add(CreateGlassBtn("YouTube", 210, 250, 70, 34, Color.FromArgb(115, 32, 48), () => controller.MediaTracker.LaunchOrFocusService("youtube")));
+            rightCard.Controls.Add(CreateGlassBtn("Deezer", 286, 250, 68, 34, Color.FromArgb(70, 45, 120), () => controller.MediaTracker.LaunchOrFocusService("webmusic")));
+
+            GlassToggleSwitch trackChk = new GlassToggleSwitch("Animation au changement de titre", 18, 340, 330, controller.Settings.TrackChangeAnimation);
+            trackChk.CheckedChanged += (s, e) => { controller.Settings.TrackChangeAnimation = trackChk.Checked; controller.Settings.Save(); };
+            rightCard.Controls.Add(trackChk);
+
+            GlassToggleSwitch fsChk = new GlassToggleSwitch("Morphing en mode plein écran", 18, 374, 330, controller.Settings.FullscreenMorph);
+            fsChk.CheckedChanged += (s, e) => { controller.Settings.FullscreenMorph = fsChk.Checked; controller.Settings.Save(); };
+            rightCard.Controls.Add(fsChk);
+
+            GlassToggleSwitch appChk = new GlassToggleSwitch("Afficher l'app détectée dans la capsule", 18, 408, 330, controller.Settings.ShowDetectedAppBadge);
+            appChk.CheckedChanged += (s, e) => { controller.Settings.ShowDetectedAppBadge = appChk.Checked; controller.Settings.Save(); };
+            rightCard.Controls.Add(appChk);
 
             rightCard.Controls.Add(CreateGlassBtn("⏮ Précédent", 18, 292, 106, 34, Color.FromArgb(28, 34, 52), () => NativeMethods.SendMediaKey(NativeMethods.VK_MEDIA_PREV_TRACK)));
             rightCard.Controls.Add(CreateGlassBtn("⏯ Lecture", 133, 292, 106, 34, Color.FromArgb(40, 115, 215), () => NativeMethods.SendMediaKey(NativeMethods.VK_MEDIA_PLAY_PAUSE)));
@@ -3962,7 +4483,7 @@ namespace iCornerDuo
             GlassCardPanel rightCard = new GlassCardPanel(406, 16, 372, 585, "Aperçu Optique en Direct");
             page.Controls.Add(rightCard);
 
-            companionPreviewBox = new Panel { Location = new Point(18, 54), Size = new Size(336, 215), BackColor = Color.FromArgb(14, 17, 26) };
+            companionPreviewBox = new DoubleBufferedPanel { Location = new Point(18, 54), Size = new Size(336, 215), BackColor = Color.FromArgb(14, 17, 26) };
             companionPreviewBox.Paint += (s, e) =>
             {
                 Graphics g = e.Graphics;
@@ -4099,7 +4620,7 @@ namespace iCornerDuo
             return tb;
         }
 
-        private void PickCustomColor(int slot, Button btn)
+        private void PickCustomColor(int slot, Control btn)
         {
             using (ColorDialog cd = new ColorDialog { FullOpen = true })
             {
@@ -4126,24 +4647,12 @@ namespace iCornerDuo
 
         private Panel CreatePageContainer()
         {
-            return new Panel { Location = new Point(235, 74), Size = new Size(805, 635), BackColor = Color.FromArgb(11, 13, 20) };
+            return new DoubleBufferedPanel { Location = new Point(235, 74), Size = new Size(805, 635), BackColor = Color.FromArgb(11, 13, 20) };
         }
 
-        private Button CreateGlassBtn(string text, int x, int y, int w, int h, Color bg, Action onClick)
+        private Control CreateGlassBtn(string text, int x, int y, int w, int h, Color bg, Action onClick)
         {
-            Button b = new Button
-            {
-                Text = text,
-                Location = new Point(x, y),
-                Size = new Size(w, h),
-                FlatStyle = FlatStyle.Flat,
-                BackColor = bg,
-                ForeColor = Color.White,
-                Font = new Font("Segoe UI Semibold", 9.0f, FontStyle.Bold),
-                Cursor = Cursors.Hand
-            };
-            b.FlatAppearance.BorderSize = 1;
-            b.FlatAppearance.BorderColor = Color.FromArgb(55, 255, 255, 255);
+            GlassButton b = new GlassButton(text, x, y, w, h, bg);
             if (onClick != null) b.Click += (s, e) => onClick();
             return b;
         }
