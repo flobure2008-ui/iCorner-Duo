@@ -1,55 +1,51 @@
-# iCorner Duo — Édition Glassmorphism & Minimaliste (v2.1)
+# iCorner Duo — Édition Liquid Glass & Mascottes Kawaii (v2.2)
 
 <p align="center">
   <img src="assets/showcase_icon.jpg" alt="iCorner Duo Icon" width="220" style="border-radius: 36px;" />
 </p>
 
-**iCorner Duo** est un studio visuel ultra-léger en **Glassmorphisme minimaliste** pour Windows 10 et Windows 11. Il sculpte des coins d'écran arrondis haute précision sur toutes vos dalles, crée un **Pont Liquide en Verre Dépoli** lors du passage de la souris d'un moniteur à l'autre, et intègre la **Capsule Nova** — un hub interactif en verre givré regroupant lecteur audio universel, minuteur Focus, compagnon minimaliste animé et assistant IA multi-modèles.
+**iCorner Duo** est un studio visuel ultra-léger en **Liquid Glass & Glassmorphisme** pour Windows 10 et Windows 11. Il sculpte des coins d'écran arrondis haute précision sur toutes vos dalles, crée une **Passerelle Fluide en Verre Dépoli** lors du passage du curseur d'un moniteur à l'autre, et intègre la **Capsule Liquid Glass** — un hub interactif à ménisque liquide regroupant lecteur audio universel, minuteur Focus, mascottes kawaii animées et dialogue IA.
 
 ---
 
-## Nouveautés de la v2.1
+## 🌟 Nouveautés de la v2.2
 
-- 🛡️ **Zéro-Scintillement Intégral & Stabilité DWM** :
-  - Élimination des clignotements grâce au double-buffering matériel natif et au style étendu `WS_EX_COMPOSITED` (0x02000000).
-  - Transition douce avec hystérésis temporelle intelligente de 2,5 s pour éviter toute coupure lors des blancs entre deux morceaux.
-  - Fenêtre des paramètres stylisée avec barre de titre sombre et angles adoucis Windows 11 (`DwmSetWindowAttribute`).
-- 🎵 **Support Complet d'Apple Music** :
-  - Détection automatique d'**Apple Music** (application Windows Store UWP, client iTunes et version web).
-  - Halo lumineux signature rose-rouge néon (`#FA2D55`) et raccourci de lancement / bascule rapide depuis la capsule.
-- 🏷️ **Badge d'App Source Détectée** :
-  - Affichage dynamique du badge de l'application en cours d'écoute (*Apple Music, Spotify, YouTube Music, Deezer, Tidal, SoundCloud, VLC, Lecteur Windows*).
-- ✨ **Animation Festive au Changement de Piste** :
-  - Envolée de notes de musique flottantes (*♪ ♫ ♬*) et impulsion ondulatoire néon réactive lors de chaque changement de chanson.
-  - Glissement horizontal cinématique du titre du morceau.
-- 🖥️ **Morphing Plein Écran Adaptatif (Mode Immersif)** :
-  - Détection automatique des jeux et vidéos plein écran (F11, YouTube plein écran, etc.).
-  - Transformation cinématique de la Capsule en un **Ruban Lumineux d'Ambiance ultra-fin** (2 px) longeant la bordure haute, réagissant discrètement au rythme audio.
-  - Geste de survol « Peek » : amenez simplement le curseur sur le bord supérieur pour faire réapparaître instantanément la capsule complète.
+- 🫧 **Capsule en Véritable « Liquid Glass »** :
+  - Rendu multi-couches exclusif : base obsidienne liquide, ménisque supérieur spéculaire en goutte d'eau, diffusion caustique interne et liseré de réfraction chromatique 1.25px.
+  - Dynamique d'expansion organique avec physique d'amortissement souple (*Spring Damping*) : ouverture rapide et fermeture progressive et soyeuse.
+  - Onglets réorganisés avec icônes vives et typographie soignée : `🎵 Audio`, `⏱️ Focus`, `🐾 Mascotte`, `✨ IA`, `⚙ Paramètres`.
 
----
+- 🐾 **Mascottes Kawaii Ultra-Mignonnes & Évolutives** :
+  - **Expressions Kawaii complètes** : Joues roses délicates fardées, grands yeux anime étincelants avec reflet principal et petite étincelle secondaire, clignement en arcs de sourire joyeux `( ˘ ◡ ˘ )`.
+  - **Interactions affectueuses** : Bouton **« 💖 Faire un Câlin (+20 XP) »** déclenchant une envolée de cœurs flottants `♥`, un bond d'excitation et des répliques chaleureuses.
+  - **Détails vivants pour chaque mascotte** :
+    - ✨ **Sparky / Lumina** : Petite fée stellaire avec ailes de cristal battantes, halo doré et poussière d'étoiles.
+    - 🦊 **Yume / Kitsune** : Renardeau céleste aux grandes oreilles douces à coussinets roses et queue ondoyante.
+    - 🐲 **Puff / Draco** : Bébé dragon de cristal avec petites cornes, ailes battantes et ventre pastel doux.
+    - 👻 **Boo / Nyx** : Petit fantôme marshmallow à collerette vaporeuse et 3 perles quantiques lumineuses en orbite.
+    - 🐾 **Mochi / Kuro-Neko** : Chaton noir tout rond avec moustaches fines blanches, queue enroulée et bouche en `:3`.
+    - 🤖 **Pip / Axiom** : Mini robot Tamagotchi avec deux petites antennes flexibles et visière OLED affichant des émoticônes vivantes `(^ ‿ ^)`, `(♥ ‿ ♥)`, `(> ‿ <)`.
 
-## Fonctionnalités Principales
+- 🎨 **Interface des Paramètres Redessinée & Rubriques Renommées** :
+  - `✦ Dalles & Courbures` : Rayon millimétrique, courbures hyper-continues et aperçu spéculaire en direct.
+  - `🌊 Passerelle Fluide` : Transitions inter-écrans liquides, effets magnétiques et 12 palettes chromatiques.
+  - `🫧 Capsule Liquid Glass` : Ménisque liquide, apparition cinématique, suivi d'écran et studio audio.
+  - `🐾 Mascottes Kawaii` : Galerie des mascottes, échelles, postures, réactivité oculaire et câlins XP.
+  - `✨ Intelligence & Dialogue` : Connecteurs directs Gemini, Claude, ChatGPT et Mistral.
 
-- **Coins d'Écran Haute Précision** :
-  - Courbes géométriques : **Courbe Hyper-Continue** ($|x|^n + |y|^n = 1$) et **Arc Géométrique Pur**.
-  - Rayon et épaisseur entièrement ajustables par écran.
-  - 8 Thèmes en verre dépoli : *Prisme Éther, Verre Givre, Aurore Boréale, Néon Cyber, Ambre Solaire, Océan Abysses, Brume Rose, Émeraude Zen*.
-- **Capsule Nova (Hub Interactif Supérieur)** :
-  - **Lecteur Audio Universel** : Spectre audio en direct, contrôles Lecture/Pause/Suivant/Précédent, synchronisation fluide avec tous vos services de streaming.
-  - **Minuteur Focus & Chronomètre** : Anneau de progression lumineux, préréglages rapides (+1m, +5m, 25m Focus).
-  - **Compagnons Minimalistes** : 6 entités géométriques lumineuses animées (*Lumina, Kitsune-V, Aether-Draco, Nyx-Specter, Kuro-Neko, Axiom-Core*) avec regard interactif suivant la souris.
-  - **Assistant IA Multi-Modèles** : Intégration directe via clé API pour **Google Gemini**, **Anthropic Claude**, **OpenAI ChatGPT** et **Mistral AI**.
-- **Transitions Multi-Écrans Liquides** :
-  - Pont visuel fluide et dynamique entre deux écrans lors du passage du curseur.
+- 🛡️ **Zéro-Scintillement & Apple Music** :
+  - Double-buffering matériel natif et style `WS_EX_COMPOSITED` garantissant une fluidité absolue à 60 FPS sans aucun scintillement.
+  - Détection automatique et couleur signature d'Apple Music, Spotify, YouTube Music, Deezer, Tidal, SoundCloud, VLC.
+  - Animation festive de notes musicales flottantes (*♪ ♫ ♬*) lors des changements de chanson.
+  - Morphing adaptatif en mode plein écran (ruban d'ambiance ultra-fin de 2 px).
 
 ---
 
 ## Installation & Exécution Rapide
 
-1. Téléchargez **`iCornerDuo.exe`** (ou l'archive zip) depuis la section **[Releases](https://github.com/flobure2008-ui/iCorner-Duo/releases)**.
-2. Lancez `iCornerDuo.exe` — aucune installation n'est requise.
-3. Cliquez sur la **Capsule Nova** en haut de l'écran ou sur l'icône dans la zone de notification (systray) pour accéder aux réglages.
+1. Téléchargez **`iCornerDuo.exe`** ou l'archive zip depuis la section **[Releases](https://github.com/flobure2008-ui/iCorner-Duo/releases)**.
+2. Lancez `iCornerDuo.exe` — exécutable portable sans dépendance externe.
+3. Survolez la capsule en haut de l'écran pour explorer les onglets, ou cliquez sur `⚙` pour ouvrir le studio complet.
 
 ### Compilation depuis la source (PowerShell)
 

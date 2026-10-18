@@ -519,6 +519,76 @@ namespace iCornerDuo
             }
         }
 
+        // Draws an ultra-luxurious Liquid Glass surface with droplet meniscus, caustic diffusion, and chromatic edge
+        public static void DrawLiquidGlassSurface(
+            Graphics g, RectangleF rect, float cornerRadius,
+            Color baseDarkTint, Color accentTint, int glassOpacity = 242, float borderAlphaRatio = 1.0f, float globalTime = 0f)
+        {
+            if (rect.Width <= 2f || rect.Height <= 2f) return;
+            using (GraphicsPath path = CreateRoundedRect(rect, cornerRadius))
+            {
+                // 1. Deep Obsidian / Liquid Crystal Base
+                using (SolidBrush baseBrush = new SolidBrush(Color.FromArgb(glassOpacity, baseDarkTint)))
+                {
+                    g.FillPath(baseBrush, path);
+                }
+
+                // 2. Caustic ambient glow from inside (soft radial bloom)
+                using (GraphicsPath innerCaustic = CreateRoundedRect(RectangleF.Inflate(rect, -2f, -2f), Math.Max(2f, cornerRadius - 2f)))
+                using (LinearGradientBrush causticGrad = new LinearGradientBrush(
+                    rect,
+                    Color.FromArgb((int)(34 * borderAlphaRatio), accentTint),
+                    Color.FromArgb(0, accentTint),
+                    90f))
+                {
+                    g.FillPath(causticGrad, innerCaustic);
+                }
+
+                // 3. Liquid Droplet Meniscus (curved specular gloss highlight across top 45%)
+                float hlHeight = Math.Min(rect.Height * 0.48f, 28f);
+                if (hlHeight > 4f)
+                {
+                    RectangleF hlRect = new RectangleF(rect.X + 1.5f, rect.Y + 1.2f, rect.Width - 3f, hlHeight);
+                    using (GraphicsPath hlPath = CreateRoundedRect(hlRect, Math.Min(cornerRadius, hlHeight / 2f)))
+                    using (LinearGradientBrush hlBrush = new LinearGradientBrush(
+                        hlRect,
+                        Color.FromArgb((int)(68 * borderAlphaRatio), 255, 255, 255),
+                        Color.FromArgb(0, 255, 255, 255),
+                        90f))
+                    {
+                        g.FillPath(hlBrush, hlPath);
+                    }
+                }
+
+                // 4. Subtle Bottom Refraction Bounce Line
+                float botH = Math.Min(rect.Height * 0.25f, 10f);
+                if (botH > 3f)
+                {
+                    RectangleF botRect = new RectangleF(rect.X + 4f, rect.Bottom - botH - 1.2f, rect.Width - 8f, botH);
+                    using (GraphicsPath botPath = CreateRoundedRect(botRect, botH / 2f))
+                    using (LinearGradientBrush botBrush = new LinearGradientBrush(
+                        botRect,
+                        Color.FromArgb(0, 255, 255, 255),
+                        Color.FromArgb((int)(18 * borderAlphaRatio), Interpolate(Color.White, accentTint, 0.4f)),
+                        90f))
+                    {
+                        g.FillPath(botBrush, botPath);
+                    }
+                }
+
+                // 5. Chromatic Dispersion Hairline Rim (1.25px)
+                using (LinearGradientBrush rimGrad = new LinearGradientBrush(
+                    rect,
+                    Color.FromArgb((int)(130 * borderAlphaRatio), Interpolate(Color.White, accentTint, 0.25f)),
+                    Color.FromArgb((int)(38 * borderAlphaRatio), accentTint),
+                    60f))
+                using (Pen rimPen = new Pen(rimGrad, 1.25f))
+                {
+                    g.DrawPath(rimPen, path);
+                }
+            }
+        }
+
         public static GraphicsPath CreateRoundedRect(RectangleF rect, float radius)
         {
             GraphicsPath path = new GraphicsPath();
@@ -806,7 +876,7 @@ namespace iCornerDuo
     {
         public int Level = 1;
         public int Xp = 20;
-        public string Mood = "Serein ✦";
+        public string Mood = "Heureux 💖";
         public string SpeechBubbleText = "";
         private long speechUntilTicks = 0;
         private float pulseBoost = 0f;
@@ -815,11 +885,14 @@ namespace iCornerDuo
         private float smoothLookY = 0f;
 
         private static readonly string[] MinimalQuotes = new string[] {
-            "Système optique synchronisé ✦",
-            "Onde sonore détectée, résonance active ♪",
-            "Mode concentration prêt.",
-            "Survole la capsule pour déployer l'interface.",
-            "Prêt à interagir via l'onglet IA."
+            "Coucou toi ! Je veille sur ton écran ✨",
+            "Trop bien cette musique, j'adore le rythme ! ♪",
+            "Mode concentration activé, tu vas gérer ✦",
+            "Câlin virtuel ! +20 XP bien mérités 💖",
+            "Je suis tout doux et en verre dépoli ~",
+            "Survole la capsule pour me voir de plus près !",
+            "Je reste avec toi pour toute ta session 🐾",
+            "Fais une pause si tes yeux fatiguent ☕"
         };
         private Random rng = new Random();
 
@@ -837,13 +910,13 @@ namespace iCornerDuo
             {
                 Level++;
                 Xp -= 100;
-                Mood = "Transcendant ✧";
-                Say("Évolution atteinte • Niveau " + Level, 3800);
+                Mood = "Épanoui ✧";
+                Say("✨ Évolution ! Je passe Niveau " + Level + " !", 4200);
             }
             else
             {
-                Mood = "Harmonieux ✦";
-                Say(MinimalQuotes[rng.Next(MinimalQuotes.Length)], 3200);
+                Mood = "Heureux 💖";
+                Say(MinimalQuotes[rng.Next(MinimalQuotes.Length)], 3500);
             }
             pulseBoost = 1.0f;
         }
@@ -856,9 +929,10 @@ namespace iCornerDuo
         public void StepTick(float globalTime, bool isAudioPlaying)
         {
             if (pulseBoost > 0f) pulseBoost = Math.Max(0f, pulseBoost - 0.03f);
-            float freq = isAudioPlaying ? 6.0f : 2.2f;
-            float amp = isAudioPlaying ? 3.5f : 1.8f;
-            smoothHoverY = (float)Math.Sin(globalTime * freq) * amp - pulseBoost * 4f;
+            float freq = isAudioPlaying ? 5.5f : 2.0f;
+            float amp = isAudioPlaying ? 3.2f : 1.6f;
+            // Compound floating harmonic motion for natural organic buoyancy
+            smoothHoverY = (float)(Math.Sin(globalTime * freq) * amp + Math.Sin(globalTime * freq * 0.5f) * (amp * 0.4f)) - pulseBoost * 5f;
         }
 
         public void DrawCompanion(
@@ -873,9 +947,9 @@ namespace iCornerDuo
 
             float cx = bounds.X + bounds.Width / 2f;
             float cy = bounds.Y + bounds.Height / 2f + smoothHoverY;
-            float r = Math.Min(bounds.Width, bounds.Height) * 0.34f;
+            float r = Math.Min(bounds.Width, bounds.Height) * 0.35f;
 
-            // Smoothly interpolated eye-tracking vector (prevents jitter!)
+            // Smooth eye-tracking interpolation
             float targetLX = 0f, targetLY = 0f;
             if (followEyes && companionScreenCenter != Point.Empty)
             {
@@ -884,47 +958,61 @@ namespace iCornerDuo
                 float dist = (float)Math.Sqrt(dx * dx + dy * dy);
                 if (dist > 2f)
                 {
-                    float f = Math.Min(1f, dist / 240f);
-                    targetLX = (dx / dist) * r * 0.24f * f;
-                    targetLY = (dy / dist) * r * 0.24f * f;
+                    float f = Math.Min(1f, dist / 220f);
+                    targetLX = (dx / dist) * r * 0.22f * f;
+                    targetLY = (dy / dist) * r * 0.22f * f;
                 }
             }
-            smoothLookX = smoothLookX * 0.75f + targetLX * 0.25f;
-            smoothLookY = smoothLookY * 0.75f + targetLY * 0.25f;
+            smoothLookX = smoothLookX * 0.72f + targetLX * 0.28f;
+            smoothLookY = smoothLookY * 0.72f + targetLY * 0.28f;
 
-            // Soft Glassmorphic Ambient Aura
-            float auraR = r * (1.28f + audioPeak * 0.28f + pulseBoost * 0.22f);
+            // Warm Glassmorphic Ambient Aura
+            float auraR = r * (1.32f + audioPeak * 0.30f + pulseBoost * 0.25f);
             using (GraphicsPath auraPath = new GraphicsPath())
             {
                 auraPath.AddEllipse(cx - auraR, cy - auraR, auraR * 2f, auraR * 2f);
                 using (PathGradientBrush pgb = new PathGradientBrush(auraPath))
                 {
-                    pgb.CenterColor = Color.FromArgb(65, accent1);
+                    pgb.CenterColor = Color.FromArgb(70, accent1);
                     pgb.SurroundColors = new Color[] { Color.FromArgb(0, accent1) };
                     g.FillPath(pgb, auraPath);
                 }
             }
 
+            bool isAudioActive = audioPeak > 0.06f;
+
             switch (entity)
             {
                 case CompanionEntity.LuminaOrb:
-                    DrawLuminaOrb(g, cx, cy, r, smoothLookX, smoothLookY, accent1, accent2, globalTime);
+                    DrawLuminaOrb(g, cx, cy, r, smoothLookX, smoothLookY, accent1, accent2, globalTime, isAudioActive);
                     break;
                 case CompanionEntity.KitsuneMinimal:
-                    DrawKitsuneMinimal(g, cx, cy, r, smoothLookX, smoothLookY, accent1, accent2, globalTime);
+                    DrawKitsuneMinimal(g, cx, cy, r, smoothLookX, smoothLookY, accent1, accent2, globalTime, isAudioActive);
                     break;
                 case CompanionEntity.DracoCrystal:
-                    DrawDracoCrystal(g, cx, cy, r, smoothLookX, smoothLookY, accent1, accent2, globalTime);
+                    DrawDracoCrystal(g, cx, cy, r, smoothLookX, smoothLookY, accent1, accent2, globalTime, isAudioActive);
                     break;
                 case CompanionEntity.NyxQuantum:
-                    DrawNyxQuantum(g, cx, cy, r, smoothLookX, smoothLookY, accent1, accent2, globalTime);
+                    DrawNyxQuantum(g, cx, cy, r, smoothLookX, smoothLookY, accent1, accent2, globalTime, isAudioActive);
                     break;
                 case CompanionEntity.KuroNeko:
-                    DrawKuroNeko(g, cx, cy, r, smoothLookX, smoothLookY, accent1, accent2, globalTime);
+                    DrawKuroNeko(g, cx, cy, r, smoothLookX, smoothLookY, accent1, accent2, globalTime, isAudioActive);
                     break;
                 case CompanionEntity.AxiomPrism:
-                    DrawAxiomPrism(g, cx, cy, r, smoothLookX, smoothLookY, accent1, accent2, globalTime);
+                    DrawAxiomPrism(g, cx, cy, r, smoothLookX, smoothLookY, accent1, accent2, globalTime, isAudioActive);
                     break;
+            }
+
+            // Floating heart particle on interaction
+            if (pulseBoost > 0.08f)
+            {
+                float hpY = cy - r * 1.2f - (1f - pulseBoost) * 18f;
+                int hAlpha = (int)(pulseBoost * 230);
+                using (Font hf = new Font("Segoe UI Symbol", Math.Max(8f, r * 0.45f), FontStyle.Bold, GraphicsUnit.Pixel))
+                using (SolidBrush hb = new SolidBrush(Color.FromArgb(hAlpha, 255, 110, 160)))
+                {
+                    g.DrawString("♥", hf, hb, cx - r * 0.22f, hpY);
+                }
             }
 
             g.SmoothingMode = oldMode;
@@ -933,170 +1021,362 @@ namespace iCornerDuo
         private void DrawGlassSphereBody(Graphics g, float cx, float cy, float r, Color accent1, Color accent2)
         {
             RectangleF bodyRect = new RectangleF(cx - r, cy - r, r * 2f, r * 2f);
-            using (SolidBrush darkGlass = new SolidBrush(Color.FromArgb(235, 14, 17, 26)))
-            using (LinearGradientBrush sheen = new LinearGradientBrush(bodyRect, Color.FromArgb(65, 255, 255, 255), Color.FromArgb(15, accent1), 45f))
-            using (Pen specularRim = new Pen(Color.FromArgb(140, GlassThemeEngine.Interpolate(Color.White, accent1, 0.5f)), 1.4f))
+            using (SolidBrush darkGlass = new SolidBrush(Color.FromArgb(238, 14, 18, 28)))
+            using (LinearGradientBrush sheen = new LinearGradientBrush(bodyRect, Color.FromArgb(70, 255, 255, 255), Color.FromArgb(20, accent1), 45f))
+            using (Pen specularRim = new Pen(Color.FromArgb(145, GlassThemeEngine.Interpolate(Color.White, accent1, 0.45f)), 1.35f))
             {
                 g.FillEllipse(darkGlass, bodyRect);
                 g.FillEllipse(sheen, bodyRect);
                 g.DrawEllipse(specularRim, bodyRect);
             }
-            // Top crescent glass reflection
-            RectangleF highlightRect = new RectangleF(cx - r * 0.65f, cy - r * 0.82f, r * 1.3f, r * 0.65f);
-            using (LinearGradientBrush hl = new LinearGradientBrush(highlightRect, Color.FromArgb(55, Color.White), Color.FromArgb(0, Color.White), 90f))
+            // Top liquid meniscus crescent
+            RectangleF highlightRect = new RectangleF(cx - r * 0.65f, cy - r * 0.84f, r * 1.3f, r * 0.65f);
+            using (LinearGradientBrush hl = new LinearGradientBrush(highlightRect, Color.FromArgb(60, Color.White), Color.FromArgb(0, Color.White), 90f))
             {
                 g.FillEllipse(hl, highlightRect);
             }
         }
 
-        private void DrawLuminaOrb(Graphics g, float cx, float cy, float r, float lx, float ly, Color c1, Color c2, float t)
+        // Ultra-cute Kawaii Face with rosy blushing cheeks, sparkling anime eyes, and sweet smile
+        private void DrawKawaiiGlassFace(Graphics g, float cx, float cy, float r, float lx, float ly, Color accent, float t, bool isAudioActive, bool isCat)
         {
-            // Tilted orbital glass ring
-            GraphicsState st = g.Save();
-            g.TranslateTransform(cx, cy);
-            g.RotateTransform((float)Math.Sin(t * 1.5f) * 18f - 15f);
-            using (Pen ringPen = new Pen(Color.FromArgb(130, c2), 1.5f))
+            bool blink = ((t % 4.6f) > 4.42f);
+            float eyeSpacing = r * 0.36f;
+            float ew = Math.Max(3.8f, r * 0.25f);
+            float eh = Math.Max(5.0f, r * 0.36f);
+            float eyeY = cy + ly - r * 0.02f;
+
+            // 1. Rosy glowing blushing cheeks
+            float blushW = r * 0.34f;
+            float blushH = r * 0.18f;
+            float blushY = cy + ly + r * 0.14f;
+            float blushXOff = r * 0.46f;
+            using (SolidBrush blushBrush = new SolidBrush(Color.FromArgb(140, 255, 115, 160)))
             {
-                g.DrawEllipse(ringPen, -r * 1.38f, -r * 0.38f, r * 2.76f, r * 0.76f);
+                g.FillEllipse(blushBrush, cx - blushXOff - blushW / 2f, blushY, blushW, blushH);
+                g.FillEllipse(blushBrush, cx + blushXOff - blushW / 2f, blushY, blushW, blushH);
             }
-            g.Restore(st);
 
-            DrawGlassSphereBody(g, cx, cy, r, c1, c2);
-            DrawMinimalGlassEyes(g, cx, cy, r, lx, ly, c1, t);
-        }
-
-        private void DrawKitsuneMinimal(Graphics g, float cx, float cy, float r, float lx, float ly, Color c1, Color c2, float t)
-        {
-            // Smooth floating minimalist curved ears (detached glass petals)
-            float earWave = (float)Math.Sin(t * 3.0f) * r * 0.06f;
-            for (int side = -1; side <= 1; side += 2)
+            // 2. Sparkling Anime Eyes
+            if (blink)
             {
-                GraphicsState st = g.Save();
-                g.TranslateTransform(cx + side * r * 0.62f, cy - r * 0.78f + earWave * side);
-                g.RotateTransform(side * 24f);
-                RectangleF earRect = new RectangleF(-r * 0.28f, -r * 0.45f, r * 0.56f, r * 0.9f);
-                using (SolidBrush eb = new SolidBrush(Color.FromArgb(220, 16, 20, 30)))
-                using (Pen ep = new Pen(Color.FromArgb(160, c1), 1.4f))
+                // Happy curved squinting smile eyes ( ˘ ◡ ˘ )
+                using (Pen eyePen = new Pen(Color.FromArgb(245, 255, 255, 255), 1.8f))
                 {
-                    g.FillEllipse(eb, earRect);
-                    g.DrawEllipse(ep, earRect);
+                    eyePen.StartCap = LineCap.Round;
+                    eyePen.EndCap = LineCap.Round;
+                    g.DrawArc(eyePen, cx - eyeSpacing + lx - ew / 2f, eyeY - eh * 0.2f, ew, eh * 0.6f, 200, 140);
+                    g.DrawArc(eyePen, cx + eyeSpacing + lx - ew / 2f, eyeY - eh * 0.2f, ew, eh * 0.6f, 200, 140);
                 }
-                g.Restore(st);
+            }
+            else
+            {
+                for (int side = -1; side <= 1; side += 2)
+                {
+                    float ex = cx + side * eyeSpacing + lx;
+                    RectangleF eyeRect = new RectangleF(ex - ew / 2f, eyeY - eh / 2f, ew, eh);
+
+                    // Outer iris aura
+                    using (SolidBrush auraB = new SolidBrush(Color.FromArgb(65, accent)))
+                        g.FillEllipse(auraB, RectangleF.Inflate(eyeRect, 2.5f, 2.5f));
+
+                    // Deep glossy pupil
+                    using (LinearGradientBrush irisB = new LinearGradientBrush(eyeRect, Color.FromArgb(245, 16, 20, 34), Color.FromArgb(245, accent), 90f))
+                        g.FillEllipse(irisB, eyeRect);
+
+                    // Large glossy highlight sparkle (top-left)
+                    using (SolidBrush wSparkle = new SolidBrush(Color.White))
+                    {
+                        g.FillEllipse(wSparkle, ex - ew * 0.28f, eyeY - eh * 0.32f, ew * 0.45f, eh * 0.45f);
+                        // Delicate secondary twinkle (bottom-right)
+                        g.FillEllipse(wSparkle, ex + ew * 0.12f, eyeY + eh * 0.14f, ew * 0.22f, eh * 0.22f);
+                    }
+                }
             }
 
-            DrawGlassSphereBody(g, cx, cy, r * 0.95f, c1, c2);
-            DrawMinimalGlassEyes(g, cx, cy + r * 0.04f, r, lx, ly, c1, t);
+            // 3. Sweet Kawaii Mouth
+            float my = cy + ly + r * 0.20f;
+            if (isCat)
+            {
+                // Kitten mouth :3
+                using (Pen catPen = new Pen(Color.FromArgb(215, Color.White), 1.35f))
+                {
+                    catPen.StartCap = LineCap.Round;
+                    catPen.EndCap = LineCap.Round;
+                    float mw = r * 0.16f;
+                    g.DrawArc(catPen, cx + lx - mw, my - 2f, mw, mw * 0.9f, 20, 150);
+                    g.DrawArc(catPen, cx + lx, my - 2f, mw, mw * 0.9f, 10, 150);
+                }
+            }
+            else
+            {
+                // Delicate happy smile curve
+                using (Pen smilePen = new Pen(Color.FromArgb(220, Color.White), 1.4f))
+                {
+                    smilePen.StartCap = LineCap.Round;
+                    smilePen.EndCap = LineCap.Round;
+                    float mw = (isAudioActive || pulseBoost > 0.2f) ? r * 0.22f : r * 0.18f;
+                    float mh = (isAudioActive || pulseBoost > 0.2f) ? r * 0.16f : r * 0.10f;
+                    g.DrawArc(smilePen, cx + lx - mw / 2f, my, mw, mh, 15, 150);
+                }
+            }
         }
 
-        private void DrawDracoCrystal(Graphics g, float cx, float cy, float r, float lx, float ly, Color c1, Color c2, float t)
+        private void DrawLuminaOrb(Graphics g, float cx, float cy, float r, float lx, float ly, Color c1, Color c2, float t, bool isAudio)
         {
-            // Translucent frosted glass wings
-            float flap = (float)Math.Sin(t * 5.0f) * r * 0.22f;
+            // Fluttery translucent fairy wings
+            float flap = (float)Math.Sin(t * 13f) * r * 0.30f;
             for (int side = -1; side <= 1; side += 2)
             {
                 PointF[] wing = new PointF[] {
-                    new PointF(cx + side * r * 0.6f, cy),
-                    new PointF(cx + side * r * 1.45f, cy - r * 0.65f + flap),
-                    new PointF(cx + side * r * 1.25f, cy + r * 0.35f + flap * 0.5f)
+                    new PointF(cx + side * r * 0.5f, cy + r * 0.1f),
+                    new PointF(cx + side * (r * 1.55f), cy - r * 0.70f + flap),
+                    new PointF(cx + side * (r * 1.30f), cy + r * 0.40f + flap * 0.4f)
                 };
-                using (SolidBrush wb = new SolidBrush(Color.FromArgb(85, c2)))
-                using (Pen wp = new Pen(Color.FromArgb(140, c1), 1.2f))
+                using (SolidBrush wb = new SolidBrush(Color.FromArgb(95, c2)))
+                using (Pen wp = new Pen(Color.FromArgb(160, Color.White), 1.2f))
                 {
                     g.FillClosedCurve(wb, wing);
                     g.DrawClosedCurve(wp, wing);
                 }
             }
 
-            DrawGlassSphereBody(g, cx, cy, r * 0.92f, c1, c2);
-            DrawMinimalGlassEyes(g, cx, cy, r, lx, ly, c1, t);
+            // Soft golden stardust halo above head
+            float haloY = cy - r * 1.18f + (float)Math.Sin(t * 3f) * 2f;
+            using (Pen haloPen = new Pen(Color.FromArgb(170, 255, 220, 120), 1.4f))
+            {
+                g.DrawEllipse(haloPen, cx - r * 0.55f, haloY - r * 0.14f, r * 1.1f, r * 0.28f);
+            }
+
+            // 2 small orbiting stardust sparkles
+            for (int i = 0; i < 2; i++)
+            {
+                double ang = t * 2.8 + i * Math.PI;
+                float sx = cx + (float)Math.Cos(ang) * r * 1.25f;
+                float sy = cy + (float)Math.Sin(ang) * r * 0.55f;
+                using (SolidBrush sb = new SolidBrush(Color.FromArgb(200, Color.White)))
+                    g.FillEllipse(sb, sx - 2f, sy - 2f, 4f, 4f);
+            }
+
+            DrawGlassSphereBody(g, cx, cy, r, c1, c2);
+            DrawKawaiiGlassFace(g, cx, cy, r, lx, ly, c1, t, isAudio, false);
         }
 
-        private void DrawNyxQuantum(Graphics g, float cx, float cy, float r, float lx, float ly, Color c1, Color c2, float t)
+        private void DrawKitsuneMinimal(Graphics g, float cx, float cy, float r, float lx, float ly, Color c1, Color c2, float t, bool isAudio)
         {
-            // 3 orbiting quantum micro-pearls
-            for (int i = 0; i < 3; i++)
+            // Fluffy waving fox tail curling up on the right side
+            float tailWave = (float)Math.Sin(t * 2.8f) * r * 0.22f;
+            PointF[] tail = new PointF[] {
+                new PointF(cx + r * 0.6f, cy + r * 0.5f),
+                new PointF(cx + r * 1.45f + tailWave, cy + r * 0.2f),
+                new PointF(cx + r * 1.55f + tailWave, cy - r * 0.45f),
+                new PointF(cx + r * 1.0f, cy + r * 0.1f)
+            };
+            using (SolidBrush tb = new SolidBrush(Color.FromArgb(220, 18, 22, 34)))
+            using (Pen tp = new Pen(Color.FromArgb(170, c1), 1.3f))
             {
-                double ang = t * 2.4 + i * (Math.PI * 2.0 / 3.0);
-                float ox = cx + (float)Math.Cos(ang) * r * 1.28f;
-                float oy = cy + (float)Math.Sin(ang) * r * 0.55f;
-                using (SolidBrush sb = new SolidBrush(Color.FromArgb(210, i % 2 == 0 ? c1 : c2)))
+                g.FillClosedCurve(tb, tail);
+                g.DrawClosedCurve(tp, tail);
+            }
+
+            // Cute fox ears with soft warm pink inner cushions
+            float earTwitch = (float)Math.Sin(t * 3.2f) * r * 0.05f + lx * 0.10f;
+            for (int side = -1; side <= 1; side += 2)
+            {
+                GraphicsState st = g.Save();
+                g.TranslateTransform(cx + side * r * 0.60f, cy - r * 0.82f + earTwitch * side);
+                g.RotateTransform(side * 22f);
+                RectangleF earRect = new RectangleF(-r * 0.28f, -r * 0.48f, r * 0.56f, r * 0.95f);
+                using (SolidBrush eb = new SolidBrush(Color.FromArgb(235, 16, 20, 32)))
+                using (Pen ep = new Pen(Color.FromArgb(170, c1), 1.4f))
                 {
-                    g.FillEllipse(sb, ox - 2.8f, oy - 2.8f, 5.6f, 5.6f);
+                    g.FillEllipse(eb, earRect);
+                    g.DrawEllipse(ep, earRect);
+                }
+                // Soft pink inner ear cushion
+                RectangleF innerRect = new RectangleF(-r * 0.16f, -r * 0.32f, r * 0.32f, r * 0.62f);
+                using (SolidBrush innerB = new SolidBrush(Color.FromArgb(215, 255, 160, 180)))
+                    g.FillEllipse(innerB, innerRect);
+                g.Restore(st);
+            }
+
+            DrawGlassSphereBody(g, cx, cy, r * 0.95f, c1, c2);
+            DrawKawaiiGlassFace(g, cx, cy + r * 0.04f, r, lx, ly, c1, t, isAudio, false);
+        }
+
+        private void DrawDracoCrystal(Graphics g, float cx, float cy, float r, float lx, float ly, Color c1, Color c2, float t, bool isAudio)
+        {
+            // Fluttery baby dragon wings
+            float flap = (float)Math.Sin(t * 5.2f) * r * 0.26f;
+            for (int side = -1; side <= 1; side += 2)
+            {
+                PointF[] wing = new PointF[] {
+                    new PointF(cx + side * r * 0.55f, cy),
+                    new PointF(cx + side * r * 1.50f, cy - r * 0.70f + flap),
+                    new PointF(cx + side * r * 1.30f, cy + r * 0.35f + flap * 0.5f)
+                };
+                using (SolidBrush wb = new SolidBrush(Color.FromArgb(110, c2)))
+                using (Pen wp = new Pen(Color.FromArgb(170, c1), 1.25f))
+                {
+                    g.FillClosedCurve(wb, wing);
+                    g.DrawClosedCurve(wp, wing);
                 }
             }
 
-            DrawGlassSphereBody(g, cx, cy, r * 0.92f, c1, c2);
-            DrawMinimalGlassEyes(g, cx, cy, r, lx, ly, Color.White, t);
+            // Cute little curved crystal horns
+            for (int side = -1; side <= 1; side += 2)
+            {
+                PointF[] horn = new PointF[] {
+                    new PointF(cx + side * r * 0.35f, cy - r * 0.75f),
+                    new PointF(cx + side * r * 0.62f, cy - r * 1.20f),
+                    new PointF(cx + side * r * 0.68f, cy - r * 0.70f)
+                };
+                using (SolidBrush hb = new SolidBrush(Color.FromArgb(210, c1)))
+                using (Pen hp = new Pen(Color.FromArgb(200, Color.White), 1.2f))
+                {
+                    g.FillClosedCurve(hb, horn);
+                    g.DrawClosedCurve(hp, horn);
+                }
+            }
+
+            DrawGlassSphereBody(g, cx, cy, r * 0.93f, c1, c2);
+
+            // Soft pastel rounded belly patch
+            RectangleF bellyRect = new RectangleF(cx - r * 0.44f, cy + r * 0.08f, r * 0.88f, r * 0.76f);
+            using (SolidBrush bellyB = new SolidBrush(Color.FromArgb(60, 255, 225, 210)))
+                g.FillEllipse(bellyB, bellyRect);
+
+            DrawKawaiiGlassFace(g, cx, cy, r, lx, ly, c1, t, isAudio, false);
         }
 
-        private void DrawKuroNeko(Graphics g, float cx, float cy, float r, float lx, float ly, Color c1, Color c2, float t)
+        private void DrawNyxQuantum(Graphics g, float cx, float cy, float r, float lx, float ly, Color c1, Color c2, float t, bool isAudio)
         {
-            // Minimalist rounded cat ears integrated into silhouette
+            // Wavy rippling marshmallow ghost skirt hem
+            float skirtWave = (float)Math.Sin(t * 4.5f) * 3f;
+            PointF[] ghostBase = new PointF[] {
+                new PointF(cx - r * 0.90f, cy + r * 0.65f),
+                new PointF(cx - r * 0.45f, cy + r * 1.05f + skirtWave),
+                new PointF(cx, cy + r * 0.85f - skirtWave),
+                new PointF(cx + r * 0.45f, cy + r * 1.05f + skirtWave),
+                new PointF(cx + r * 0.90f, cy + r * 0.65f)
+            };
+            using (SolidBrush gb = new SolidBrush(Color.FromArgb(235, 16, 20, 32)))
+            using (Pen gp = new Pen(Color.FromArgb(160, c1), 1.3f))
+            {
+                g.FillClosedCurve(gb, ghostBase);
+                g.DrawClosedCurve(gp, ghostBase);
+            }
+
+            // 3 orbiting star pearls
+            for (int i = 0; i < 3; i++)
+            {
+                double ang = t * 2.5 + i * (Math.PI * 2.0 / 3.0);
+                float ox = cx + (float)Math.Cos(ang) * r * 1.32f;
+                float oy = cy + (float)Math.Sin(ang) * r * 0.60f;
+                using (SolidBrush sb = new SolidBrush(Color.FromArgb(220, i % 2 == 0 ? c1 : c2)))
+                    g.FillEllipse(sb, ox - 3f, oy - 3f, 6f, 6f);
+            }
+
+            DrawGlassSphereBody(g, cx, cy, r * 0.92f, c1, c2);
+            DrawKawaiiGlassFace(g, cx, cy, r, lx, ly, Color.White, t, isAudio, false);
+        }
+
+        private void DrawKuroNeko(Graphics g, float cx, float cy, float r, float lx, float ly, Color c1, Color c2, float t, bool isAudio)
+        {
+            // Curving swishing kitten tail on right
+            float tailSwish = (float)Math.Sin(t * 3.2f) * r * 0.28f;
+            PointF[] tail = new PointF[] {
+                new PointF(cx + r * 0.65f, cy + r * 0.55f),
+                new PointF(cx + r * 1.35f + tailSwish, cy + r * 0.35f),
+                new PointF(cx + r * 1.45f + tailSwish, cy - r * 0.30f),
+                new PointF(cx + r * 1.10f, cy + r * 0.15f)
+            };
+            using (SolidBrush tb = new SolidBrush(Color.FromArgb(240, 14, 17, 26)))
+            using (Pen tp = new Pen(Color.FromArgb(160, c1), 1.3f))
+            {
+                g.FillClosedCurve(tb, tail);
+                g.DrawClosedCurve(tp, tail);
+            }
+
+            // Rounded kitten ears with warm soft pink inner pads
             for (int side = -1; side <= 1; side += 2)
             {
                 PointF[] ear = new PointF[] {
-                    new PointF(cx + side * r * 0.35f, cy - r * 0.72f),
-                    new PointF(cx + side * r * 0.78f, cy - r * 1.08f),
-                    new PointF(cx + side * r * 0.85f, cy - r * 0.32f)
+                    new PointF(cx + side * r * 0.32f, cy - r * 0.72f),
+                    new PointF(cx + side * r * 0.76f, cy - r * 1.12f),
+                    new PointF(cx + side * r * 0.88f, cy - r * 0.30f)
                 };
-                using (SolidBrush eb = new SolidBrush(Color.FromArgb(240, 14, 17, 26)))
-                using (Pen ep = new Pen(Color.FromArgb(150, c1), 1.4f))
+                using (SolidBrush eb = new SolidBrush(Color.FromArgb(245, 14, 18, 28)))
+                using (Pen ep = new Pen(Color.FromArgb(160, c1), 1.4f))
                 {
-                    g.FillClosedCurve(eb, ear, FillMode.Alternate, TensionMode);
-                    g.DrawClosedCurve(ep, ear, TensionMode, FillMode.Alternate);
+                    g.FillClosedCurve(eb, ear);
+                    g.DrawClosedCurve(ep, ear);
+                }
+                // Pink inner ear pad
+                PointF[] innerEar = new PointF[] {
+                    new PointF(cx + side * r * 0.42f, cy - r * 0.65f),
+                    new PointF(cx + side * r * 0.72f, cy - r * 0.98f),
+                    new PointF(cx + side * r * 0.80f, cy - r * 0.40f)
+                };
+                using (SolidBrush pb = new SolidBrush(Color.FromArgb(220, 255, 165, 185)))
+                    g.FillClosedCurve(pb, innerEar);
+            }
+
+            DrawGlassSphereBody(g, cx, cy, r * 0.95f, c1, c2);
+
+            // Delicate white whisker lines on cheeks
+            using (Pen wp = new Pen(Color.FromArgb(170, 255, 255, 255), 1.1f))
+            {
+                // Left whiskers
+                g.DrawLine(wp, cx - r * 0.38f, cy + r * 0.12f, cx - r * 0.95f, cy + r * 0.06f);
+                g.DrawLine(wp, cx - r * 0.38f, cy + r * 0.22f, cx - r * 0.95f, cy + r * 0.28f);
+                // Right whiskers
+                g.DrawLine(wp, cx + r * 0.38f, cy + r * 0.12f, cx + r * 0.95f, cy + r * 0.06f);
+                g.DrawLine(wp, cx + r * 0.38f, cy + r * 0.22f, cx + r * 0.95f, cy + r * 0.28f);
+            }
+
+            DrawKawaiiGlassFace(g, cx, cy + r * 0.04f, r, lx, ly, c1, t, isAudio, true);
+        }
+
+        private void DrawAxiomPrism(Graphics g, float cx, float cy, float r, float lx, float ly, Color c1, Color c2, float t, bool isAudio)
+        {
+            // Dual flexible antennas with glowing neon tips
+            float antTilt = (float)Math.Sin(t * 3.5f) * 4f + lx * 0.15f;
+            for (int side = -1; side <= 1; side += 2)
+            {
+                float ax = cx + side * r * 0.50f;
+                float ay = cy - r * 0.85f;
+                float tipX = ax + side * 8f + antTilt;
+                float tipY = ay - 14f;
+                using (Pen ap = new Pen(Color.FromArgb(180, c1), 1.5f))
+                    g.DrawLine(ap, ax, ay, tipX, tipY);
+                using (SolidBrush tipB = new SolidBrush(Color.FromArgb(240, Color.White)))
+                using (SolidBrush glowB = new SolidBrush(Color.FromArgb(120, c1)))
+                {
+                    g.FillEllipse(glowB, tipX - 5f, tipY - 5f, 10f, 10f);
+                    g.FillEllipse(tipB, tipX - 2.5f, tipY - 2.5f, 5f, 5f);
                 }
             }
 
             DrawGlassSphereBody(g, cx, cy, r * 0.94f, c1, c2);
-            DrawMinimalGlassEyes(g, cx, cy + r * 0.05f, r, lx, ly, c1, t);
-        }
 
-        private const float TensionMode = 0.35f;
-
-        private void DrawAxiomPrism(Graphics g, float cx, float cy, float r, float lx, float ly, Color c1, Color c2, float t)
-        {
-            // Smooth rotating glass diamond/octahedron
-            float pulse = (float)Math.Sin(t * 3.0f) * r * 0.06f;
-            PointF[] diamond = new PointF[] {
-                new PointF(cx, cy - r * 1.12f - pulse),
-                new PointF(cx + r * 1.05f + pulse, cy),
-                new PointF(cx, cy + r * 1.12f + pulse),
-                new PointF(cx - r * 1.05f - pulse, cy)
-            };
-            using (SolidBrush db = new SolidBrush(Color.FromArgb(230, 15, 19, 30)))
-            using (Pen dp = new Pen(Color.FromArgb(180, c1), 1.5f))
+            // Curved OLED Glass Visor Screen
+            RectangleF visor = new RectangleF(cx - r * 0.72f, cy - r * 0.38f, r * 1.44f, r * 0.76f);
+            using (GraphicsPath vp = GlassThemeEngine.CreateRoundedRect(visor, visor.Height / 2f))
             {
-                g.FillPolygon(db, diamond);
-                g.DrawPolygon(dp, diamond);
+                using (SolidBrush screenB = new SolidBrush(Color.FromArgb(245, 8, 11, 18)))
+                    g.FillPath(screenB, vp);
+                using (Pen rimP = new Pen(Color.FromArgb(140, c1), 1.2f))
+                    g.DrawPath(rimP, vp);
             }
 
-            // Single central luminous optic sensor
-            float er = r * 0.30f;
-            using (SolidBrush glow = new SolidBrush(Color.FromArgb(90, c1)))
-            using (SolidBrush core = new SolidBrush(Color.White))
+            // Animated Emoticon Expression on OLED Screen
+            string emo = (pulseBoost > 0.15f) ? "♥ ‿ ♥" : (isAudio ? "^ ‿ ^" : ((t % 4.6f > 4.42f) ? "- ‿ -" : "• ‿ •"));
+            using (Font emoFont = new Font("Segoe UI Semibold", Math.Max(7f, r * 0.34f), FontStyle.Bold, GraphicsUnit.Pixel))
+            using (SolidBrush emoB = new SolidBrush(Color.FromArgb(240, 200, 245, 255)))
             {
-                g.FillEllipse(glow, cx + lx - er * 1.4f, cy + ly - er * 1.4f, er * 2.8f, er * 2.8f);
-                g.FillEllipse(core, cx + lx - er * 0.65f, cy + ly - er * 0.65f, er * 1.3f, er * 1.3f);
-            }
-        }
-
-        private void DrawMinimalGlassEyes(Graphics g, float cx, float cy, float r, float lx, float ly, Color accent, float t)
-        {
-            bool blink = ((t % 4.4f) > 4.25f);
-            float spacing = r * 0.34f;
-            float ew = Math.Max(3.2f, r * 0.24f);
-            float eh = blink ? 1.5f : Math.Max(4.2f, r * 0.34f);
-
-            using (SolidBrush glowB = new SolidBrush(Color.FromArgb(95, accent)))
-            using (SolidBrush coreB = new SolidBrush(Color.FromArgb(245, 245, 250, 255)))
-            {
-                // Soft glow behind eyes
-                g.FillEllipse(glowB, cx - spacing + lx - ew * 0.8f, cy + ly - eh * 0.8f, ew * 1.6f, eh * 1.6f);
-                g.FillEllipse(glowB, cx + spacing + lx - ew * 0.8f, cy + ly - eh * 0.8f, ew * 1.6f, eh * 1.6f);
-
-                // Crisp pill eyes
-                g.FillEllipse(coreB, cx - spacing + lx - ew / 2f, cy + ly - eh / 2f, ew, eh);
-                g.FillEllipse(coreB, cx + spacing + lx - ew / 2f, cy + ly - eh / 2f, ew, eh);
+                SizeF sz = g.MeasureString(emo, emoFont);
+                g.DrawString(emo, emoFont, emoB, cx + lx * 0.6f - sz.Width / 2f, cy + ly * 0.6f - sz.Height / 2f + 1f);
             }
         }
     }
@@ -2213,8 +2493,9 @@ namespace iCornerDuo
             }
 
             float targetExpand = isHovering ? 1.0f : 0.0f;
-            expandProgress = expandProgress * 0.80f + targetExpand * 0.20f;
-            if (Math.Abs(expandProgress - targetExpand) < 0.004f) expandProgress = targetExpand;
+            float expandRate = (targetExpand > expandProgress) ? 0.24f : 0.17f;
+            expandProgress += (targetExpand - expandProgress) * expandRate;
+            if (Math.Abs(expandProgress - targetExpand) < 0.003f) expandProgress = targetExpand;
 
             // Spawn transform
             float spawnScaleX = 1.0f, spawnScaleY = 1.0f, spawnOffsetY = 0f;
@@ -2333,8 +2614,8 @@ namespace iCornerDuo
                 if (contentK > 0.02f)
                     DrawCapsuleAmbientAura(g, pillRect, cornerRad, settings.IslandBorder, accent1, accent2, palette, globalTime, media.CurrentAudioPeak, transitionBoost + (float)Math.Sin(trackAnim * Math.PI) * 0.5f);
 
-                // 2. Frosted Glass Capsule Surface
-                GlassThemeEngine.DrawFrostedGlassSurface(g, pillRect, cornerRad, Color.FromArgb(10, 12, 18), accent1, 244, 1.0f);
+                // 2. Liquid Glass Capsule Surface with droplet meniscus & chromatic edge
+                GlassThemeEngine.DrawLiquidGlassSurface(g, pillRect, cornerRad, Color.FromArgb(9, 12, 20), accent1, 245, 1.0f, globalTime);
 
                 // 3. Compact vs Expanded Content
                 if (expandProgress < 0.42f)
@@ -2604,7 +2885,7 @@ namespace iCornerDuo
 
             // Top Glass Tab Bar
             RectangleF[] tabRects = GetTopTabRects(pill, scale);
-            string[] tabTitles = new string[] { "Audio", "Minuteur", "Compagnon", "IA (" + settings.ActiveAiProvider + ")", "⚙" };
+            string[] tabTitles = new string[] { "🎵 Audio", "⏱️ Focus", "🐾 Mascotte", "✨ IA", "⚙" };
 
             for (int i = 0; i < tabRects.Length; i++)
             {
@@ -2736,13 +3017,13 @@ namespace iCornerDuo
             {
                 g.DrawString(settings.CompanionName + "   •   Niv. " + CompanionEngine.Level + " (" + CompanionEngine.Xp + "%)", fontTitleBold, wb, tx, bodyTop + 2f * scale);
                 g.DrawString("Entité : " + ent + "   •   État : " + CompanionEngine.Mood, fontSubReg, cb, tx, bodyTop + 23f * scale);
-                string quote = CompanionEngine.HasActiveSpeech ? CompanionEngine.SpeechBubbleText : "Interagissez ou changez d'entité ci-dessous.";
-                if (quote.Length > 46) quote = quote.Substring(0, 44) + "…";
+                string quote = CompanionEngine.HasActiveSpeech ? CompanionEngine.SpeechBubbleText : "Fais-moi un câlin ou découvre mes animations 💖";
+                if (quote.Length > 48) quote = quote.Substring(0, 46) + "…";
                 g.DrawString(quote, fontSubReg, wb, tx, bodyTop + 42f * scale);
             }
 
             RectangleF[] btns = GetActionButtonsForCurrentTab(pill, scale);
-            string[] labels = new string[] { "Stimuler (+XP)", "Changer d'Entité", "Ancrage (" + settings.CompanionPos + ")", "Réflexion IA" };
+            string[] labels = new string[] { "💖 Câlin (+20 XP)", "🐾 Mascotte Suivante", "📍 Ancrage (" + settings.CompanionPos + ")", "✨ Dialogue IA" };
             DrawGlassButtonsGrid(g, btns, labels, alpha, accent1, 0);
         }
 
@@ -2794,7 +3075,7 @@ namespace iCornerDuo
             float y = pill.Y + 10f * scale;
             float h = 24f * scale;
             float gap = 6f * scale;
-            float w1 = 80f * scale, w2 = 88f * scale, w3 = 96f * scale, w4 = 108f * scale, w5 = 32f * scale;
+            float w1 = 82f * scale, w2 = 82f * scale, w3 = 96f * scale, w4 = 76f * scale, w5 = 32f * scale;
             float total = w1 + w2 + w3 + w4 + w5 + gap * 4;
             float x = pill.X + (pill.Width - total) / 2f;
 
@@ -4024,7 +4305,7 @@ namespace iCornerDuo
                     SizeF tsz = g.MeasureString("iCorner Duo", hdrTitleFont);
                     using (SolidBrush ab = new SolidBrush(pal[0]))
                         g.DrawString("Studio", hdrTitleFont, ab, 80 + tsz.Width - 6, 12);
-                    g.DrawString("Coins arrondis • Transitions • Capsule Nova • Musique • Compagnon & IA", hdrSubFont, sb, 83, 45);
+                    g.DrawString("Coins Organiques • Passerelle Liquide • Capsule Glass • Mascottes Kawaii • Intelligence", hdrSubFont, sb, 83, 45);
                 }
             };
 
@@ -4048,14 +4329,14 @@ namespace iCornerDuo
             Controls.Add(sidebar);
 
             string[] navLabels = new string[] {
-                "1.  Angles & Courbures",
-                "2.  Transitions & Palettes",
-                "3.  Capsule Nova & Focus",
-                "4.  Compagnon Minimal",
-                "5.  Intelligence IA (API)"
+                "1.  ✦ Dalles & Courbures",
+                "2.  🌊 Passerelle Fluide",
+                "3.  🫧 Capsule Liquid Glass",
+                "4.  🐾 Mascottes Kawaii",
+                "5.  ✨ Intelligence & Dialogue"
             };
 
-            string[] navGlyphs = new string[] { "◜", "⇄", "◉", "✦", "◈" };
+            string[] navGlyphs = new string[] { "✦", "🌊", "🫧", "🐾", "✨" };
             for (int i = 0; i < 5; i++)
             {
                 int idx = i;
@@ -4123,7 +4404,7 @@ namespace iCornerDuo
         {
             Panel page = CreatePageContainer();
 
-            GlassCardPanel leftCard = new GlassCardPanel(18, 16, 372, 585, "Géométrie & Rayon des Angles");
+            GlassCardPanel leftCard = new GlassCardPanel(18, 16, 372, 585, "✦ Géométrie Pure & Dalles Moniteurs");
             page.Controls.Add(leftCard);
 
             GlassToggleSwitch enableChk = new GlassToggleSwitch("Activer les bords arrondis multi-écrans", 18, 54, 330, controller.Settings.Enabled);
@@ -4168,7 +4449,7 @@ namespace iCornerDuo
             leftCard.Controls.Add(CreateGlassBtn("Actualiser la topologie d'écrans", 18, 425, 336, 36, Color.FromArgb(28, 34, 52), () => controller.RebuildMonitors()));
 
             // Right Card
-            GlassCardPanel rightCard = new GlassCardPanel(406, 16, 372, 585, "Finition Glassmorphique & Aperçu");
+            GlassCardPanel rightCard = new GlassCardPanel(406, 16, 372, 585, "👁️ Rendu Spéculaire des Angles");
             page.Controls.Add(rightCard);
 
             GlassToggleSwitch bezelChk = new GlassToggleSwitch("Liseré spéculaire en verre dépoli", 18, 54, 330, controller.Settings.CornerBezelGlow);
@@ -4240,7 +4521,7 @@ namespace iCornerDuo
         {
             Panel page = CreatePageContainer();
 
-            GlassCardPanel leftCard = new GlassCardPanel(18, 16, 372, 585, "Transitions Optiques Inter-Écrans");
+            GlassCardPanel leftCard = new GlassCardPanel(18, 16, 372, 585, "🌊 Passerelle Inter-Écrans & Fluides");
             page.Controls.Add(leftCard);
 
             GlassToggleSwitch enTrans = new GlassToggleSwitch("Activer la transition au passage d'écran", 18, 54, 330, controller.Settings.EnableTransition);
@@ -4282,7 +4563,7 @@ namespace iCornerDuo
             leftCard.Controls.Add(CreateGlassBtn("Simuler une traversée d'écran", 18, 355, 336, 40, Color.FromArgb(40, 115, 215), () => controller.TriggerDemoTransition()));
 
             // Right Card
-            GlassCardPanel rightCard = new GlassCardPanel(406, 16, 372, 585, "Palettes Glassmorphiques (12 Thèmes)");
+            GlassCardPanel rightCard = new GlassCardPanel(406, 16, 372, 585, "🎨 Palettes Chromatiques en Verre (12 Thèmes)");
             page.Controls.Add(rightCard);
 
             rightCard.Controls.Add(CreateLabel("Palette chromatique :", 18, 54));
@@ -4326,7 +4607,7 @@ namespace iCornerDuo
         {
             Panel page = CreatePageContainer();
 
-            GlassCardPanel leftCard = new GlassCardPanel(18, 16, 372, 585, "Capsule Nova & Système d'Apparition");
+            GlassCardPanel leftCard = new GlassCardPanel(18, 16, 372, 585, "🫧 Capsule Liquid Glass & Dynamique");
             page.Controls.Add(leftCard);
 
             leftCard.Controls.Add(CreateLabel("Mode de présence de la capsule :", 18, 54));
@@ -4385,7 +4666,7 @@ namespace iCornerDuo
             leftCard.Controls.Add(brandChk);
 
             // Right Card
-            GlassCardPanel rightCard = new GlassCardPanel(406, 16, 372, 585, "Minuteur Focus & Contrôles Audio");
+            GlassCardPanel rightCard = new GlassCardPanel(406, 16, 372, 585, "⏱️ Minuteur Focus & Studio Musical");
             page.Controls.Add(rightCard);
 
             rightCard.Controls.Add(CreateLabel("Sessions Focus & Minuteur rapide :", 18, 54));
@@ -4426,23 +4707,23 @@ namespace iCornerDuo
         {
             Panel page = CreatePageContainer();
 
-            GlassCardPanel leftCard = new GlassCardPanel(18, 16, 372, 585, "Entité Compagnon Minimaliste");
+            GlassCardPanel leftCard = new GlassCardPanel(18, 16, 372, 585, "🐾 Mascottes Kawaii & Évolutions");
             page.Controls.Add(leftCard);
 
-            leftCard.Controls.Add(CreateLabel("Choix de l'entité :", 18, 54));
+            leftCard.Controls.Add(CreateLabel("Choix de la mascotte :", 18, 54));
             ComboBox specCombo = CreateComboBox(18, 78, 336, new string[] {
-                "Aucun compagnon (Désactivé)",
-                "Lumina (Orbe Céleste en Verre Dépoli)",
-                "Kitsune-V (Esprit Renard Néo-Minimal)",
-                "Aether-Draco (Wyvern de Cristal Translucide)",
-                "Nyx-Specter (Entité Quantique & Satellites)",
-                "Kuro-Neko (Félin Bionique Minimaliste)",
-                "Axiom-Core (Prisme Octaédrique Optique)"
+                "Aucune mascotte (Désactivée)",
+                "✨ Sparky / Lumina (Petite Fée d'Étoile & Ailes)",
+                "🦊 Yume / Kitsune (Renardeau Céleste Kawaii)",
+                "🐲 Puff / Draco (Bébé Dragon de Cristal Chibi)",
+                "👻 Boo / Nyx (Petit Fantôme Marshmallow)",
+                "🐾 Mochi / Kuro-Neko (Chaton Kawaii aux Joues Roses)",
+                "🤖 Pip / Axiom (Mini Robot Tamagotchi & Émoticônes)"
             }, (int)controller.Settings.Companion);
             specCombo.SelectedIndexChanged += (s, e) => { controller.Settings.Companion = (CompanionEntity)specCombo.SelectedIndex; controller.Settings.Save(); };
             leftCard.Controls.Add(specCombo);
 
-            leftCard.Controls.Add(CreateLabel("Nom de l'entité :", 18, 124));
+            leftCard.Controls.Add(CreateLabel("Nom de la mascotte :", 18, 124));
             TextBox nameBox = new TextBox
             {
                 Location = new Point(18, 148),
@@ -4464,7 +4745,7 @@ namespace iCornerDuo
             posCombo.SelectedIndexChanged += (s, e) => { controller.Settings.CompanionPos = (CompanionAnchor)posCombo.SelectedIndex; controller.Settings.Save(); };
             leftCard.Controls.Add(posCombo);
 
-            leftCard.Controls.Add(CreateLabel("Échelle du compagnon :", 18, 258));
+            leftCard.Controls.Add(CreateLabel("Échelle de la mascotte :", 18, 258));
             Label cSzVal = CreateValueLabel(controller.Settings.CompanionScalePercent + " %", 295, 258);
             leftCard.Controls.Add(cSzVal);
             GlassSlider cSzSlider = new GlassSlider(18, 282, 336, 70, 165, controller.Settings.CompanionScalePercent);
@@ -4480,7 +4761,7 @@ namespace iCornerDuo
             leftCard.Controls.Add(bubChk);
 
             // Right Card
-            GlassCardPanel rightCard = new GlassCardPanel(406, 16, 372, 585, "Aperçu Optique en Direct");
+            GlassCardPanel rightCard = new GlassCardPanel(406, 16, 372, 585, "💖 Miroir & Émotions de la Mascotte");
             page.Controls.Add(rightCard);
 
             companionPreviewBox = new DoubleBufferedPanel { Location = new Point(18, 54), Size = new Size(336, 215), BackColor = Color.FromArgb(14, 17, 26) };
@@ -4497,7 +4778,7 @@ namespace iCornerDuo
             };
             rightCard.Controls.Add(companionPreviewBox);
 
-            rightCard.Controls.Add(CreateGlassBtn("Stimuler l'entité (+20 XP)", 18, 286, 336, 38, Color.FromArgb(40, 115, 215), () => controller.DynamicIsland.CompanionEngine.InteractBoost()));
+            rightCard.Controls.Add(CreateGlassBtn("💖 Faire un Câlin (+20 XP)", 18, 286, 336, 38, Color.FromArgb(195, 55, 115), () => controller.DynamicIsland.CompanionEngine.InteractBoost()));
             rightCard.Controls.Add(CreateGlassBtn("Générer une réflexion IA", 18, 334, 336, 38, Color.FromArgb(65, 55, 130), () =>
             {
                 controller.DynamicIsland.AiEngine.SendPromptAsync(controller.Settings, "Dis une phrase courte, apaisante et minimaliste.", reply => controller.DynamicIsland.CompanionEngine.Say(reply, 5500));
@@ -4510,7 +4791,7 @@ namespace iCornerDuo
         {
             Panel page = CreatePageContainer();
 
-            GlassCardPanel leftCard = new GlassCardPanel(18, 16, 372, 585, "Connecteurs API (Gemini, Claude, ChatGPT, Mistral)");
+            GlassCardPanel leftCard = new GlassCardPanel(18, 16, 372, 585, "✨ Cerveaux IA & Dialogue Créatif");
             page.Controls.Add(leftCard);
 
             leftCard.Controls.Add(CreateLabel("Moteur IA actif :", 18, 54));
@@ -4566,7 +4847,7 @@ namespace iCornerDuo
             leftCard.Controls.Add(sysBox);
 
             // Right Card
-            GlassCardPanel rightCard = new GlassCardPanel(406, 16, 372, 585, "Console de Dialogue IA");
+            GlassCardPanel rightCard = new GlassCardPanel(406, 16, 372, 585, "💬 Studio de Discussion Instantanée");
             page.Controls.Add(rightCard);
 
             aiStatusLabel = new Label
