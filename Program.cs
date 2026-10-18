@@ -1037,346 +1037,351 @@ namespace iCornerDuo
             }
         }
 
-        // Ultra-cute Kawaii Face with rosy blushing cheeks, sparkling anime eyes, and sweet smile
-        private void DrawKawaiiGlassFace(Graphics g, float cx, float cy, float r, float lx, float ly, Color accent, float t, bool isAudioActive, bool isCat)
+        // Elegant celestial crystal eyes with star reflection highlights
+        private void DrawCelestialGlassEyes(Graphics g, float cx, float cy, float r, float lx, float ly, Color accent, float t)
         {
-            bool blink = ((t % 4.6f) > 4.42f);
-            float eyeSpacing = r * 0.36f;
-            float ew = Math.Max(3.8f, r * 0.25f);
-            float eh = Math.Max(5.0f, r * 0.36f);
-            float eyeY = cy + ly - r * 0.02f;
+            bool blink = ((t % 5.0f) > 4.82f);
+            float spacing = r * 0.35f;
+            float ew = Math.Max(3.2f, r * 0.22f);
+            float eh = Math.Max(4.5f, r * 0.32f);
+            float ey = cy + ly - r * 0.04f;
 
-            // 1. Rosy glowing blushing cheeks
-            float blushW = r * 0.34f;
-            float blushH = r * 0.18f;
-            float blushY = cy + ly + r * 0.14f;
-            float blushXOff = r * 0.46f;
-            using (SolidBrush blushBrush = new SolidBrush(Color.FromArgb(140, 255, 115, 160)))
-            {
-                g.FillEllipse(blushBrush, cx - blushXOff - blushW / 2f, blushY, blushW, blushH);
-                g.FillEllipse(blushBrush, cx + blushXOff - blushW / 2f, blushY, blushW, blushH);
-            }
-
-            // 2. Sparkling Anime Eyes
             if (blink)
             {
-                // Happy curved squinting smile eyes ( ˘ ◡ ˘ )
-                using (Pen eyePen = new Pen(Color.FromArgb(245, 255, 255, 255), 1.8f))
+                using (Pen eyePen = new Pen(Color.FromArgb(235, Color.White), 1.6f))
                 {
                     eyePen.StartCap = LineCap.Round;
                     eyePen.EndCap = LineCap.Round;
-                    g.DrawArc(eyePen, cx - eyeSpacing + lx - ew / 2f, eyeY - eh * 0.2f, ew, eh * 0.6f, 200, 140);
-                    g.DrawArc(eyePen, cx + eyeSpacing + lx - ew / 2f, eyeY - eh * 0.2f, ew, eh * 0.6f, 200, 140);
+                    g.DrawArc(eyePen, cx - spacing + lx - ew / 2f, ey, ew, eh * 0.45f, 200, 140);
+                    g.DrawArc(eyePen, cx + spacing + lx - ew / 2f, ey, ew, eh * 0.45f, 200, 140);
                 }
             }
             else
             {
                 for (int side = -1; side <= 1; side += 2)
                 {
-                    float ex = cx + side * eyeSpacing + lx;
-                    RectangleF eyeRect = new RectangleF(ex - ew / 2f, eyeY - eh / 2f, ew, eh);
+                    float ex = cx + side * spacing + lx;
+                    RectangleF eyeRect = new RectangleF(ex - ew / 2f, ey - eh / 2f, ew, eh);
 
-                    // Outer iris aura
-                    using (SolidBrush auraB = new SolidBrush(Color.FromArgb(65, accent)))
-                        g.FillEllipse(auraB, RectangleF.Inflate(eyeRect, 2.5f, 2.5f));
+                    // Ambient luminous aura
+                    using (SolidBrush auraB = new SolidBrush(Color.FromArgb(85, accent)))
+                        g.FillEllipse(auraB, RectangleF.Inflate(eyeRect, 3f, 3f));
 
-                    // Deep glossy pupil
-                    using (LinearGradientBrush irisB = new LinearGradientBrush(eyeRect, Color.FromArgb(245, 16, 20, 34), Color.FromArgb(245, accent), 90f))
-                        g.FillEllipse(irisB, eyeRect);
-
-                    // Large glossy highlight sparkle (top-left)
-                    using (SolidBrush wSparkle = new SolidBrush(Color.White))
+                    // Deep obsidian-sapphire iris
+                    using (LinearGradientBrush irisB = new LinearGradientBrush(
+                        eyeRect, Color.FromArgb(240, 12, 16, 28), Color.FromArgb(245, GlassThemeEngine.Interpolate(Color.White, accent, 0.7f)), 90f))
                     {
-                        g.FillEllipse(wSparkle, ex - ew * 0.28f, eyeY - eh * 0.32f, ew * 0.45f, eh * 0.45f);
-                        // Delicate secondary twinkle (bottom-right)
-                        g.FillEllipse(wSparkle, ex + ew * 0.12f, eyeY + eh * 0.14f, ew * 0.22f, eh * 0.22f);
+                        g.FillEllipse(irisB, eyeRect);
                     }
-                }
-            }
 
-            // 3. Sweet Kawaii Mouth
-            float my = cy + ly + r * 0.20f;
-            if (isCat)
-            {
-                // Kitten mouth :3
-                using (Pen catPen = new Pen(Color.FromArgb(215, Color.White), 1.35f))
-                {
-                    catPen.StartCap = LineCap.Round;
-                    catPen.EndCap = LineCap.Round;
-                    float mw = r * 0.16f;
-                    g.DrawArc(catPen, cx + lx - mw, my - 2f, mw, mw * 0.9f, 20, 150);
-                    g.DrawArc(catPen, cx + lx, my - 2f, mw, mw * 0.9f, 10, 150);
-                }
-            }
-            else
-            {
-                // Delicate happy smile curve
-                using (Pen smilePen = new Pen(Color.FromArgb(220, Color.White), 1.4f))
-                {
-                    smilePen.StartCap = LineCap.Round;
-                    smilePen.EndCap = LineCap.Round;
-                    float mw = (isAudioActive || pulseBoost > 0.2f) ? r * 0.22f : r * 0.18f;
-                    float mh = (isAudioActive || pulseBoost > 0.2f) ? r * 0.16f : r * 0.10f;
-                    g.DrawArc(smilePen, cx + lx - mw / 2f, my, mw, mh, 15, 150);
+                    // Crystal primary twinkle
+                    using (SolidBrush wb = new SolidBrush(Color.White))
+                    {
+                        g.FillEllipse(wb, ex - ew * 0.25f, ey - eh * 0.30f, ew * 0.42f, eh * 0.42f);
+                        g.FillEllipse(wb, ex + ew * 0.12f, ey + eh * 0.14f, ew * 0.20f, eh * 0.20f);
+                    }
                 }
             }
         }
 
         private void DrawLuminaOrb(Graphics g, float cx, float cy, float r, float lx, float ly, Color c1, Color c2, float t, bool isAudio)
         {
-            // Fluttery translucent fairy wings
-            float flap = (float)Math.Sin(t * 13f) * r * 0.30f;
-            for (int side = -1; side <= 1; side += 2)
+            // 1. Dual Gyroscopic 3D Rings
+            float rot1 = (t * 22f) % 360f;
+            float rot2 = (-t * 18f + 60f) % 360f;
+
+            GraphicsState gs1 = g.Save();
+            g.TranslateTransform(cx, cy);
+            g.RotateTransform(35f);
+            using (Pen ring1 = new Pen(Color.FromArgb(170, GlassThemeEngine.Interpolate(Color.White, c1, 0.4f)), 1.4f))
             {
-                PointF[] wing = new PointF[] {
-                    new PointF(cx + side * r * 0.5f, cy + r * 0.1f),
-                    new PointF(cx + side * (r * 1.55f), cy - r * 0.70f + flap),
-                    new PointF(cx + side * (r * 1.30f), cy + r * 0.40f + flap * 0.4f)
-                };
-                using (SolidBrush wb = new SolidBrush(Color.FromArgb(95, c2)))
-                using (Pen wp = new Pen(Color.FromArgb(160, Color.White), 1.2f))
+                g.DrawEllipse(ring1, -r * 1.35f, -r * 0.42f, r * 2.70f, r * 0.84f);
+            }
+            // Rotating diamond star on ring 1
+            float rad1 = rot1 * (float)Math.PI / 180f;
+            float sx1 = (float)Math.Cos(rad1) * r * 1.35f;
+            float sy1 = (float)Math.Sin(rad1) * r * 0.42f;
+            using (SolidBrush sb = new SolidBrush(Color.White))
+            {
+                g.FillEllipse(sb, sx1 - 2.5f, sy1 - 2.5f, 5f, 5f);
+            }
+            g.Restore(gs1);
+
+            GraphicsState gs2 = g.Save();
+            g.TranslateTransform(cx, cy);
+            g.RotateTransform(-40f);
+            using (Pen ring2 = new Pen(Color.FromArgb(140, c2), 1.2f))
+            {
+                g.DrawEllipse(ring2, -r * 1.25f, -r * 0.38f, r * 2.50f, r * 0.76f);
+            }
+            float rad2 = rot2 * (float)Math.PI / 180f;
+            float sx2 = (float)Math.Cos(rad2) * r * 1.25f;
+            float sy2 = (float)Math.Sin(rad2) * r * 0.38f;
+            using (SolidBrush sb = new SolidBrush(Color.FromArgb(230, c1)))
+            {
+                g.FillEllipse(sb, sx2 - 2.2f, sy2 - 2.2f, 4.4f, 4.4f);
+            }
+            g.Restore(gs2);
+
+            // 2. Bioluminescent core & obsidian glass body
+            DrawGlassSphereBody(g, cx, cy, r, c1, c2);
+
+            // Pulsating internal celestial core
+            float corePulse = (float)Math.Sin(t * 3.5f) * r * 0.08f;
+            float cr = r * 0.35f + corePulse;
+            using (GraphicsPath cp = new GraphicsPath())
+            {
+                cp.AddEllipse(cx - cr, cy - cr, cr * 2f, cr * 2f);
+                using (PathGradientBrush pb = new PathGradientBrush(cp))
                 {
-                    g.FillClosedCurve(wb, wing);
-                    g.DrawClosedCurve(wp, wing);
+                    pb.CenterColor = Color.FromArgb(190, Color.White);
+                    pb.SurroundColors = new Color[] { Color.FromArgb(0, c1) };
+                    g.FillPath(pb, cp);
                 }
             }
 
-            // Soft golden stardust halo above head
-            float haloY = cy - r * 1.18f + (float)Math.Sin(t * 3f) * 2f;
-            using (Pen haloPen = new Pen(Color.FromArgb(170, 255, 220, 120), 1.4f))
-            {
-                g.DrawEllipse(haloPen, cx - r * 0.55f, haloY - r * 0.14f, r * 1.1f, r * 0.28f);
-            }
-
-            // 2 small orbiting stardust sparkles
-            for (int i = 0; i < 2; i++)
-            {
-                double ang = t * 2.8 + i * Math.PI;
-                float sx = cx + (float)Math.Cos(ang) * r * 1.25f;
-                float sy = cy + (float)Math.Sin(ang) * r * 0.55f;
-                using (SolidBrush sb = new SolidBrush(Color.FromArgb(200, Color.White)))
-                    g.FillEllipse(sb, sx - 2f, sy - 2f, 4f, 4f);
-            }
-
-            DrawGlassSphereBody(g, cx, cy, r, c1, c2);
-            DrawKawaiiGlassFace(g, cx, cy, r, lx, ly, c1, t, isAudio, false);
+            DrawCelestialGlassEyes(g, cx, cy, r, lx, ly, c1, t);
         }
 
         private void DrawKitsuneMinimal(Graphics g, float cx, float cy, float r, float lx, float ly, Color c1, Color c2, float t, bool isAudio)
         {
-            // Fluffy waving fox tail curling up on the right side
-            float tailWave = (float)Math.Sin(t * 2.8f) * r * 0.22f;
-            PointF[] tail = new PointF[] {
-                new PointF(cx + r * 0.6f, cy + r * 0.5f),
-                new PointF(cx + r * 1.45f + tailWave, cy + r * 0.2f),
-                new PointF(cx + r * 1.55f + tailWave, cy - r * 0.45f),
-                new PointF(cx + r * 1.0f, cy + r * 0.1f)
+            // 1. Ethereal silk light tail in flowing sweeping arc
+            float tailSweep = (float)Math.Sin(t * 2.2f) * r * 0.20f;
+            PointF[] tailPts = new PointF[] {
+                new PointF(cx + r * 0.45f, cy + r * 0.45f),
+                new PointF(cx + r * 1.35f + tailSweep, cy + r * 0.35f),
+                new PointF(cx + r * 1.55f + tailSweep, cy - r * 0.50f),
+                new PointF(cx + r * 1.15f, cy - r * 0.85f),
+                new PointF(cx + r * 0.95f, cy - r * 0.30f),
+                new PointF(cx + r * 0.80f, cy + r * 0.15f)
             };
-            using (SolidBrush tb = new SolidBrush(Color.FromArgb(220, 18, 22, 34)))
-            using (Pen tp = new Pen(Color.FromArgb(170, c1), 1.3f))
+            using (LinearGradientBrush tailBrush = new LinearGradientBrush(
+                new RectangleF(cx, cy - r, r * 1.8f, r * 2f),
+                Color.FromArgb(170, c1), Color.FromArgb(40, c2), 45f))
+            using (Pen tailPen = new Pen(Color.FromArgb(180, Color.White), 1.2f))
             {
-                g.FillClosedCurve(tb, tail);
-                g.DrawClosedCurve(tp, tail);
+                g.FillClosedCurve(tailBrush, tailPts, FillMode.Winding, 0.45f);
+                g.DrawClosedCurve(tailPen, tailPts, 0.45f, FillMode.Winding);
             }
 
-            // Cute fox ears with soft warm pink inner cushions
-            float earTwitch = (float)Math.Sin(t * 3.2f) * r * 0.05f + lx * 0.10f;
+            // 2. Sacred Crystal Fox Ears (Aurora borealis gradient)
+            float earTwitch = lx * 0.08f;
             for (int side = -1; side <= 1; side += 2)
             {
                 GraphicsState st = g.Save();
-                g.TranslateTransform(cx + side * r * 0.60f, cy - r * 0.82f + earTwitch * side);
-                g.RotateTransform(side * 22f);
-                RectangleF earRect = new RectangleF(-r * 0.28f, -r * 0.48f, r * 0.56f, r * 0.95f);
-                using (SolidBrush eb = new SolidBrush(Color.FromArgb(235, 16, 20, 32)))
-                using (Pen ep = new Pen(Color.FromArgb(170, c1), 1.4f))
+                g.TranslateTransform(cx + side * r * 0.58f, cy - r * 0.80f + earTwitch * side);
+                g.RotateTransform(side * 20f);
+                RectangleF earRect = new RectangleF(-r * 0.26f, -r * 0.52f, r * 0.52f, r * 1.05f);
+                using (LinearGradientBrush eb = new LinearGradientBrush(earRect, Color.FromArgb(235, Color.White), Color.FromArgb(220, 15, 18, 30), 90f))
+                using (Pen ep = new Pen(Color.FromArgb(180, c1), 1.4f))
                 {
                     g.FillEllipse(eb, earRect);
                     g.DrawEllipse(ep, earRect);
                 }
-                // Soft pink inner ear cushion
-                RectangleF innerRect = new RectangleF(-r * 0.16f, -r * 0.32f, r * 0.32f, r * 0.62f);
-                using (SolidBrush innerB = new SolidBrush(Color.FromArgb(215, 255, 160, 180)))
-                    g.FillEllipse(innerB, innerRect);
+                // Inner crystalline auroral core
+                RectangleF innerRect = new RectangleF(-r * 0.14f, -r * 0.36f, r * 0.28f, r * 0.72f);
+                using (LinearGradientBrush inb = new LinearGradientBrush(innerRect, Color.FromArgb(210, c1), Color.FromArgb(180, c2), 90f))
+                    g.FillEllipse(inb, innerRect);
                 g.Restore(st);
             }
 
-            DrawGlassSphereBody(g, cx, cy, r * 0.95f, c1, c2);
-            DrawKawaiiGlassFace(g, cx, cy + r * 0.04f, r, lx, ly, c1, t, isAudio, false);
+            DrawGlassSphereBody(g, cx, cy, r * 0.94f, c1, c2);
+
+            // Sacred golden crest mark on forehead
+            using (SolidBrush crestB = new SolidBrush(Color.FromArgb(210, 255, 225, 140)))
+            {
+                PointF[] crest = new PointF[] {
+                    new PointF(cx, cy - r * 0.65f),
+                    new PointF(cx + 3.5f, cy - r * 0.48f),
+                    new PointF(cx, cy - r * 0.32f),
+                    new PointF(cx - 3.5f, cy - r * 0.48f)
+                };
+                g.FillPolygon(crestB, crest);
+            }
+
+            DrawCelestialGlassEyes(g, cx, cy + r * 0.04f, r, lx, ly, c1, t);
         }
 
         private void DrawDracoCrystal(Graphics g, float cx, float cy, float r, float lx, float ly, Color c1, Color c2, float t, bool isAudio)
         {
-            // Fluttery baby dragon wings
-            float flap = (float)Math.Sin(t * 5.2f) * r * 0.26f;
+            // 1. Translucent faceted crystal wyvern wings
+            float flap = (float)Math.Sin(t * 4.2f) * r * 0.24f;
             for (int side = -1; side <= 1; side += 2)
             {
                 PointF[] wing = new PointF[] {
-                    new PointF(cx + side * r * 0.55f, cy),
-                    new PointF(cx + side * r * 1.50f, cy - r * 0.70f + flap),
-                    new PointF(cx + side * r * 1.30f, cy + r * 0.35f + flap * 0.5f)
+                    new PointF(cx + side * r * 0.50f, cy + r * 0.05f),
+                    new PointF(cx + side * r * 1.60f, cy - r * 0.75f + flap),
+                    new PointF(cx + side * r * 1.45f, cy - r * 0.15f + flap * 0.7f),
+                    new PointF(cx + side * r * 1.30f, cy + r * 0.40f + flap * 0.4f),
+                    new PointF(cx + side * r * 0.70f, cy + r * 0.25f)
                 };
-                using (SolidBrush wb = new SolidBrush(Color.FromArgb(110, c2)))
-                using (Pen wp = new Pen(Color.FromArgb(170, c1), 1.25f))
+                using (LinearGradientBrush wb = new LinearGradientBrush(
+                    new RectangleF(cx - r * 1.7f, cy - r, r * 3.4f, r * 2f),
+                    Color.FromArgb(130, c2), Color.FromArgb(35, Color.White), 45f))
+                using (Pen wp = new Pen(Color.FromArgb(180, c1), 1.3f))
                 {
-                    g.FillClosedCurve(wb, wing);
-                    g.DrawClosedCurve(wp, wing);
+                    g.FillPolygon(wb, wing);
+                    g.DrawPolygon(wp, wing);
+                    // Glowing wing vein
+                    g.DrawLine(wp, cx + side * r * 0.50f, cy + r * 0.05f, cx + side * r * 1.60f, cy - r * 0.75f + flap);
                 }
             }
 
-            // Cute little curved crystal horns
+            // 2. Sculpted polished quartz horns
             for (int side = -1; side <= 1; side += 2)
             {
                 PointF[] horn = new PointF[] {
-                    new PointF(cx + side * r * 0.35f, cy - r * 0.75f),
-                    new PointF(cx + side * r * 0.62f, cy - r * 1.20f),
-                    new PointF(cx + side * r * 0.68f, cy - r * 0.70f)
+                    new PointF(cx + side * r * 0.30f, cy - r * 0.75f),
+                    new PointF(cx + side * r * 0.68f, cy - r * 1.25f),
+                    new PointF(cx + side * r * 0.65f, cy - r * 0.70f)
                 };
-                using (SolidBrush hb = new SolidBrush(Color.FromArgb(210, c1)))
+                using (LinearGradientBrush hb = new LinearGradientBrush(
+                    new RectangleF(cx - r, cy - r * 1.3f, r * 2f, r), Color.FromArgb(235, Color.White), Color.FromArgb(210, c1), 90f))
                 using (Pen hp = new Pen(Color.FromArgb(200, Color.White), 1.2f))
                 {
-                    g.FillClosedCurve(hb, horn);
-                    g.DrawClosedCurve(hp, horn);
+                    g.FillPolygon(hb, horn);
+                    g.DrawPolygon(hp, horn);
                 }
             }
 
             DrawGlassSphereBody(g, cx, cy, r * 0.93f, c1, c2);
 
-            // Soft pastel rounded belly patch
-            RectangleF bellyRect = new RectangleF(cx - r * 0.44f, cy + r * 0.08f, r * 0.88f, r * 0.76f);
-            using (SolidBrush bellyB = new SolidBrush(Color.FromArgb(60, 255, 225, 210)))
-                g.FillEllipse(bellyB, bellyRect);
+            // Pulsating ruby core gemstone
+            float gemPulse = (float)Math.Sin(t * 3.8f) * 1.8f;
+            RectangleF gemRect = new RectangleF(cx - 4.5f - gemPulse / 2f, cy + r * 0.18f - gemPulse / 2f, 9f + gemPulse, 9f + gemPulse);
+            using (SolidBrush gemB = new SolidBrush(Color.FromArgb(210, 255, 80, 110)))
+            using (Pen gemP = new Pen(Color.FromArgb(220, Color.White), 1.1f))
+            {
+                g.FillEllipse(gemB, gemRect);
+                g.DrawEllipse(gemP, gemRect);
+            }
 
-            DrawKawaiiGlassFace(g, cx, cy, r, lx, ly, c1, t, isAudio, false);
+            DrawCelestialGlassEyes(g, cx, cy - r * 0.02f, r, lx, ly, c1, t);
         }
 
         private void DrawNyxQuantum(Graphics g, float cx, float cy, float r, float lx, float ly, Color c1, Color c2, float t, bool isAudio)
         {
-            // Wavy rippling marshmallow ghost skirt hem
-            float skirtWave = (float)Math.Sin(t * 4.5f) * 3f;
-            PointF[] ghostBase = new PointF[] {
-                new PointF(cx - r * 0.90f, cy + r * 0.65f),
-                new PointF(cx - r * 0.45f, cy + r * 1.05f + skirtWave),
-                new PointF(cx, cy + r * 0.85f - skirtWave),
-                new PointF(cx + r * 0.45f, cy + r * 1.05f + skirtWave),
-                new PointF(cx + r * 0.90f, cy + r * 0.65f)
-            };
-            using (SolidBrush gb = new SolidBrush(Color.FromArgb(235, 16, 20, 32)))
-            using (Pen gp = new Pen(Color.FromArgb(160, c1), 1.3f))
+            // 1. Fluid opalescent cloud-drop base
+            float wave = (float)Math.Sin(t * 3.6f) * r * 0.08f;
+            RectangleF opalRect = new RectangleF(cx - r * 0.95f, cy - r * 0.95f + wave, r * 1.9f, r * 1.9f);
+            using (LinearGradientBrush ob = new LinearGradientBrush(opalRect, Color.FromArgb(230, 18, 22, 38), Color.FromArgb(200, 32, 28, 52), 45f))
+            using (Pen op = new Pen(Color.FromArgb(170, GlassThemeEngine.Interpolate(Color.White, c1, 0.5f)), 1.4f))
             {
-                g.FillClosedCurve(gb, ghostBase);
-                g.DrawClosedCurve(gp, ghostBase);
+                g.FillEllipse(ob, opalRect);
+                g.DrawEllipse(op, opalRect);
             }
 
-            // 3 orbiting star pearls
+            // Internal opalescent iridescent sheen
+            RectangleF sheenR = new RectangleF(cx - r * 0.65f, cy - r * 0.70f + wave, r * 1.3f, r * 0.75f);
+            using (LinearGradientBrush shb = new LinearGradientBrush(sheenR, Color.FromArgb(75, 230, 245, 255), Color.FromArgb(0, 255, 255, 255), 90f))
+            {
+                g.FillEllipse(shb, sheenR);
+            }
+
+            // 2. 3 Golden-spiral celestial star pearls
             for (int i = 0; i < 3; i++)
             {
-                double ang = t * 2.5 + i * (Math.PI * 2.0 / 3.0);
-                float ox = cx + (float)Math.Cos(ang) * r * 1.32f;
-                float oy = cy + (float)Math.Sin(ang) * r * 0.60f;
-                using (SolidBrush sb = new SolidBrush(Color.FromArgb(220, i % 2 == 0 ? c1 : c2)))
-                    g.FillEllipse(sb, ox - 3f, oy - 3f, 6f, 6f);
+                double ang = t * 2.2 + i * (Math.PI * 2.0 / 3.0);
+                float ox = cx + (float)Math.Cos(ang) * r * 1.34f;
+                float oy = cy + (float)Math.Sin(ang) * r * 0.65f;
+                using (SolidBrush sb = new SolidBrush(Color.FromArgb(235, i % 2 == 0 ? Color.White : c1)))
+                using (SolidBrush gb = new SolidBrush(Color.FromArgb(90, c1)))
+                {
+                    g.FillEllipse(gb, ox - 5f, oy - 5f, 10f, 10f);
+                    g.FillEllipse(sb, ox - 2.5f, oy - 2.5f, 5f, 5f);
+                }
             }
 
-            DrawGlassSphereBody(g, cx, cy, r * 0.92f, c1, c2);
-            DrawKawaiiGlassFace(g, cx, cy, r, lx, ly, Color.White, t, isAudio, false);
+            DrawCelestialGlassEyes(g, cx, cy + wave, r, lx, ly, Color.White, t);
         }
 
         private void DrawKuroNeko(Graphics g, float cx, float cy, float r, float lx, float ly, Color c1, Color c2, float t, bool isAudio)
         {
-            // Curving swishing kitten tail on right
-            float tailSwish = (float)Math.Sin(t * 3.2f) * r * 0.28f;
-            PointF[] tail = new PointF[] {
-                new PointF(cx + r * 0.65f, cy + r * 0.55f),
-                new PointF(cx + r * 1.35f + tailSwish, cy + r * 0.35f),
-                new PointF(cx + r * 1.45f + tailSwish, cy - r * 0.30f),
-                new PointF(cx + r * 1.10f, cy + r * 0.15f)
-            };
-            using (SolidBrush tb = new SolidBrush(Color.FromArgb(240, 14, 17, 26)))
-            using (Pen tp = new Pen(Color.FromArgb(160, c1), 1.3f))
-            {
-                g.FillClosedCurve(tb, tail);
-                g.DrawClosedCurve(tp, tail);
-            }
-
-            // Rounded kitten ears with warm soft pink inner pads
+            // 1. Sleek sculptural cat ears in deep smoked onyx & amethyst
             for (int side = -1; side <= 1; side += 2)
             {
                 PointF[] ear = new PointF[] {
-                    new PointF(cx + side * r * 0.32f, cy - r * 0.72f),
-                    new PointF(cx + side * r * 0.76f, cy - r * 1.12f),
-                    new PointF(cx + side * r * 0.88f, cy - r * 0.30f)
+                    new PointF(cx + side * r * 0.28f, cy - r * 0.72f),
+                    new PointF(cx + side * r * 0.74f, cy - r * 1.18f),
+                    new PointF(cx + side * r * 0.88f, cy - r * 0.28f)
                 };
-                using (SolidBrush eb = new SolidBrush(Color.FromArgb(245, 14, 18, 28)))
-                using (Pen ep = new Pen(Color.FromArgb(160, c1), 1.4f))
+                using (LinearGradientBrush eb = new LinearGradientBrush(
+                    new RectangleF(cx - r, cy - r * 1.2f, r * 2f, r), Color.FromArgb(245, 12, 14, 22), Color.FromArgb(220, 24, 20, 36), 90f))
+                using (Pen ep = new Pen(Color.FromArgb(170, c1), 1.35f))
                 {
-                    g.FillClosedCurve(eb, ear);
-                    g.DrawClosedCurve(ep, ear);
+                    g.FillClosedCurve(eb, ear, FillMode.Alternate, 0.35f);
+                    g.DrawClosedCurve(ep, ear, 0.35f, FillMode.Alternate);
                 }
-                // Pink inner ear pad
-                PointF[] innerEar = new PointF[] {
-                    new PointF(cx + side * r * 0.42f, cy - r * 0.65f),
-                    new PointF(cx + side * r * 0.72f, cy - r * 0.98f),
-                    new PointF(cx + side * r * 0.80f, cy - r * 0.40f)
+                // Amethyst interior glow
+                PointF[] inner = new PointF[] {
+                    new PointF(cx + side * r * 0.38f, cy - r * 0.65f),
+                    new PointF(cx + side * r * 0.70f, cy - r * 1.02f),
+                    new PointF(cx + side * r * 0.78f, cy - r * 0.38f)
                 };
-                using (SolidBrush pb = new SolidBrush(Color.FromArgb(220, 255, 165, 185)))
-                    g.FillClosedCurve(pb, innerEar);
+                using (SolidBrush inb = new SolidBrush(Color.FromArgb(175, 160, 110, 240)))
+                    g.FillClosedCurve(inb, inner, FillMode.Alternate, 0.35f);
             }
 
             DrawGlassSphereBody(g, cx, cy, r * 0.95f, c1, c2);
 
-            // Delicate white whisker lines on cheeks
-            using (Pen wp = new Pen(Color.FromArgb(170, 255, 255, 255), 1.1f))
+            // Floating golden stardust orb above head
+            float orbY = cy - r * 1.15f + (float)Math.Sin(t * 3.0f) * 2f;
+            using (SolidBrush sob = new SolidBrush(Color.FromArgb(220, 255, 215, 120)))
+            using (SolidBrush aob = new SolidBrush(Color.FromArgb(80, 255, 215, 120)))
             {
-                // Left whiskers
-                g.DrawLine(wp, cx - r * 0.38f, cy + r * 0.12f, cx - r * 0.95f, cy + r * 0.06f);
-                g.DrawLine(wp, cx - r * 0.38f, cy + r * 0.22f, cx - r * 0.95f, cy + r * 0.28f);
-                // Right whiskers
-                g.DrawLine(wp, cx + r * 0.38f, cy + r * 0.12f, cx + r * 0.95f, cy + r * 0.06f);
-                g.DrawLine(wp, cx + r * 0.38f, cy + r * 0.22f, cx + r * 0.95f, cy + r * 0.28f);
+                g.FillEllipse(aob, cx - 6f, orbY - 6f, 12f, 12f);
+                g.FillEllipse(sob, cx - 2.5f, orbY - 2.5f, 5f, 5f);
             }
 
-            DrawKawaiiGlassFace(g, cx, cy + r * 0.04f, r, lx, ly, c1, t, isAudio, true);
+            // Hairline laser-whiskers (subtle & chic)
+            using (Pen wp = new Pen(Color.FromArgb(110, 255, 255, 255), 1.0f))
+            {
+                g.DrawLine(wp, cx - r * 0.40f, cy + r * 0.12f, cx - r * 0.92f, cy + r * 0.06f);
+                g.DrawLine(wp, cx - r * 0.40f, cy + r * 0.22f, cx - r * 0.92f, cy + r * 0.28f);
+                g.DrawLine(wp, cx + r * 0.40f, cy + r * 0.12f, cx + r * 0.92f, cy + r * 0.06f);
+                g.DrawLine(wp, cx + r * 0.40f, cy + r * 0.22f, cx + r * 0.92f, cy + r * 0.28f);
+            }
+
+            DrawCelestialGlassEyes(g, cx, cy + r * 0.04f, r, lx, ly, Color.FromArgb(140, 190, 255), t);
         }
 
         private void DrawAxiomPrism(Graphics g, float cx, float cy, float r, float lx, float ly, Color c1, Color c2, float t, bool isAudio)
         {
-            // Dual flexible antennas with glowing neon tips
-            float antTilt = (float)Math.Sin(t * 3.5f) * 4f + lx * 0.15f;
-            for (int side = -1; side <= 1; side += 2)
+            // 1. Rotating Holographic Equatorial Ring
+            GraphicsState st = g.Save();
+            g.TranslateTransform(cx, cy);
+            g.RotateTransform((float)Math.Sin(t * 1.5f) * 16f - 12f);
+            using (Pen ringPen = new Pen(Color.FromArgb(170, c1), 1.5f))
             {
-                float ax = cx + side * r * 0.50f;
-                float ay = cy - r * 0.85f;
-                float tipX = ax + side * 8f + antTilt;
-                float tipY = ay - 14f;
-                using (Pen ap = new Pen(Color.FromArgb(180, c1), 1.5f))
-                    g.DrawLine(ap, ax, ay, tipX, tipY);
-                using (SolidBrush tipB = new SolidBrush(Color.FromArgb(240, Color.White)))
-                using (SolidBrush glowB = new SolidBrush(Color.FromArgb(120, c1)))
-                {
-                    g.FillEllipse(glowB, tipX - 5f, tipY - 5f, 10f, 10f);
-                    g.FillEllipse(tipB, tipX - 2.5f, tipY - 2.5f, 5f, 5f);
-                }
+                g.DrawEllipse(ringPen, -r * 1.35f, -r * 0.35f, r * 2.70f, r * 0.70f);
             }
+            g.Restore(st);
 
+            // 2. Beveled Sapphire Crystal Sphere in Brushed Titanium
             DrawGlassSphereBody(g, cx, cy, r * 0.94f, c1, c2);
 
-            // Curved OLED Glass Visor Screen
-            RectangleF visor = new RectangleF(cx - r * 0.72f, cy - r * 0.38f, r * 1.44f, r * 0.76f);
+            // Curved OLED Glass Visor
+            RectangleF visor = new RectangleF(cx - r * 0.70f, cy - r * 0.34f, r * 1.40f, r * 0.68f);
             using (GraphicsPath vp = GlassThemeEngine.CreateRoundedRect(visor, visor.Height / 2f))
             {
-                using (SolidBrush screenB = new SolidBrush(Color.FromArgb(245, 8, 11, 18)))
+                using (SolidBrush screenB = new SolidBrush(Color.FromArgb(245, 8, 10, 16)))
                     g.FillPath(screenB, vp);
-                using (Pen rimP = new Pen(Color.FromArgb(140, c1), 1.2f))
+                using (Pen rimP = new Pen(Color.FromArgb(150, c1), 1.25f))
                     g.DrawPath(rimP, vp);
             }
 
-            // Animated Emoticon Expression on OLED Screen
-            string emo = (pulseBoost > 0.15f) ? "♥ ‿ ♥" : (isAudio ? "^ ‿ ^" : ((t % 4.6f > 4.42f) ? "- ‿ -" : "• ‿ •"));
-            using (Font emoFont = new Font("Segoe UI Semibold", Math.Max(7f, r * 0.34f), FontStyle.Bold, GraphicsUnit.Pixel))
-            using (SolidBrush emoB = new SolidBrush(Color.FromArgb(240, 200, 245, 255)))
+            // Animated Vector Optical Core Eye (futuristic iris dilation)
+            float eyeDilate = (float)(0.65 + 0.35 * Math.Sin(t * 3.0f));
+            float er = r * 0.20f * eyeDilate;
+            float ecx = cx + lx * 0.5f;
+            float ecy = cy + ly * 0.5f;
+            using (SolidBrush coreGlow = new SolidBrush(Color.FromArgb(90, c1)))
+            using (SolidBrush coreDot = new SolidBrush(Color.White))
+            using (Pen pupilPen = new Pen(Color.FromArgb(220, c1), 1.2f))
             {
-                SizeF sz = g.MeasureString(emo, emoFont);
-                g.DrawString(emo, emoFont, emoB, cx + lx * 0.6f - sz.Width / 2f, cy + ly * 0.6f - sz.Height / 2f + 1f);
+                g.FillEllipse(coreGlow, ecx - er * 1.5f, ecy - er * 1.5f, er * 3f, er * 3f);
+                g.DrawEllipse(pupilPen, ecx - er, ecy - er, er * 2f, er * 2f);
+                g.FillEllipse(coreDot, ecx - 2f, ecy - 2f, 4f, 4f);
             }
         }
     }
@@ -3769,17 +3774,17 @@ namespace iCornerDuo
         {
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
             RectangleF r = new RectangleF(1, 1, Width - 3, Height - 3);
-            GlassThemeEngine.DrawFrostedGlassSurface(e.Graphics, r, 16f, Color.FromArgb(18, 21, 32), Color.FromArgb(110, 195, 255), 245, 0.85f);
+            GlassThemeEngine.DrawFrostedGlassSurface(e.Graphics, r, 20f, Color.FromArgb(18, 21, 32), Color.FromArgb(110, 195, 255), 245, 0.88f);
 
             if (!string.IsNullOrEmpty(CardTitle))
             {
-                using (SolidBrush tb = new SolidBrush(Color.FromArgb(145, 215, 255)))
+                using (SolidBrush tb = new SolidBrush(Color.FromArgb(155, 222, 255)))
                 {
-                    e.Graphics.DrawString(CardTitle, titleFont, tb, 18, 14);
+                    e.Graphics.DrawString(CardTitle, titleFont, tb, 20, 15);
                 }
                 using (Pen sep = new Pen(Color.FromArgb(28, 255, 255, 255), 1f))
                 {
-                    e.Graphics.DrawLine(sep, 18, 40, Width - 18, 40);
+                    e.Graphics.DrawLine(sep, 20, 42, Width - 20, 42);
                 }
             }
             base.OnPaint(e);
@@ -3919,6 +3924,192 @@ namespace iCornerDuo
                 e.Graphics.FillEllipse(glow, thumbX - 10f, 3f, 20f, 20f);
                 e.Graphics.FillEllipse(thumb, thumbX - 6.5f, 6.5f, 13f, 13f);
             }
+        }
+    }
+
+    public class GlassRoundedInput : Panel
+    {
+        private TextBox innerBox;
+        private bool isFocused = false;
+        private bool isHovered = false;
+
+        public TextBox InnerTextBox { get { return innerBox; } }
+        public override string Text
+        {
+            get { return innerBox != null ? innerBox.Text : base.Text; }
+            set { if (innerBox != null) innerBox.Text = value; base.Text = value; }
+        }
+
+        public GlassRoundedInput(int x, int y, int w, int h, string val, bool isPassword, bool multiline)
+        {
+            Location = new Point(x, y);
+            Size = new Size(w, h);
+            BackColor = Color.FromArgb(18, 21, 32);
+            SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.ResizeRedraw, true);
+            UpdateStyles();
+
+            innerBox = new TextBox
+            {
+                Location = new Point(14, multiline ? 10 : (h - 20) / 2),
+                Size = new Size(w - 28, multiline ? h - 20 : 20),
+                BorderStyle = BorderStyle.None,
+                BackColor = Color.FromArgb(20, 24, 38),
+                ForeColor = Color.FromArgb(240, 244, 255),
+                Font = new Font("Segoe UI", 9.5f),
+                Multiline = multiline,
+                Text = val
+            };
+            if (isPassword) innerBox.UseSystemPasswordChar = true;
+            if (multiline) innerBox.ScrollBars = ScrollBars.Vertical;
+
+            innerBox.TextChanged += (s, e) => { if (TextChanged != null) TextChanged(this, e); };
+            innerBox.Enter += (s, e) => { isFocused = true; Invalidate(); };
+            innerBox.Leave += (s, e) => { isFocused = false; Invalidate(); };
+            innerBox.MouseEnter += (s, e) => { isHovered = true; Invalidate(); };
+            innerBox.MouseLeave += (s, e) => { isHovered = false; Invalidate(); };
+
+            Controls.Add(innerBox);
+        }
+
+        public new event EventHandler TextChanged;
+
+        protected override void OnMouseEnter(EventArgs e) { isHovered = true; Invalidate(); base.OnMouseEnter(e); }
+        protected override void OnMouseLeave(EventArgs e) { isHovered = false; Invalidate(); base.OnMouseLeave(e); }
+        protected override void OnClick(EventArgs e) { innerBox.Focus(); base.OnClick(e); }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            RectangleF r = new RectangleF(1f, 1f, Width - 2.5f, Height - 2.5f);
+            float radius = Math.Min(16f, Height / 2f);
+
+            Color bg = Color.FromArgb(20, 24, 38);
+            using (GraphicsPath path = GlassThemeEngine.CreateRoundedRect(r, radius))
+            {
+                using (SolidBrush b = new SolidBrush(bg)) e.Graphics.FillPath(b, path);
+
+                Color rimCol = isFocused
+                    ? Color.FromArgb(190, 80, 185, 255)
+                    : (isHovered ? Color.FromArgb(110, 140, 190, 255) : Color.FromArgb(42, 255, 255, 255));
+                float rimWidth = isFocused ? 1.6f : 1.0f;
+                using (Pen p = new Pen(rimCol, rimWidth)) e.Graphics.DrawPath(p, path);
+
+                // Top delicate specular reflection
+                RectangleF specRect = new RectangleF(r.X + 2, r.Y + 1, r.Width - 4, Math.Max(2f, r.Height * 0.35f));
+                using (GraphicsPath sp = GlassThemeEngine.CreateRoundedRect(specRect, radius * 0.6f))
+                using (LinearGradientBrush sb = new LinearGradientBrush(specRect, Color.FromArgb(18, 255, 255, 255), Color.FromArgb(0, 255, 255, 255), 90f))
+                {
+                    e.Graphics.FillPath(sb, sp);
+                }
+            }
+        }
+    }
+
+    public class GlassRoundedComboBox : Panel
+    {
+        private ComboBox innerCombo;
+        private bool isHovered = false;
+
+        public ComboBox InnerComboBox { get { return innerCombo; } }
+        public event EventHandler SelectedIndexChanged;
+
+        public int SelectedIndex
+        {
+            get { return innerCombo != null ? innerCombo.SelectedIndex : -1; }
+            set { if (innerCombo != null) innerCombo.SelectedIndex = value; }
+        }
+
+        public GlassRoundedComboBox(int x, int y, int w, int h, string[] items, int selectedIndex)
+        {
+            Location = new Point(x, y);
+            Size = new Size(w, h);
+            BackColor = Color.FromArgb(18, 21, 32);
+            SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.ResizeRedraw, true);
+            UpdateStyles();
+
+            innerCombo = new ComboBox
+            {
+                Location = new Point(12, (h - 22) / 2),
+                Width = w - 24,
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                BackColor = Color.FromArgb(20, 24, 38),
+                ForeColor = Color.FromArgb(235, 242, 255),
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 9.2f)
+            };
+            if (items != null) innerCombo.Items.AddRange(items);
+            if (selectedIndex >= 0 && items != null && selectedIndex < items.Length)
+                innerCombo.SelectedIndex = selectedIndex;
+            else if (items != null && items.Length > 0)
+                innerCombo.SelectedIndex = 0;
+
+            innerCombo.SelectedIndexChanged += (s, e) => { if (SelectedIndexChanged != null) SelectedIndexChanged(this, e); };
+            innerCombo.MouseEnter += (s, e) => { isHovered = true; Invalidate(); };
+            innerCombo.MouseLeave += (s, e) => { isHovered = false; Invalidate(); };
+
+            Controls.Add(innerCombo);
+        }
+
+        protected override void OnMouseEnter(EventArgs e) { isHovered = true; Invalidate(); base.OnMouseEnter(e); }
+        protected override void OnMouseLeave(EventArgs e) { isHovered = false; Invalidate(); base.OnMouseLeave(e); }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            RectangleF r = new RectangleF(1f, 1f, Width - 2.5f, Height - 2.5f);
+            float radius = Math.Min(16f, Height / 2f);
+
+            Color bg = Color.FromArgb(20, 24, 38);
+            using (GraphicsPath path = GlassThemeEngine.CreateRoundedRect(r, radius))
+            {
+                using (SolidBrush b = new SolidBrush(bg)) e.Graphics.FillPath(b, path);
+
+                Color rimCol = isHovered ? Color.FromArgb(120, 140, 200, 255) : Color.FromArgb(42, 255, 255, 255);
+                using (Pen p = new Pen(rimCol, 1.0f)) e.Graphics.DrawPath(p, path);
+
+                RectangleF specRect = new RectangleF(r.X + 2, r.Y + 1, r.Width - 4, r.Height * 0.35f);
+                using (GraphicsPath sp = GlassThemeEngine.CreateRoundedRect(specRect, radius * 0.6f))
+                using (LinearGradientBrush sb = new LinearGradientBrush(specRect, Color.FromArgb(18, 255, 255, 255), Color.FromArgb(0, 255, 255, 255), 90f))
+                {
+                    e.Graphics.FillPath(sb, sp);
+                }
+            }
+        }
+    }
+
+    public class GlassRoundedBox : Panel
+    {
+        public float CornerRadius = 18f;
+        public Color SurfaceColor = Color.FromArgb(16, 20, 30);
+        public Color BorderColor = Color.FromArgb(42, 255, 255, 255);
+
+        public GlassRoundedBox(int x, int y, int w, int h, float radius)
+        {
+            Location = new Point(x, y);
+            Size = new Size(w, h);
+            CornerRadius = radius;
+            BackColor = Color.FromArgb(18, 21, 32);
+            SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.ResizeRedraw, true);
+            UpdateStyles();
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            RectangleF r = new RectangleF(1f, 1f, Width - 2.5f, Height - 2.5f);
+            using (GraphicsPath path = GlassThemeEngine.CreateRoundedRect(r, CornerRadius))
+            {
+                using (SolidBrush b = new SolidBrush(SurfaceColor)) e.Graphics.FillPath(b, path);
+                using (Pen p = new Pen(BorderColor, 1.0f)) e.Graphics.DrawPath(p, path);
+
+                RectangleF spec = new RectangleF(r.X + 2, r.Y + 1, r.Width - 4, Math.Max(2f, r.Height * 0.28f));
+                using (GraphicsPath sp = GlassThemeEngine.CreateRoundedRect(spec, CornerRadius * 0.6f))
+                using (LinearGradientBrush sb = new LinearGradientBrush(spec, Color.FromArgb(16, 255, 255, 255), Color.FromArgb(0, 255, 255, 255), 90f))
+                {
+                    e.Graphics.FillPath(sb, sp);
+                }
+            }
+            base.OnPaint(e);
         }
     }
 
@@ -4215,17 +4406,18 @@ namespace iCornerDuo
         private Panel[] pages = new Panel[5];
         private int activePageIndex = 0;
 
-        private Panel cornerPreviewBox;
-        private Panel companionPreviewBox;
-        private ComboBox themeCombo;
+        private GlassRoundedBox cornerPreviewBox;
+        private GlassRoundedBox companionPreviewBox;
+        private GlassRoundedComboBox themeCombo;
+        private GlassRoundedBox aiStatusBox;
         private Label aiStatusLabel;
-        private TextBox aiChatTestInput;
+        private GlassRoundedInput aiChatTestInput;
         private System.Windows.Forms.Timer uiPreviewTimer;
 
         public SettingsForm(OverlayController ctrl)
         {
             controller = ctrl;
-            Text = "iCorner Duo — Glassmorphism Studio";
+            Text = "iCorner Duo — Studio Aura Glass";
             Size = new Size(1050, 740);
             StartPosition = FormStartPosition.CenterScreen;
             BackColor = Color.FromArgb(11, 13, 20);
@@ -4304,8 +4496,8 @@ namespace iCornerDuo
                     g.DrawString("iCorner Duo", hdrTitleFont, wb, 80, 12);
                     SizeF tsz = g.MeasureString("iCorner Duo", hdrTitleFont);
                     using (SolidBrush ab = new SolidBrush(pal[0]))
-                        g.DrawString("Studio", hdrTitleFont, ab, 80 + tsz.Width - 6, 12);
-                    g.DrawString("Coins Organiques • Passerelle Liquide • Capsule Glass • Mascottes Kawaii • Intelligence", hdrSubFont, sb, 83, 45);
+                        g.DrawString("Aura Glass", hdrTitleFont, ab, 80 + tsz.Width - 6, 12);
+                    g.DrawString("Coins Organiques • Passerelle Liquide • Capsule Aura Glass • Mascottes Célestes • Intelligence", hdrSubFont, sb, 83, 45);
                 }
             };
 
@@ -4331,12 +4523,12 @@ namespace iCornerDuo
             string[] navLabels = new string[] {
                 "1.  ✦ Dalles & Courbures",
                 "2.  🌊 Passerelle Fluide",
-                "3.  🫧 Capsule Liquid Glass",
-                "4.  🐾 Mascottes Kawaii",
-                "5.  ✨ Intelligence & Dialogue"
+                "3.  💧 Capsule Aura Glass",
+                "4.  ✨ Mascottes Célestes",
+                "5.  🔮 Intelligence & Dialogue"
             };
 
-            string[] navGlyphs = new string[] { "✦", "🌊", "🫧", "🐾", "✨" };
+            string[] navGlyphs = new string[] { "✦", "🌊", "💧", "✨", "🔮" };
             for (int i = 0; i < 5; i++)
             {
                 int idx = i;
@@ -4420,7 +4612,7 @@ namespace iCornerDuo
             leftCard.Controls.Add(radSlider);
 
             leftCard.Controls.Add(CreateLabel("Profil géométrique de la courbe :", 18, 164));
-            ComboBox curveCombo = CreateComboBox(18, 188, 336, new string[] {
+            GlassRoundedComboBox curveCombo = CreateComboBox(18, 188, 336, new string[] {
                 "Courbe Hyper-Continue (Superellipse n=4.2)",
                 "Arc Circulaire Classique (n=2.0)"
             }, (int)controller.Settings.Curve);
@@ -4443,8 +4635,10 @@ namespace iCornerDuo
                 Rectangle b = controller.Monitors[i].Bounds;
                 msb.AppendFormat("• Écran {0} : {1}×{2} ({3}, {4})\n", i + 1, b.Width, b.Height, b.X, b.Y);
             }
-            Label monLbl = new Label { Location = new Point(18, 340), Size = new Size(336, 75), ForeColor = Color.FromArgb(145, 205, 255), BackColor = Color.FromArgb(18, 21, 32), Text = msb.ToString() };
-            leftCard.Controls.Add(monLbl);
+            GlassRoundedBox monBox = new GlassRoundedBox(18, 334, 336, 80, 14f);
+            Label monLbl = new Label { Location = new Point(12, 10), Size = new Size(312, 60), ForeColor = Color.FromArgb(145, 205, 255), BackColor = Color.FromArgb(16, 20, 30), Text = msb.ToString() };
+            monBox.Controls.Add(monLbl);
+            leftCard.Controls.Add(monBox);
 
             leftCard.Controls.Add(CreateGlassBtn("Actualiser la topologie d'écrans", 18, 425, 336, 36, Color.FromArgb(28, 34, 52), () => controller.RebuildMonitors()));
 
@@ -4457,7 +4651,7 @@ namespace iCornerDuo
             rightCard.Controls.Add(bezelChk);
 
             rightCard.Controls.Add(CreateLabel("Comportement lumineux des angles :", 18, 96));
-            ComboBox animCombo = CreateComboBox(18, 120, 336, new string[] {
+            GlassRoundedComboBox animCombo = CreateComboBox(18, 120, 336, new string[] {
                 "Verre Dépoli Statique (0% CPU au repos)",
                 "Flux Prismatique Fluide",
                 "Respiration Atmosphérique Douce",
@@ -4490,26 +4684,31 @@ namespace iCornerDuo
             rightCard.Controls.Add(spSlider);
 
             rightCard.Controls.Add(CreateLabel("Aperçu temps réel :", 18, 360));
-            cornerPreviewBox = new DoubleBufferedPanel { Location = new Point(18, 386), Size = new Size(336, 125), BackColor = Color.FromArgb(22, 26, 40) };
+            cornerPreviewBox = new GlassRoundedBox(18, 386, 336, 125, 18f);
             cornerPreviewBox.Paint += (s, e) =>
             {
                 Graphics g = e.Graphics;
                 g.SmoothingMode = SmoothingMode.AntiAlias;
                 Rectangle r = cornerPreviewBox.ClientRectangle;
                 Color[] pal = GlassThemeEngine.GetPalette(controller.Settings, controller.GlobalTimeSeconds);
-                using (LinearGradientBrush wp = new LinearGradientBrush(r, Color.FromArgb(255, 24, 38, 68), Color.FromArgb(255, 52, 28, 76), 25f))
-                    g.FillRectangle(wp, r);
-                int pr = Math.Min(65, controller.Settings.CornerRadius);
-                if (controller.Settings.Enabled && pr > 2)
+                using (GraphicsPath cp = GlassThemeEngine.CreateRoundedRect(new RectangleF(2, 2, r.Width - 4, r.Height - 4), 16f))
                 {
-                    int sz = pr + 22;
-                    float ph = controller.GlobalTimeSeconds * (controller.Settings.CornerAnimSpeed / 100f);
-                    using (Bitmap b1 = MonitorCorners.RenderCornerBitmap(sz, pr, CornerPosition.TopLeft, controller.Settings, 0.3f, pal, ph, controller.MediaTracker.CurrentAudioPeak))
-                    using (Bitmap b2 = MonitorCorners.RenderCornerBitmap(sz, pr, CornerPosition.TopRight, controller.Settings, 0.3f, pal, ph, controller.MediaTracker.CurrentAudioPeak))
+                    g.SetClip(cp);
+                    using (LinearGradientBrush wp = new LinearGradientBrush(r, Color.FromArgb(255, 24, 38, 68), Color.FromArgb(255, 52, 28, 76), 25f))
+                        g.FillRectangle(wp, r);
+                    int pr = Math.Min(65, controller.Settings.CornerRadius);
+                    if (controller.Settings.Enabled && pr > 2)
                     {
-                        g.DrawImage(b1, 0, 0);
-                        g.DrawImage(b2, r.Width - b2.Width, 0);
+                        int sz = pr + 22;
+                        float ph = controller.GlobalTimeSeconds * (controller.Settings.CornerAnimSpeed / 100f);
+                        using (Bitmap b1 = MonitorCorners.RenderCornerBitmap(sz, pr, CornerPosition.TopLeft, controller.Settings, 0.3f, pal, ph, controller.MediaTracker.CurrentAudioPeak))
+                        using (Bitmap b2 = MonitorCorners.RenderCornerBitmap(sz, pr, CornerPosition.TopRight, controller.Settings, 0.3f, pal, ph, controller.MediaTracker.CurrentAudioPeak))
+                        {
+                            g.DrawImage(b1, 0, 0);
+                            g.DrawImage(b2, r.Width - b2.Width, 0);
+                        }
                     }
+                    g.ResetClip();
                 }
             };
             rightCard.Controls.Add(cornerPreviewBox);
@@ -4533,7 +4732,7 @@ namespace iCornerDuo
             leftCard.Controls.Add(magChk);
 
             leftCard.Controls.Add(CreateLabel("Style visuel de la transition :", 18, 132));
-            ComboBox styleCombo = CreateComboBox(18, 156, 336, new string[] {
+            GlassRoundedComboBox styleCombo = CreateComboBox(18, 156, 336, new string[] {
                 "Fusion Glassmorphique (Pont Liquide + Aura + Étoiles)",
                 "Pont Liquide en Verre Dépoli",
                 "Onde Prismatique Atmosphérique",
@@ -4607,11 +4806,11 @@ namespace iCornerDuo
         {
             Panel page = CreatePageContainer();
 
-            GlassCardPanel leftCard = new GlassCardPanel(18, 16, 372, 585, "🫧 Capsule Liquid Glass & Dynamique");
+            GlassCardPanel leftCard = new GlassCardPanel(18, 16, 372, 585, "💧 Capsule Aura Glass & Dynamique");
             page.Controls.Add(leftCard);
 
             leftCard.Controls.Add(CreateLabel("Mode de présence de la capsule :", 18, 54));
-            ComboBox visCombo = CreateComboBox(18, 78, 336, new string[] {
+            GlassRoundedComboBox visCombo = CreateComboBox(18, 78, 336, new string[] {
                 "Toujours présente en haut de l'écran",
                 "Apparition au survol du bord supérieur (Hot-Edge)",
                 "Contextuelle (Audio, Minuteur, Compagnon ou Transition)",
@@ -4622,7 +4821,7 @@ namespace iCornerDuo
             leftCard.Controls.Add(visCombo);
 
             leftCard.Controls.Add(CreateLabel("Cinématique d'apparition :", 18, 122));
-            ComboBox spawnCombo = CreateComboBox(18, 146, 336, new string[] {
+            GlassRoundedComboBox spawnCombo = CreateComboBox(18, 146, 336, new string[] {
                 "Goutte en Verre Liquide (Liquid Drop)",
                 "Déploiement Horizontal Doux",
                 "Fondu Optique & Zoom Subtil",
@@ -4633,7 +4832,7 @@ namespace iCornerDuo
             leftCard.Controls.Add(spawnCombo);
 
             leftCard.Controls.Add(CreateLabel("Ancrage multi-écrans :", 18, 190));
-            ComboBox posCombo = CreateComboBox(18, 214, 336, new string[] {
+            GlassRoundedComboBox posCombo = CreateComboBox(18, 214, 336, new string[] {
                 "Suivre l'écran actif du curseur (Glissement fluide)",
                 "Fixer sur le moniteur principal"
             }, (int)controller.Settings.IslandPlacement);
@@ -4641,7 +4840,7 @@ namespace iCornerDuo
             leftCard.Controls.Add(posCombo);
 
             leftCard.Controls.Add(CreateLabel("Finition du contour de la capsule :", 18, 258));
-            ComboBox borderCombo = CreateComboBox(18, 282, 336, new string[] {
+            GlassRoundedComboBox borderCombo = CreateComboBox(18, 282, 336, new string[] {
                 "Liseré Verre Dépoli Spéculaire (Minimaliste)",
                 "Halo Prismatique Rotatif Doux",
                 "Halo Réactif au Spectre Audio",
@@ -4707,37 +4906,29 @@ namespace iCornerDuo
         {
             Panel page = CreatePageContainer();
 
-            GlassCardPanel leftCard = new GlassCardPanel(18, 16, 372, 585, "🐾 Mascottes Kawaii & Évolutions");
+            GlassCardPanel leftCard = new GlassCardPanel(18, 16, 372, 585, "✨ Mascottes Célestes & Évolutions");
             page.Controls.Add(leftCard);
 
-            leftCard.Controls.Add(CreateLabel("Choix de la mascotte :", 18, 54));
-            ComboBox specCombo = CreateComboBox(18, 78, 336, new string[] {
+            leftCard.Controls.Add(CreateLabel("Choix de la mascotte céleste :", 18, 54));
+            GlassRoundedComboBox specCombo = CreateComboBox(18, 78, 336, new string[] {
                 "Aucune mascotte (Désactivée)",
-                "✨ Sparky / Lumina (Petite Fée d'Étoile & Ailes)",
-                "🦊 Yume / Kitsune (Renardeau Céleste Kawaii)",
-                "🐲 Puff / Draco (Bébé Dragon de Cristal Chibi)",
-                "👻 Boo / Nyx (Petit Fantôme Marshmallow)",
-                "🐾 Mochi / Kuro-Neko (Chaton Kawaii aux Joues Roses)",
-                "🤖 Pip / Axiom (Mini Robot Tamagotchi & Émoticônes)"
+                "✨ Lumina (Sphère d'Étoile Gyroscopique Céleste)",
+                "🦊 Kitsune (Renard Boréal d'Aurore Éthérée)",
+                "💎 Draco (Wyverne de Cristal & Gemmes Taillées)",
+                "🫧 Nyx (Goutte Stellaire Opalescente & Perles)",
+                "🐾 Kuro-Neko (Félin d'Obsidienne Fumé & Améthyste)",
+                "🔮 Axiom (Sphère Saphir & Couronne Titane Gravée)"
             }, (int)controller.Settings.Companion);
             specCombo.SelectedIndexChanged += (s, e) => { controller.Settings.Companion = (CompanionEntity)specCombo.SelectedIndex; controller.Settings.Save(); };
             leftCard.Controls.Add(specCombo);
 
             leftCard.Controls.Add(CreateLabel("Nom de la mascotte :", 18, 124));
-            TextBox nameBox = new TextBox
-            {
-                Location = new Point(18, 148),
-                Width = 336,
-                Text = controller.Settings.CompanionName,
-                BackColor = Color.FromArgb(24, 28, 42),
-                ForeColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle
-            };
+            GlassRoundedInput nameBox = new GlassRoundedInput(18, 148, 336, 32, controller.Settings.CompanionName, false, false);
             nameBox.TextChanged += (s, e) => { controller.Settings.CompanionName = nameBox.Text; controller.Settings.Save(); };
             leftCard.Controls.Add(nameBox);
 
             leftCard.Controls.Add(CreateLabel("Ancrage autour de la capsule :", 18, 190));
-            ComboBox posCombo = CreateComboBox(18, 214, 336, new string[] {
+            GlassRoundedComboBox posCombo = CreateComboBox(18, 214, 336, new string[] {
                 "En lévitation douce à droite de la capsule",
                 "Posé au-dessus de la capsule",
                 "Intégré à l'intérieur de la capsule"
@@ -4761,20 +4952,26 @@ namespace iCornerDuo
             leftCard.Controls.Add(bubChk);
 
             // Right Card
-            GlassCardPanel rightCard = new GlassCardPanel(406, 16, 372, 585, "💖 Miroir & Émotions de la Mascotte");
+            GlassCardPanel rightCard = new GlassCardPanel(406, 16, 372, 585, "💎 Miroir Astral & Émanations de la Mascotte");
             page.Controls.Add(rightCard);
 
-            companionPreviewBox = new DoubleBufferedPanel { Location = new Point(18, 54), Size = new Size(336, 215), BackColor = Color.FromArgb(14, 17, 26) };
+            companionPreviewBox = new GlassRoundedBox(18, 54, 336, 215, 18f);
             companionPreviewBox.Paint += (s, e) =>
             {
                 Graphics g = e.Graphics;
                 g.SmoothingMode = SmoothingMode.AntiAlias;
-                Color[] pal = GlassThemeEngine.GetPalette(controller.Settings, controller.GlobalTimeSeconds);
-                CompanionEntity sp = controller.Settings.Companion == CompanionEntity.None ? CompanionEntity.LuminaOrb : controller.Settings.Companion;
-                Point screenCenter = companionPreviewBox.PointToScreen(new Point(companionPreviewBox.Width / 2, companionPreviewBox.Height / 2));
-                controller.DynamicIsland.CompanionEngine.DrawCompanion(
-                    g, new RectangleF(88, 28, 160, 160), sp, Cursor.Position, screenCenter,
-                    pal[0], pal[1 % pal.Length], controller.GlobalTimeSeconds, controller.MediaTracker.CurrentAudioPeak, true);
+                Rectangle r = companionPreviewBox.ClientRectangle;
+                using (GraphicsPath cp = GlassThemeEngine.CreateRoundedRect(new RectangleF(2, 2, r.Width - 4, r.Height - 4), 16f))
+                {
+                    g.SetClip(cp);
+                    Color[] pal = GlassThemeEngine.GetPalette(controller.Settings, controller.GlobalTimeSeconds);
+                    CompanionEntity sp = controller.Settings.Companion == CompanionEntity.None ? CompanionEntity.LuminaOrb : controller.Settings.Companion;
+                    Point screenCenter = companionPreviewBox.PointToScreen(new Point(companionPreviewBox.Width / 2, companionPreviewBox.Height / 2));
+                    controller.DynamicIsland.CompanionEngine.DrawCompanion(
+                        g, new RectangleF(88, 28, 160, 160), sp, Cursor.Position, screenCenter,
+                        pal[0], pal[1 % pal.Length], controller.GlobalTimeSeconds, controller.MediaTracker.CurrentAudioPeak, true);
+                    g.ResetClip();
+                }
             };
             rightCard.Controls.Add(companionPreviewBox);
 
@@ -4795,7 +4992,7 @@ namespace iCornerDuo
             page.Controls.Add(leftCard);
 
             leftCard.Controls.Add(CreateLabel("Moteur IA actif :", 18, 54));
-            ComboBox provCombo = CreateComboBox(18, 78, 336, new string[] {
+            GlassRoundedComboBox provCombo = CreateComboBox(18, 78, 336, new string[] {
                 "Google Gemini (gemini-2.5-flash)",
                 "Anthropic Claude (claude-3-5-sonnet)",
                 "OpenAI ChatGPT (gpt-4o-mini)",
@@ -4805,44 +5002,35 @@ namespace iCornerDuo
             leftCard.Controls.Add(provCombo);
 
             leftCard.Controls.Add(CreateLabel("Clé API Gemini & Modèle :", 18, 120));
-            TextBox gemKey = CreateApiInputBox(18, 142, 212, controller.Settings.GeminiApiKey, true);
-            TextBox gemMod = CreateApiInputBox(236, 142, 118, controller.Settings.GeminiModel, false);
+            GlassRoundedInput gemKey = CreateApiInputBox(18, 142, 212, controller.Settings.GeminiApiKey, true);
+            GlassRoundedInput gemMod = CreateApiInputBox(236, 142, 118, controller.Settings.GeminiModel, false);
             gemKey.TextChanged += (s, e) => { controller.Settings.GeminiApiKey = gemKey.Text.Trim(); controller.Settings.Save(); };
             gemMod.TextChanged += (s, e) => { controller.Settings.GeminiModel = gemMod.Text.Trim(); controller.Settings.Save(); };
             leftCard.Controls.Add(gemKey); leftCard.Controls.Add(gemMod);
 
             leftCard.Controls.Add(CreateLabel("Clé API Claude & Modèle :", 18, 178));
-            TextBox clKey = CreateApiInputBox(18, 200, 212, controller.Settings.ClaudeApiKey, true);
-            TextBox clMod = CreateApiInputBox(236, 200, 118, controller.Settings.ClaudeModel, false);
+            GlassRoundedInput clKey = CreateApiInputBox(18, 200, 212, controller.Settings.ClaudeApiKey, true);
+            GlassRoundedInput clMod = CreateApiInputBox(236, 200, 118, controller.Settings.ClaudeModel, false);
             clKey.TextChanged += (s, e) => { controller.Settings.ClaudeApiKey = clKey.Text.Trim(); controller.Settings.Save(); };
             clMod.TextChanged += (s, e) => { controller.Settings.ClaudeModel = clMod.Text.Trim(); controller.Settings.Save(); };
             leftCard.Controls.Add(clKey); leftCard.Controls.Add(clMod);
 
             leftCard.Controls.Add(CreateLabel("Clé API ChatGPT & Modèle :", 18, 236));
-            TextBox oaKey = CreateApiInputBox(18, 258, 212, controller.Settings.OpenAiApiKey, true);
-            TextBox oaMod = CreateApiInputBox(236, 258, 118, controller.Settings.OpenAiModel, false);
+            GlassRoundedInput oaKey = CreateApiInputBox(18, 258, 212, controller.Settings.OpenAiApiKey, true);
+            GlassRoundedInput oaMod = CreateApiInputBox(236, 258, 118, controller.Settings.OpenAiModel, false);
             oaKey.TextChanged += (s, e) => { controller.Settings.OpenAiApiKey = oaKey.Text.Trim(); controller.Settings.Save(); };
             oaMod.TextChanged += (s, e) => { controller.Settings.OpenAiModel = oaMod.Text.Trim(); controller.Settings.Save(); };
             leftCard.Controls.Add(oaKey); leftCard.Controls.Add(oaMod);
 
             leftCard.Controls.Add(CreateLabel("Clé API Mistral & Modèle :", 18, 294));
-            TextBox miKey = CreateApiInputBox(18, 316, 212, controller.Settings.MistralApiKey, true);
-            TextBox miMod = CreateApiInputBox(236, 316, 118, controller.Settings.MistralModel, false);
+            GlassRoundedInput miKey = CreateApiInputBox(18, 316, 212, controller.Settings.MistralApiKey, true);
+            GlassRoundedInput miMod = CreateApiInputBox(236, 316, 118, controller.Settings.MistralModel, false);
             miKey.TextChanged += (s, e) => { controller.Settings.MistralApiKey = miKey.Text.Trim(); controller.Settings.Save(); };
             miMod.TextChanged += (s, e) => { controller.Settings.MistralModel = miMod.Text.Trim(); controller.Settings.Save(); };
             leftCard.Controls.Add(miKey); leftCard.Controls.Add(miMod);
 
             leftCard.Controls.Add(CreateLabel("Directive système (Personnalité) :", 18, 356));
-            TextBox sysBox = new TextBox
-            {
-                Location = new Point(18, 380),
-                Size = new Size(336, 92),
-                Multiline = true,
-                Text = controller.Settings.AiSystemPrompt,
-                BackColor = Color.FromArgb(24, 28, 42),
-                ForeColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle
-            };
+            GlassRoundedInput sysBox = new GlassRoundedInput(18, 380, 336, 92, controller.Settings.AiSystemPrompt, false, true);
             sysBox.TextChanged += (s, e) => { controller.Settings.AiSystemPrompt = sysBox.Text; controller.Settings.Save(); };
             leftCard.Controls.Add(sysBox);
 
@@ -4850,30 +5038,23 @@ namespace iCornerDuo
             GlassCardPanel rightCard = new GlassCardPanel(406, 16, 372, 585, "💬 Studio de Discussion Instantanée");
             page.Controls.Add(rightCard);
 
+            aiStatusBox = new GlassRoundedBox(18, 54, 336, 220, 16f);
             aiStatusLabel = new Label
             {
-                Location = new Point(18, 54),
-                Size = new Size(336, 220),
-                BackColor = Color.FromArgb(14, 17, 26),
+                Location = new Point(14, 12),
+                Size = new Size(308, 196),
+                BackColor = Color.FromArgb(16, 20, 30),
                 ForeColor = Color.FromArgb(225, 234, 250),
-                Padding = new Padding(12),
                 Text = controller.DynamicIsland.AiEngine.LastResponse
             };
-            rightCard.Controls.Add(aiStatusLabel);
+            aiStatusBox.Controls.Add(aiStatusLabel);
+            rightCard.Controls.Add(aiStatusBox);
 
             rightCard.Controls.Add(CreateLabel("Message :", 18, 290));
-            aiChatTestInput = new TextBox
-            {
-                Location = new Point(18, 314),
-                Size = new Size(336, 28),
-                BackColor = Color.FromArgb(24, 28, 42),
-                ForeColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle,
-                Text = "Bonjour, présente-toi en une phrase minimaliste."
-            };
+            aiChatTestInput = new GlassRoundedInput(18, 314, 336, 34, "Bonjour, présente-toi en une phrase minimaliste.", false, false);
             rightCard.Controls.Add(aiChatTestInput);
 
-            rightCard.Controls.Add(CreateGlassBtn("Envoyer la requête à l'IA", 18, 354, 336, 40, Color.FromArgb(40, 115, 215), () =>
+            rightCard.Controls.Add(CreateGlassBtn("Envoyer la requête à l'IA", 18, 356, 336, 40, Color.FromArgb(40, 115, 215), () =>
             {
                 string prompt = aiChatTestInput.Text.Trim();
                 if (string.IsNullOrEmpty(prompt)) return;
@@ -4894,11 +5075,9 @@ namespace iCornerDuo
             return page;
         }
 
-        private TextBox CreateApiInputBox(int x, int y, int w, string val, bool isPassword)
+        private GlassRoundedInput CreateApiInputBox(int x, int y, int w, string val, bool isPassword)
         {
-            TextBox tb = new TextBox { Location = new Point(x, y), Width = w, Text = val, BackColor = Color.FromArgb(24, 28, 42), ForeColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
-            if (isPassword) tb.UseSystemPasswordChar = true;
-            return tb;
+            return new GlassRoundedInput(x, y, w, 32, val, isPassword, false);
         }
 
         private void PickCustomColor(int slot, Control btn)
@@ -4948,12 +5127,9 @@ namespace iCornerDuo
             return new Label { Text = text, Location = new Point(x, y), AutoSize = true, BackColor = Color.FromArgb(18, 21, 32), Font = new Font("Segoe UI Semibold", 9.2f, FontStyle.Bold), ForeColor = Color.FromArgb(115, 210, 255) };
         }
 
-        private ComboBox CreateComboBox(int x, int y, int w, string[] items, int selectedIndex)
+        private GlassRoundedComboBox CreateComboBox(int x, int y, int w, string[] items, int selectedIndex)
         {
-            ComboBox cb = new ComboBox { Location = new Point(x, y), Width = w, DropDownStyle = ComboBoxStyle.DropDownList, BackColor = Color.FromArgb(26, 30, 44), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
-            cb.Items.AddRange(items);
-            cb.SelectedIndex = (selectedIndex >= 0 && selectedIndex < items.Length) ? selectedIndex : 0;
-            return cb;
+            return new GlassRoundedComboBox(x, y, w, 34, items, selectedIndex);
         }
 
         private bool IsStartupEnabled()

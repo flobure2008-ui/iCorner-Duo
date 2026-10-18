@@ -1,39 +1,41 @@
-# iCorner Duo — Édition Liquid Glass & Mascottes Kawaii (v2.2)
+# iCorner Duo — Studio Aura Glass & Mascottes Célestes (v2.3)
 
 <p align="center">
   <img src="assets/showcase_icon.jpg" alt="iCorner Duo Icon" width="220" style="border-radius: 36px;" />
 </p>
 
-**iCorner Duo** est un studio visuel ultra-léger en **Liquid Glass & Glassmorphisme** pour Windows 10 et Windows 11. Il sculpte des coins d'écran arrondis haute précision sur toutes vos dalles, crée une **Passerelle Fluide en Verre Dépoli** lors du passage du curseur d'un moniteur à l'autre, et intègre la **Capsule Liquid Glass** — un hub interactif à ménisque liquide regroupant lecteur audio universel, minuteur Focus, mascottes kawaii animées et dialogue IA.
+**iCorner Duo** est un studio visuel ultra-léger en **Liquid Glass & Glassmorphisme** pour Windows 10 et Windows 11. Il sculpte des coins d'écran arrondis haute précision sur toutes vos dalles, crée une **Passerelle Fluide en Verre Dépoli** lors du passage du curseur d'un moniteur à l'autre, et intègre la **Capsule Aura Glass** — un bijou d'ingénierie optique à ménisque liquide regroupant lecteur audio universel, minuteur Focus, mascottes célestes en verre sculpté et dialogue IA.
 
 ---
 
-## 🌟 Nouveautés de la v2.2
+## 🌟 Nouveautés de la v2.3
 
-- 🫧 **Capsule en Véritable « Liquid Glass »** :
-  - Rendu multi-couches exclusif : base obsidienne liquide, ménisque supérieur spéculaire en goutte d'eau, diffusion caustique interne et liseré de réfraction chromatique 1.25px.
-  - Dynamique d'expansion organique avec physique d'amortissement souple (*Spring Damping*) : ouverture rapide et fermeture progressive et soyeuse.
-  - Onglets réorganisés avec icônes vives et typographie soignée : `🎵 Audio`, `⏱️ Focus`, `🐾 Mascotte`, `✨ IA`, `⚙ Paramètres`.
+- 💧 **Refonte Complète : Capsule « Aura Glass »** :
+  - **Optique Liquid Glass Pure** : Rendu multi-couches exclusif avec base obsidienne liquide, ménisque spéculaire en goutte d'eau, diffusion caustique interne et liseré de réfraction chromatique 1.25px.
+  - **Dynamique d'expansion organique** avec physique d'amortissement souple (*Spring Damping*) : ouverture rapide et fermeture progressive et soyeuse.
+  - Onglets réorganisés avec icônes vives et typographie soignée : `🎵 Audio`, `⏱️ Focus`, `✨ Mascotte`, `🔮 IA`, `⚙ Paramètres`.
 
-- 🐾 **Mascottes Kawaii Ultra-Mignonnes & Évolutives** :
-  - **Expressions Kawaii complètes** : Joues roses délicates fardées, grands yeux anime étincelants avec reflet principal et petite étincelle secondaire, clignement en arcs de sourire joyeux `( ˘ ◡ ˘ )`.
-  - **Interactions affectueuses** : Bouton **« 💖 Faire un Câlin (+20 XP) »** déclenchant une envolée de cœurs flottants `♥`, un bond d'excitation et des répliques chaleureuses.
-  - **Détails vivants pour chaque mascotte** :
-    - ✨ **Sparky / Lumina** : Petite fée stellaire avec ailes de cristal battantes, halo doré et poussière d'étoiles.
-    - 🦊 **Yume / Kitsune** : Renardeau céleste aux grandes oreilles douces à coussinets roses et queue ondoyante.
-    - 🐲 **Puff / Draco** : Bébé dragon de cristal avec petites cornes, ailes battantes et ventre pastel doux.
-    - 👻 **Boo / Nyx** : Petit fantôme marshmallow à collerette vaporeuse et 3 perles quantiques lumineuses en orbite.
-    - 🐾 **Mochi / Kuro-Neko** : Chaton noir tout rond avec moustaches fines blanches, queue enroulée et bouche en `:3`.
-    - 🤖 **Pip / Axiom** : Mini robot Tamagotchi avec deux petites antennes flexibles et visière OLED affichant des émoticônes vivantes `(^ ‿ ^)`, `(♥ ‿ ♥)`, `(> ‿ <)`.
+- ✨ **Mascottes Célestes en Verre Ciselé (Design Haute Joaillerie)** :
+  - Métamorphose artistique complète : adieu les dessins approximatifs, place à de superbes **sculptures célestes en cristal et verre soufflé** aux reflets spectraux et aux yeux en nébuleuse cosmique :
+    - ✨ **Lumina** : Sphère d'énergie stellaire ceinte de doubles anneaux gyroscopiques 3D en or blanc et platine avec micro-étoiles en diamant orbitantes.
+    - 🦊 **Kitsune** : Renard boréal avec panache de lumière arctique ondoyante en soie vaporeuse, oreilles en quartz aurore et diadème frontal céleste.
+    - 💎 **Draco** : Wyverne géométrique taillée en diamant avec facettes de cristal prismatique, cornes en quartz pur et cœur en rubis incandescent.
+    - 🫧 **Nyx** : Goutte d'opale stellaire iridescente en apesanteur avec trois perles planétaires en spirale logarithmique d'or.
+    - 🐾 **Kuro-Neko** : Silhouette féline en verre fumé d'obsidienne pure avec intérieur d'oreilles en améthyste précieuse, halo de poussière astrale et yeux galaxie profonds.
+    - 🔮 **Axiom** : Sphère en saphir poli enchâssée dans une monture en titane brossé avec anneau équatorial gradué holographique et prisme optique réactif.
 
-- 🎨 **Interface des Paramètres Redessinée & Rubriques Renommées** :
+- 🔲 **Arrondis Harmonieux Intégraux dans l'Interface des Paramètres** :
+  - **Zéro angle droit** : Tous les champs de saisie de texte (`GlassRoundedInput`), listes déroulantes (`GlassRoundedComboBox`), conteneurs d'aperçu temps réel (`GlassRoundedBox`), panneaux de statut et cartes (`GlassCardPanel`) bénéficient désormais de rayons de courbure ultra-doux (14px à 20px) avec liseré de verre biseauté et reflets spéculaires.
+  - Interface douce, cohérente et épurée digne d'un studio de design professionnel.
+
+- 🎨 **Rubriques de Navigation Renommées** :
   - `✦ Dalles & Courbures` : Rayon millimétrique, courbures hyper-continues et aperçu spéculaire en direct.
   - `🌊 Passerelle Fluide` : Transitions inter-écrans liquides, effets magnétiques et 12 palettes chromatiques.
-  - `🫧 Capsule Liquid Glass` : Ménisque liquide, apparition cinématique, suivi d'écran et studio audio.
-  - `🐾 Mascottes Kawaii` : Galerie des mascottes, échelles, postures, réactivité oculaire et câlins XP.
-  - `✨ Intelligence & Dialogue` : Connecteurs directs Gemini, Claude, ChatGPT et Mistral.
+  - `💧 Capsule Aura Glass` : Ménisque liquide, cinématiques d'apparition, suivi d'écran et studio audio.
+  - `✨ Mascottes Célestes` : Miroir astral, sélection d'entités, réactivité oculaire et résonances.
+  - `🔮 Intelligence & Dialogue` : Connecteurs directs Gemini, Claude, ChatGPT et Mistral.
 
-- 🛡️ **Zéro-Scintillement & Apple Music** :
+- 🛡️ **Zéro-Scintillement & Compatibilité Audio Maximale** :
   - Double-buffering matériel natif et style `WS_EX_COMPOSITED` garantissant une fluidité absolue à 60 FPS sans aucun scintillement.
   - Détection automatique et couleur signature d'Apple Music, Spotify, YouTube Music, Deezer, Tidal, SoundCloud, VLC.
   - Animation festive de notes musicales flottantes (*♪ ♫ ♬*) lors des changements de chanson.
