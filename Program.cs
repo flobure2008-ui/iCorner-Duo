@@ -5,15 +5,17 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Net;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 using Microsoft.Win32;
 
 namespace iCornerDuo
 {
     // =========================================================================
-    // ENUMS & CONFIGURATION
+    // ENUMS & GLOBAL CONFIGURATION
     // =========================================================================
     public enum CurveType
     {
@@ -23,63 +25,107 @@ namespace iCornerDuo
 
     public enum CornerAnimationMode
     {
-        Static = 0,              // Liseré fixe classique
-        RotatingGradient = 1,    // Rotation chromatique 360° continue
-        BreathingPulse = 2,      // Respiration lumineuse douce
-        AudioBeatSync = 3,       // Réactif aux basses / musique en temps réel !
-        SparkleShimmer = 4,      // Scintillement d'étoiles dans les angles
-        NeonChase = 5            // Onde néon pulsante décalée par angle
+        Static = 0,
+        RotatingGradient = 1,
+        BreathingPulse = 2,
+        AudioBeatSync = 3,
+        SparkleShimmer = 4,
+        NeonChase = 5
     }
 
     public enum TransitionStyle
     {
-        ComboUltimate = 0,       // Pont Liquide + Siri Wave + Particules + Flash Angles
-        LiquidBridge = 1,        // Pont liquide métaballe Apple Duo
-        SiriIntelligenceGlow = 2,// Onde chromatique Apple Intelligence
-        ElectricPlasmaPortal = 3,// Éclairs & arcs plasma électriques
-        CosmicParticleBurst = 4, // Explosion de particules & étoiles
-        SonarShockwave = 5,      // Ondes de choc concentriques (Ripples)
-        NeonLaserBlade = 6,      // Faisceau laser néon sur la bordure
-        DynamicIslandBounce = 7  // Focus pilule Dynamic Island + Pulse Angles
+        ComboUltimate = 0,
+        LiquidBridge = 1,
+        SiriIntelligenceGlow = 2,
+        ElectricPlasmaPortal = 3,
+        CosmicParticleBurst = 4,
+        SonarShockwave = 5,
+        NeonLaserBlade = 6,
+        DynamicIslandBounce = 7
     }
 
     public enum ColorTheme
     {
-        AppleIntelligence = 0,   // Cyan, Violet, Magenta, Amber
-        iOSBlueCyan = 1,         // Electric Blue, Cyan, Indigo
-        SpotifyNeonGreen = 2,    // Spotify Green, Mint, Emerald
-        AppleMusicRose = 3,      // Apple Music Rose, Crimson, Pink
-        YouTubeCrimson = 4,      // YouTube Red, Fiery Orange, Magenta
-        CyberpunkRainbow = 5,    // Arc-en-ciel RGB 360° animé
-        SunsetPro = 6,           // Corail, Rose, Pourpre, Or
-        UltraVioletNebula = 7,   // Violet cosmique, Indigo, Rose néon
-        MagmaGold = 8,           // Or solaire, Orange lave, Rouge braise
-        ArcticAurora = 9,        // Vert aurore, Cyan polaire, Bleu glacier
-        SakuraPastel = 10,       // Rose cerisier, Lavande, Pêche
-        MinimalMonochrome = 11,  // Argent, Blanc pur, Noir obsidienne
-        CustomColors = 12        // Couleurs personnalisées par l'utilisateur
+        AppleIntelligence = 0,
+        iOSBlueCyan = 1,
+        SpotifyNeonGreen = 2,
+        AppleMusicRose = 3,
+        YouTubeCrimson = 4,
+        CyberpunkRainbow = 5,
+        SunsetPro = 6,
+        UltraVioletNebula = 7,
+        MagmaGold = 8,
+        ArcticAurora = 9,
+        SakuraPastel = 10,
+        MinimalMonochrome = 11,
+        CustomColors = 12
     }
 
     public enum IslandVisibilityMode
     {
-        AlwaysVisible = 0,       // Toujours affiché en haut de l'écran
-        WhenMediaOrTransition = 1,// Affiché quand une musique joue ou en transition
-        OnlyOnTransition = 2,    // Uniquement lors du changement d'écran
-        Disabled = 3             // Désactivé
+        AlwaysVisible = 0,          // Toujours affiché
+        HotTopEdgeTrigger = 1,      // Apparaît quand la souris approche le haut de l'écran
+        SmartAutoActivity = 2,      // Apparaît si musique, minuteur, compagnon ou transition
+        OnlyOnTransition = 3,       // Uniquement lors du changement d'écran
+        Disabled = 4                // Masqué
+    }
+
+    public enum IslandSpawnAnimation
+    {
+        LiquidDropDown = 0,         // Goutte liquide élastique tombant du haut
+        SpringUnfold = 1,           // Déploiement horizontal avec rebond
+        WormholePortal = 2,         // Portail dimensionnel lumineux
+        CyberNeonSnap = 3,          // Flash laser cyberpunk
+        NovaBloom = 4               // Éruption lumineuse condensée
     }
 
     public enum IslandPlacementMode
     {
-        FollowActiveScreen = 0,  // Suit l'écran où se trouve la souris
-        PrimaryScreenOnly = 1    // Toujours sur l'écran principal
+        FollowActiveScreen = 0,
+        PrimaryScreenOnly = 1
     }
 
     public enum IslandBorderAnimation
     {
-        SiriRotatingGlow = 0,    // Halo rotatif multicolore Apple Intelligence
-        AudioReactiveHalo = 1,   // Halo qui pulse avec la musique
-        BreathingGlass = 2,      // Liseré verre respirant subtil
-        MinimalClean = 3         // Bordure noire épurée sans halo externe
+        SiriRotatingGlow = 0,
+        AudioReactiveHalo = 1,
+        BreathingGlass = 2,
+        MinimalClean = 3
+    }
+
+    public enum IslandActiveTab
+    {
+        Music = 0,
+        Timer = 1,
+        Companion = 2,
+        AiAssistant = 3
+    }
+
+    public enum CompanionSpecies
+    {
+        None = 0,
+        KitsuneCyberFox = 1,        // Renard Cybernétique Néon (Oreilles + Queues)
+        DracoPlasmaDragon = 2,      // Mini Dragon Plasma (Ailes + Souffle)
+        SpecterHoloGhost = 3,       // Esprit Holographique Cyberpunk (Anneaux + Visière LED)
+        NekoBionicCat = 4,          // Chat Bionique Synthwave (Casque audio + Ronronnement)
+        AtlasMechaDrone = 5,        // Drone Sphérique Sci-Fi (Noyau rotatif + Scanner)
+        IgnisCosmicFlame = 6        // Élémentaire de Feu Cosmique
+    }
+
+    public enum CompanionPositionMode
+    {
+        PerchedOnIsland = 0,        // Perché sur le bord du Dynamic Island
+        InsideIsland = 1,           // Intégré dans la pilule Dynamic Island
+        FloatingNextToIsland = 2    // En lévitation à droite du Dynamic Island
+    }
+
+    public enum AiProvider
+    {
+        Gemini = 0,
+        Claude = 1,
+        ChatGPT = 2,
+        Mistral = 3
     }
 
     public enum MediaSourceType
@@ -92,9 +138,12 @@ namespace iCornerDuo
         SystemAudio = 5
     }
 
+    // =========================================================================
+    // PERSISTENT SETTINGS
+    // =========================================================================
     public class AppSettings
     {
-        // Corner Settings
+        // 1. Corners
         public bool Enabled = true;
         public int CornerRadius = 38;
         public CurveType Curve = CurveType.SquircleApple;
@@ -103,31 +152,51 @@ namespace iCornerDuo
         public bool BottomLeft = true;
         public bool BottomRight = true;
         public bool CornerBezelGlow = true;
-        public int BezelGlowOpacity = 65; // 0..100
-        public int BezelThickness = 25;   // 10..80 (div by 10 -> 1.0px to 8.0px)
+        public int BezelGlowOpacity = 65;
+        public int BezelThickness = 25;
         public CornerAnimationMode CornerAnim = CornerAnimationMode.RotatingGradient;
-        public int CornerAnimSpeed = 100; // 20..250 %
+        public int CornerAnimSpeed = 100;
 
-        // Transition Settings
+        // 2. Transitions & Colors
         public bool EnableTransition = true;
         public bool EnableMagneticProximity = true;
         public TransitionStyle Style = TransitionStyle.ComboUltimate;
         public ColorTheme Theme = ColorTheme.AppleIntelligence;
-        public int DurationMs = 1000;      // 350..2200
-        public int IntensityPercent = 120; // 50..200
-
-        // Custom Colors
+        public int DurationMs = 1000;
+        public int IntensityPercent = 120;
         public int CustomColor1Argb = Color.FromArgb(255, 0, 240, 255).ToArgb();
         public int CustomColor2Argb = Color.FromArgb(255, 255, 0, 128).ToArgb();
 
-        // Dynamic Island Settings
+        // 3. Dynamic Island & Spawn System
         public IslandVisibilityMode IslandMode = IslandVisibilityMode.AlwaysVisible;
+        public IslandSpawnAnimation SpawnAnim = IslandSpawnAnimation.LiquidDropDown;
         public IslandPlacementMode IslandPlacement = IslandPlacementMode.FollowActiveScreen;
         public IslandBorderAnimation IslandBorder = IslandBorderAnimation.SiriRotatingGlow;
-        public int IslandScalePercent = 105; // 70..160
+        public int IslandScalePercent = 105;
         public bool IslandExpandOnHover = true;
         public bool IslandShowClockWhenIdle = true;
-        public bool IslandAutoAdaptBrandColor = true; // Adapts glow to Spotify Green / Apple Music Rose / YouTube Red!
+        public bool IslandAutoAdaptBrandColor = true;
+
+        // 4. Companion Settings (Original Non-Apple Cyber Companion)
+        public CompanionSpecies Companion = CompanionSpecies.KitsuneCyberFox;
+        public CompanionPositionMode CompanionPos = CompanionPositionMode.PerchedOnIsland;
+        public int CompanionScalePercent = 110;
+        public bool CompanionFollowCursorEyes = true;
+        public bool CompanionDanceToMusic = true;
+        public bool CompanionShowSpeechBubbles = true;
+        public string CompanionName = "Kitsune-X";
+
+        // 5. AI Multi-Provider Settings (Gemini, Claude, ChatGPT, Mistral)
+        public AiProvider ActiveAiProvider = AiProvider.Gemini;
+        public string GeminiApiKey = "";
+        public string GeminiModel = "gemini-2.5-flash";
+        public string ClaudeApiKey = "";
+        public string ClaudeModel = "claude-3-5-sonnet-latest";
+        public string OpenAiApiKey = "";
+        public string OpenAiModel = "gpt-4o-mini";
+        public string MistralApiKey = "";
+        public string MistralModel = "mistral-small-latest";
+        public string AiSystemPrompt = "Tu es le compagnon cybernétique intelligent de l'utilisateur dans son Dynamic Island sur Windows. Réponds toujours en français de façon concise, stylée, utile et chaleureuse (max 2-3 phrases courtes pour tenir dans une bulle).";
 
         private static string SettingsPath
         {
@@ -165,12 +234,30 @@ namespace iCornerDuo
                 sb.AppendFormat("  \"CustomColor1Argb\": {0},\n", CustomColor1Argb);
                 sb.AppendFormat("  \"CustomColor2Argb\": {0},\n", CustomColor2Argb);
                 sb.AppendFormat("  \"IslandMode\": {0},\n", (int)IslandMode);
+                sb.AppendFormat("  \"SpawnAnim\": {0},\n", (int)SpawnAnim);
                 sb.AppendFormat("  \"IslandPlacement\": {0},\n", (int)IslandPlacement);
                 sb.AppendFormat("  \"IslandBorder\": {0},\n", (int)IslandBorder);
                 sb.AppendFormat("  \"IslandScalePercent\": {0},\n", IslandScalePercent);
                 sb.AppendFormat("  \"IslandExpandOnHover\": {0},\n", IslandExpandOnHover.ToString().ToLower());
                 sb.AppendFormat("  \"IslandShowClockWhenIdle\": {0},\n", IslandShowClockWhenIdle.ToString().ToLower());
-                sb.AppendFormat("  \"IslandAutoAdaptBrandColor\": {0}\n", IslandAutoAdaptBrandColor.ToString().ToLower());
+                sb.AppendFormat("  \"IslandAutoAdaptBrandColor\": {0},\n", IslandAutoAdaptBrandColor.ToString().ToLower());
+                sb.AppendFormat("  \"Companion\": {0},\n", (int)Companion);
+                sb.AppendFormat("  \"CompanionPos\": {0},\n", (int)CompanionPos);
+                sb.AppendFormat("  \"CompanionScalePercent\": {0},\n", CompanionScalePercent);
+                sb.AppendFormat("  \"CompanionFollowCursorEyes\": {0},\n", CompanionFollowCursorEyes.ToString().ToLower());
+                sb.AppendFormat("  \"CompanionDanceToMusic\": {0},\n", CompanionDanceToMusic.ToString().ToLower());
+                sb.AppendFormat("  \"CompanionShowSpeechBubbles\": {0},\n", CompanionShowSpeechBubbles.ToString().ToLower());
+                sb.AppendFormat("  \"CompanionName\": \"{0}\",\n", EscapeJson(CompanionName));
+                sb.AppendFormat("  \"ActiveAiProvider\": {0},\n", (int)ActiveAiProvider);
+                sb.AppendFormat("  \"GeminiApiKey\": \"{0}\",\n", EscapeJson(GeminiApiKey));
+                sb.AppendFormat("  \"GeminiModel\": \"{0}\",\n", EscapeJson(GeminiModel));
+                sb.AppendFormat("  \"ClaudeApiKey\": \"{0}\",\n", EscapeJson(ClaudeApiKey));
+                sb.AppendFormat("  \"ClaudeModel\": \"{0}\",\n", EscapeJson(ClaudeModel));
+                sb.AppendFormat("  \"OpenAiApiKey\": \"{0}\",\n", EscapeJson(OpenAiApiKey));
+                sb.AppendFormat("  \"OpenAiModel\": \"{0}\",\n", EscapeJson(OpenAiModel));
+                sb.AppendFormat("  \"MistralApiKey\": \"{0}\",\n", EscapeJson(MistralApiKey));
+                sb.AppendFormat("  \"MistralModel\": \"{0}\",\n", EscapeJson(MistralModel));
+                sb.AppendFormat("  \"AiSystemPrompt\": \"{0}\"\n", EscapeJson(AiSystemPrompt));
                 sb.AppendLine("}");
                 File.WriteAllText(SettingsPath, sb.ToString(), Encoding.UTF8);
             }
@@ -206,16 +293,40 @@ namespace iCornerDuo
                     s.CustomColor1Argb = ReadInt(json, "CustomColor1Argb", s.CustomColor1Argb);
                     s.CustomColor2Argb = ReadInt(json, "CustomColor2Argb", s.CustomColor2Argb);
                     s.IslandMode = (IslandVisibilityMode)ReadInt(json, "IslandMode", (int)s.IslandMode);
+                    s.SpawnAnim = (IslandSpawnAnimation)ReadInt(json, "SpawnAnim", (int)s.SpawnAnim);
                     s.IslandPlacement = (IslandPlacementMode)ReadInt(json, "IslandPlacement", (int)s.IslandPlacement);
                     s.IslandBorder = (IslandBorderAnimation)ReadInt(json, "IslandBorder", (int)s.IslandBorder);
                     s.IslandScalePercent = ReadInt(json, "IslandScalePercent", s.IslandScalePercent);
                     s.IslandExpandOnHover = ReadBool(json, "IslandExpandOnHover", s.IslandExpandOnHover);
                     s.IslandShowClockWhenIdle = ReadBool(json, "IslandShowClockWhenIdle", s.IslandShowClockWhenIdle);
                     s.IslandAutoAdaptBrandColor = ReadBool(json, "IslandAutoAdaptBrandColor", s.IslandAutoAdaptBrandColor);
+                    s.Companion = (CompanionSpecies)ReadInt(json, "Companion", (int)s.Companion);
+                    s.CompanionPos = (CompanionPositionMode)ReadInt(json, "CompanionPos", (int)s.CompanionPos);
+                    s.CompanionScalePercent = ReadInt(json, "CompanionScalePercent", s.CompanionScalePercent);
+                    s.CompanionFollowCursorEyes = ReadBool(json, "CompanionFollowCursorEyes", s.CompanionFollowCursorEyes);
+                    s.CompanionDanceToMusic = ReadBool(json, "CompanionDanceToMusic", s.CompanionDanceToMusic);
+                    s.CompanionShowSpeechBubbles = ReadBool(json, "CompanionShowSpeechBubbles", s.CompanionShowSpeechBubbles);
+                    s.CompanionName = ReadString(json, "CompanionName", s.CompanionName);
+                    s.ActiveAiProvider = (AiProvider)ReadInt(json, "ActiveAiProvider", (int)s.ActiveAiProvider);
+                    s.GeminiApiKey = ReadString(json, "GeminiApiKey", s.GeminiApiKey);
+                    s.GeminiModel = ReadString(json, "GeminiModel", s.GeminiModel);
+                    s.ClaudeApiKey = ReadString(json, "ClaudeApiKey", s.ClaudeApiKey);
+                    s.ClaudeModel = ReadString(json, "ClaudeModel", s.ClaudeModel);
+                    s.OpenAiApiKey = ReadString(json, "OpenAiApiKey", s.OpenAiApiKey);
+                    s.OpenAiModel = ReadString(json, "OpenAiModel", s.OpenAiModel);
+                    s.MistralApiKey = ReadString(json, "MistralApiKey", s.MistralApiKey);
+                    s.MistralModel = ReadString(json, "MistralModel", s.MistralModel);
+                    s.AiSystemPrompt = ReadString(json, "AiSystemPrompt", s.AiSystemPrompt);
                 }
             }
             catch { }
             return s;
+        }
+
+        private static string EscapeJson(string s)
+        {
+            if (string.IsNullOrEmpty(s)) return "";
+            return s.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\r", " ").Replace("\n", " ");
         }
 
         private static bool ReadBool(string json, string key, bool def)
@@ -241,10 +352,742 @@ namespace iCornerDuo
             if (end > 0 && int.TryParse(sub.Substring(0, end), out val)) return val;
             return def;
         }
+
+        private static string ReadString(string json, string key, string def)
+        {
+            string pattern = "\"" + key + "\":";
+            int idx = json.IndexOf(pattern, StringComparison.OrdinalIgnoreCase);
+            if (idx < 0) return def;
+            int firstQuote = json.IndexOf('"', idx + pattern.Length);
+            if (firstQuote < 0) return def;
+            StringBuilder sb = new StringBuilder();
+            bool escaped = false;
+            for (int i = firstQuote + 1; i < json.Length; i++)
+            {
+                char c = json[i];
+                if (escaped) { sb.Append(c); escaped = false; }
+                else if (c == '\\') { escaped = true; }
+                else if (c == '"') { return sb.ToString(); }
+                else { sb.Append(c); }
+            }
+            return def;
+        }
     }
 
     // =========================================================================
-    // WIN32 INTEROP + MEDIA KEYS + COREAUDIO REAL-TIME PEAK METER
+    // MULTI-PROVIDER AI ASSISTANT ENGINE (GEMINI, CLAUDE, CHATGPT, MISTRAL)
+    // =========================================================================
+    public class AiAssistantEngine
+    {
+        public bool IsBusy = false;
+        public string LastResponse = "Salut ! Je suis ton compagnon IA. Clique sur 'Poser une question' ou configure ta clé API Gemini / Claude / ChatGPT / Mistral !";
+        public string LastError = "";
+
+        public event Action<string> OnResponseReceived;
+
+        public AiAssistantEngine()
+        {
+            try
+            {
+                // Enable TLS 1.2 (3072) for modern HTTPS APIs on .NET 4.x
+                ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072 | SecurityProtocolType.Tls;
+            }
+            catch { }
+        }
+
+        public void SendPromptAsync(AppSettings settings, string userPrompt, Action<string> callback = null)
+        {
+            if (IsBusy) return;
+            IsBusy = true;
+            LastResponse = "⏳ Réflexion en cours (" + settings.ActiveAiProvider + ")...";
+            if (OnResponseReceived != null) OnResponseReceived(LastResponse);
+
+            ThreadPool.QueueUserWorkItem(_ =>
+            {
+                string reply = QueryProviderSync(settings, userPrompt);
+                IsBusy = false;
+                LastResponse = reply;
+                if (OnResponseReceived != null) OnResponseReceived(reply);
+                if (callback != null)
+                {
+                    try { callback(reply); } catch { }
+                }
+            });
+        }
+
+        private string QueryProviderSync(AppSettings s, string prompt)
+        {
+            try
+            {
+                string sys = string.IsNullOrEmpty(s.AiSystemPrompt)
+                    ? "Tu es un compagnon IA concis et sympathique. Réponds en français en 1 à 3 phrases courtes."
+                    : s.AiSystemPrompt;
+
+                switch (s.ActiveAiProvider)
+                {
+                    case AiProvider.Gemini:
+                        return CallGemini(s.GeminiApiKey, s.GeminiModel, sys, prompt);
+                    case AiProvider.Claude:
+                        return CallClaude(s.ClaudeApiKey, s.ClaudeModel, sys, prompt);
+                    case AiProvider.ChatGPT:
+                        return CallOpenAiCompatible("https://api.openai.com/v1/chat/completions", s.OpenAiApiKey, s.OpenAiModel, sys, prompt, "ChatGPT");
+                    case AiProvider.Mistral:
+                        return CallOpenAiCompatible("https://api.mistral.ai/v1/chat/completions", s.MistralApiKey, s.MistralModel, sys, prompt, "Mistral");
+                    default:
+                        return "Fournisseur IA inconnu.";
+                }
+            }
+            catch (WebException wex)
+            {
+                string errBody = "";
+                try
+                {
+                    if (wex.Response != null)
+                    {
+                        using (StreamReader sr = new StreamReader(wex.Response.GetResponseStream(), Encoding.UTF8))
+                        {
+                            errBody = sr.ReadToEnd();
+                        }
+                    }
+                }
+                catch { }
+                string msg = ExtractJsonField(errBody, "message");
+                if (!string.IsNullOrEmpty(msg)) return "⚠️ Erreur API : " + msg;
+                return "⚠️ Erreur réseau/API : " + wex.Message;
+            }
+            catch (Exception ex)
+            {
+                return "⚠️ Erreur : " + ex.Message;
+            }
+        }
+
+        private string CallGemini(string apiKey, string model, string sysPrompt, string userPrompt)
+        {
+            if (string.IsNullOrEmpty(apiKey))
+                return "🔑 Clé API Gemini manquante ! Ouvrez Paramètres -> Assistant IA pour entrer votre clé Gemini.";
+
+            string mdl = string.IsNullOrEmpty(model) ? "gemini-2.5-flash" : model.Trim();
+            string url = "https://generativelanguage.googleapis.com/v1beta/models/" + mdl + ":generateContent?key=" + apiKey.Trim();
+
+            string body = "{"
+                + "\"system_instruction\":{\"parts\":[{\"text\":\"" + EscapeJsonString(sysPrompt) + "\"}]},"
+                + "\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"" + EscapeJsonString(userPrompt) + "\"}]}]"
+                + "}";
+
+            string resp = HttpPostJson(url, body, null);
+            string text = ExtractJsonField(resp, "text");
+            return string.IsNullOrEmpty(text) ? "Réponse Gemini reçue (format brut)." : UnescapeJsonString(text);
+        }
+
+        private string CallClaude(string apiKey, string model, string sysPrompt, string userPrompt)
+        {
+            if (string.IsNullOrEmpty(apiKey))
+                return "🔑 Clé API Claude manquante ! Ouvrez Paramètres -> Assistant IA pour entrer votre clé Anthropic.";
+
+            string mdl = string.IsNullOrEmpty(model) ? "claude-3-5-sonnet-latest" : model.Trim();
+            string url = "https://api.anthropic.com/v1/messages";
+
+            string body = "{"
+                + "\"model\":\"" + EscapeJsonString(mdl) + "\","
+                + "\"max_tokens\":300,"
+                + "\"system\":\"" + EscapeJsonString(sysPrompt) + "\","
+                + "\"messages\":[{\"role\":\"user\",\"content\":\"" + EscapeJsonString(userPrompt) + "\"}]"
+                + "}";
+
+            Dictionary<string, string> headers = new Dictionary<string, string>();
+            headers["x-api-key"] = apiKey.Trim();
+            headers["anthropic-version"] = "2023-06-01";
+
+            string resp = HttpPostJson(url, body, headers);
+            string text = ExtractJsonField(resp, "text");
+            return string.IsNullOrEmpty(text) ? "Réponse Claude reçue." : UnescapeJsonString(text);
+        }
+
+        private string CallOpenAiCompatible(string url, string apiKey, string model, string sysPrompt, string userPrompt, string label)
+        {
+            if (string.IsNullOrEmpty(apiKey))
+                return "🔑 Clé API " + label + " manquante ! Ouvrez Paramètres -> Assistant IA pour entrer votre clé.";
+
+            string mdl = string.IsNullOrEmpty(model) ? (label == "Mistral" ? "mistral-small-latest" : "gpt-4o-mini") : model.Trim();
+            string body = "{"
+                + "\"model\":\"" + EscapeJsonString(mdl) + "\","
+                + "\"max_tokens\":300,"
+                + "\"messages\":["
+                + "{\"role\":\"system\",\"content\":\"" + EscapeJsonString(sysPrompt) + "\"},"
+                + "{\"role\":\"user\",\"content\":\"" + EscapeJsonString(userPrompt) + "\"}"
+                + "]}";
+
+            Dictionary<string, string> headers = new Dictionary<string, string>();
+            headers["Authorization"] = "Bearer " + apiKey.Trim();
+
+            string resp = HttpPostJson(url, body, headers);
+            string content = ExtractJsonField(resp, "content");
+            return string.IsNullOrEmpty(content) ? "Réponse " + label + " reçue." : UnescapeJsonString(content);
+        }
+
+        private static string HttpPostJson(string url, string jsonBody, Dictionary<string, string> headers)
+        {
+            HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
+            req.Method = "POST";
+            req.ContentType = "application/json; charset=utf-8";
+            req.Timeout = 20000;
+            if (headers != null)
+            {
+                foreach (var kv in headers)
+                {
+                    req.Headers[kv.Key] = kv.Value;
+                }
+            }
+            byte[] bytes = Encoding.UTF8.GetBytes(jsonBody);
+            req.ContentLength = bytes.Length;
+            using (Stream st = req.GetRequestStream())
+            {
+                st.Write(bytes, 0, bytes.Length);
+            }
+            using (HttpWebResponse resp = (HttpWebResponse)req.GetResponse())
+            using (StreamReader sr = new StreamReader(resp.GetResponseStream(), Encoding.UTF8))
+            {
+                return sr.ReadToEnd();
+            }
+        }
+
+        private static string EscapeJsonString(string s)
+        {
+            if (string.IsNullOrEmpty(s)) return "";
+            return s.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\r", "\\r").Replace("\n", "\\n");
+        }
+
+        private static string UnescapeJsonString(string s)
+        {
+            if (string.IsNullOrEmpty(s)) return "";
+            return s.Replace("\\n", "\n").Replace("\\r", "").Replace("\\\"", "\"").Replace("\\\\", "\\");
+        }
+
+        private static string ExtractJsonField(string json, string fieldName)
+        {
+            if (string.IsNullOrEmpty(json)) return "";
+            string pattern = "\"" + fieldName + "\"";
+            int idx = json.IndexOf(pattern, StringComparison.OrdinalIgnoreCase);
+            if (idx < 0) return "";
+            int colon = json.IndexOf(':', idx + pattern.Length);
+            if (colon < 0) return "";
+            int firstQuote = json.IndexOf('"', colon + 1);
+            if (firstQuote < 0) return "";
+
+            StringBuilder sb = new StringBuilder();
+            bool escaped = false;
+            for (int i = firstQuote + 1; i < json.Length; i++)
+            {
+                char c = json[i];
+                if (escaped)
+                {
+                    if (c == 'n') sb.Append('\n');
+                    else if (c == 'r') { }
+                    else sb.Append(c);
+                    escaped = false;
+                }
+                else if (c == '\\')
+                {
+                    escaped = true;
+                }
+                else if (c == '"')
+                {
+                    return sb.ToString();
+                }
+                else
+                {
+                    sb.Append(c);
+                }
+            }
+            return sb.ToString();
+        }
+    }
+
+    // =========================================================================
+    // APPLE-STYLE TIMER, POMODORO & STOPWATCH ENGINE FOR DYNAMIC ISLAND
+    // =========================================================================
+    public class IslandTimerEngine
+    {
+        public bool IsRunning = false;
+        public bool IsStopwatchMode = false;
+        public double TotalSeconds = 300;     // Default 5:00
+        public double RemainingSeconds = 300;
+        public double ElapsedStopwatchSeconds = 0;
+        public string TimerLabel = "Minuteur";
+        public bool FinishedAlertActive = false;
+        private long lastTickTime = 0;
+        private long alertUntilTicks = 0;
+
+        public event Action OnTimerFinished;
+
+        public void StartCountdown(int seconds, string label = "Minuteur")
+        {
+            IsStopwatchMode = false;
+            TotalSeconds = Math.Max(5, seconds);
+            RemainingSeconds = TotalSeconds;
+            TimerLabel = label;
+            IsRunning = true;
+            FinishedAlertActive = false;
+            lastTickTime = DateTime.UtcNow.Ticks;
+        }
+
+        public void AddSeconds(int sec)
+        {
+            if (IsStopwatchMode) return;
+            TotalSeconds = Math.Max(10, TotalSeconds + sec);
+            RemainingSeconds = Math.Max(0, RemainingSeconds + sec);
+        }
+
+        public void ToggleStartPause()
+        {
+            if (!IsRunning && !IsStopwatchMode && RemainingSeconds <= 0)
+            {
+                RemainingSeconds = TotalSeconds;
+            }
+            IsRunning = !IsRunning;
+            lastTickTime = DateTime.UtcNow.Ticks;
+            FinishedAlertActive = false;
+        }
+
+        public void Reset()
+        {
+            IsRunning = false;
+            FinishedAlertActive = false;
+            if (IsStopwatchMode) ElapsedStopwatchSeconds = 0;
+            else RemainingSeconds = TotalSeconds;
+        }
+
+        public void SwitchToStopwatch()
+        {
+            IsStopwatchMode = true;
+            ElapsedStopwatchSeconds = 0;
+            TimerLabel = "Chronomètre";
+            IsRunning = true;
+            lastTickTime = DateTime.UtcNow.Ticks;
+        }
+
+        public void StepTick()
+        {
+            long now = DateTime.UtcNow.Ticks;
+            if (FinishedAlertActive && now > alertUntilTicks)
+            {
+                FinishedAlertActive = false;
+            }
+
+            if (!IsRunning)
+            {
+                lastTickTime = now;
+                return;
+            }
+
+            double dt = (now - lastTickTime) / 10000000.0;
+            lastTickTime = now;
+            if (dt <= 0 || dt > 2.0) return;
+
+            if (IsStopwatchMode)
+            {
+                ElapsedStopwatchSeconds += dt;
+            }
+            else
+            {
+                RemainingSeconds -= dt;
+                if (RemainingSeconds <= 0)
+                {
+                    RemainingSeconds = 0;
+                    IsRunning = false;
+                    FinishedAlertActive = true;
+                    alertUntilTicks = now + 60000000L; // 6s alert
+                    try { System.Media.SystemSounds.Exclamation.Play(); } catch { }
+                    if (OnTimerFinished != null) OnTimerFinished();
+                }
+            }
+        }
+
+        public float ProgressRatio
+        {
+            get
+            {
+                if (IsStopwatchMode) return (float)((ElapsedStopwatchSeconds % 60.0) / 60.0);
+                if (TotalSeconds <= 0) return 0f;
+                return (float)Math.Max(0.0, Math.Min(1.0, RemainingSeconds / TotalSeconds));
+            }
+        }
+
+        public string FormattedTime
+        {
+            get
+            {
+                double sec = IsStopwatchMode ? ElapsedStopwatchSeconds : Math.Ceiling(RemainingSeconds);
+                int total = (int)Math.Max(0, sec);
+                int mins = total / 60;
+                int rem = total % 60;
+                return mins.ToString("00") + ":" + rem.ToString("00");
+            }
+        }
+    }
+
+    // =========================================================================
+    // ORIGINAL CYBER / ANIME / SCI-FI COMPANION ENGINE (NON-APPLE)
+    // =========================================================================
+    public class CyberCompanionEngine
+    {
+        public int Level = 1;
+        public int Xp = 25;
+        public string Mood = "Énergique ⚡";
+        public string SpeechBubbleText = "";
+        private long speechUntilTicks = 0;
+        private float excitementBoost = 0f;
+        private float jumpOffset = 0f;
+
+        private static readonly string[] FunQuotes = new string[] {
+            "Prêt à explorer tes écrans ! ⚡",
+            "Ce son est incroyable ! 🎵",
+            "Concentration maximale activée ! 🔥",
+            "Survole le Dynamic Island pour voir mes pouvoirs !",
+            "Clique sur l'onglet IA pour discuter avec moi ! 🤖",
+            "Tes bords arrondis sont ultra propres ✨"
+        };
+        private Random rng = new Random();
+
+        public void Say(string text, int durationMs = 4500)
+        {
+            SpeechBubbleText = text;
+            speechUntilTicks = DateTime.UtcNow.Ticks + durationMs * 10000L;
+            excitementBoost = 1.0f;
+        }
+
+        public void InteractPetOrBoost()
+        {
+            Xp += 15;
+            if (Xp >= 100)
+            {
+                Level++;
+                Xp -= 100;
+                Mood = "Ultra Évolué 🌟";
+                Say("🎉 NIVEAU SUPÉRIEUR ! Niveau " + Level + " atteint !", 4000);
+            }
+            else
+            {
+                Mood = "Heureux ♥";
+                Say(FunQuotes[rng.Next(FunQuotes.Length)], 3500);
+            }
+            excitementBoost = 1.0f;
+        }
+
+        public bool HasActiveSpeech
+        {
+            get { return !string.IsNullOrEmpty(SpeechBubbleText) && DateTime.UtcNow.Ticks < speechUntilTicks; }
+        }
+
+        public void StepTick(float globalTime, bool isAudioPlaying)
+        {
+            if (excitementBoost > 0f) excitementBoost = Math.Max(0f, excitementBoost - 0.025f);
+            float bounceFreq = isAudioPlaying ? 9.5f : 3.2f;
+            float bounceAmp = isAudioPlaying ? 5.5f : 2.5f;
+            jumpOffset = (float)Math.Abs(Math.Sin(globalTime * bounceFreq)) * bounceAmp + excitementBoost * 8f;
+        }
+
+        public void DrawCompanion(
+            Graphics g,
+            RectangleF bounds,
+            CompanionSpecies species,
+            Point cursorScreenPos,
+            Point companionScreenCenter,
+            Color accent1,
+            Color accent2,
+            float globalTime,
+            float audioPeak,
+            bool followEyes)
+        {
+            if (species == CompanionSpecies.None) return;
+
+            SmoothingMode oldMode = g.SmoothingMode;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+
+            float cx = bounds.X + bounds.Width / 2f;
+            float cy = bounds.Y + bounds.Height / 2f - jumpOffset * 0.6f;
+            float r = Math.Min(bounds.Width, bounds.Height) * 0.40f;
+
+            // Calculate eye look vector towards mouse cursor
+            float lookX = 0f, lookY = 0f;
+            if (followEyes)
+            {
+                float dx = cursorScreenPos.X - companionScreenCenter.X;
+                float dy = cursorScreenPos.Y - companionScreenCenter.Y;
+                float dist = (float)Math.Sqrt(dx * dx + dy * dy);
+                if (dist > 1f)
+                {
+                    float factor = Math.Min(1f, dist / 250f);
+                    lookX = (dx / dist) * r * 0.22f * factor;
+                    lookY = (dy / dist) * r * 0.22f * factor;
+                }
+            }
+
+            // Outer aura ring reactive to audio/excitement
+            float auraRad = r * (1.28f + audioPeak * 0.35f + excitementBoost * 0.25f);
+            using (SolidBrush auraBrush = new SolidBrush(Color.FromArgb(55, accent1)))
+            {
+                g.FillEllipse(auraBrush, cx - auraRad, cy - auraRad, auraRad * 2f, auraRad * 2f);
+            }
+
+            switch (species)
+            {
+                case CompanionSpecies.KitsuneCyberFox:
+                    DrawKitsuneFox(g, cx, cy, r, lookX, lookY, accent1, accent2, globalTime, audioPeak);
+                    break;
+                case CompanionSpecies.DracoPlasmaDragon:
+                    DrawPlasmaDragon(g, cx, cy, r, lookX, lookY, accent1, accent2, globalTime, audioPeak);
+                    break;
+                case CompanionSpecies.SpecterHoloGhost:
+                    DrawHoloGhost(g, cx, cy, r, lookX, lookY, accent1, accent2, globalTime, audioPeak);
+                    break;
+                case CompanionSpecies.NekoBionicCat:
+                    DrawBionicCat(g, cx, cy, r, lookX, lookY, accent1, accent2, globalTime, audioPeak);
+                    break;
+                case CompanionSpecies.AtlasMechaDrone:
+                    DrawMechaDrone(g, cx, cy, r, lookX, lookY, accent1, accent2, globalTime, audioPeak);
+                    break;
+                case CompanionSpecies.IgnisCosmicFlame:
+                    DrawCosmicFlame(g, cx, cy, r, lookX, lookY, accent1, accent2, globalTime, audioPeak);
+                    break;
+            }
+
+            // Musical notes floating when audio is playing!
+            if (audioPeak > 0.04f)
+            {
+                float noteY = cy - r * 1.1f - ((globalTime * 28f) % (r * 0.9f));
+                float noteX = cx + r * 0.95f + (float)Math.Sin(globalTime * 6f) * 5f;
+                using (Font nf = new Font("Segoe UI Symbol", Math.Max(7f, r * 0.48f), FontStyle.Bold))
+                using (SolidBrush nb = new SolidBrush(accent1))
+                {
+                    g.DrawString("♪", nf, nb, noteX, noteY);
+                }
+            }
+
+            g.SmoothingMode = oldMode;
+        }
+
+        private void DrawKitsuneFox(Graphics g, float cx, float cy, float r, float lx, float ly, Color c1, Color c2, float t, float audio)
+        {
+            // Swaying glowing tails behind
+            for (int tail = -1; tail <= 1; tail += 2)
+            {
+                float sway = (float)Math.Sin(t * 5.5f + tail) * r * 0.35f;
+                PointF[] tailPts = new PointF[] {
+                    new PointF(cx, cy + r * 0.3f),
+                    new PointF(cx + tail * r * 1.35f, cy - r * 0.2f + sway),
+                    new PointF(cx + tail * r * 0.85f, cy + r * 0.65f + sway)
+                };
+                using (SolidBrush tb = new SolidBrush(Color.FromArgb(180, c2)))
+                {
+                    g.FillPolygon(tb, tailPts);
+                }
+            }
+
+            // Pointed Cyber Fox Ears
+            float earTwitch = (float)Math.Sin(t * 4.0f) * r * 0.08f;
+            PointF[] leftEar = new PointF[] {
+                new PointF(cx - r * 0.75f, cy - r * 0.25f),
+                new PointF(cx - r * 0.95f, cy - r * 1.35f + earTwitch),
+                new PointF(cx - r * 0.18f, cy - r * 0.75f)
+            };
+            PointF[] rightEar = new PointF[] {
+                new PointF(cx + r * 0.75f, cy - r * 0.25f),
+                new PointF(cx + r * 0.95f, cy - r * 1.35f - earTwitch),
+                new PointF(cx + r * 0.18f, cy - r * 0.75f)
+            };
+
+            using (SolidBrush darkBody = new SolidBrush(Color.FromArgb(250, 18, 20, 30)))
+            using (Pen neonRim = new Pen(c1, 2.0f))
+            {
+                g.FillPolygon(darkBody, leftEar);
+                g.DrawPolygon(neonRim, leftEar);
+                g.FillPolygon(darkBody, rightEar);
+                g.DrawPolygon(neonRim, rightEar);
+
+                // Fox head diamond-rounded shape
+                PointF[] headPts = new PointF[] {
+                    new PointF(cx, cy - r * 0.85f),
+                    new PointF(cx + r * 0.95f, cy + r * 0.05f),
+                    new PointF(cx, cy + r * 0.85f),
+                    new PointF(cx - r * 0.95f, cy + r * 0.05f)
+                };
+                g.FillPolygon(darkBody, headPts);
+                g.DrawPolygon(neonRim, headPts);
+            }
+
+            // Glowing Cyber Eyes following cursor
+            DrawExpressiveEyes(g, cx, cy - r * 0.05f, r, lx, ly, c1, t);
+
+            // Neon nose
+            using (SolidBrush noseB = new SolidBrush(c2))
+            {
+                g.FillEllipse(noseB, cx - 2.5f, cy + r * 0.35f, 5f, 4f);
+            }
+        }
+
+        private void DrawPlasmaDragon(Graphics g, float cx, float cy, float r, float lx, float ly, Color c1, Color c2, float t, float audio)
+        {
+            // Flapping Dragon Wings
+            float wingFlap = (float)Math.Sin(t * 8.0f) * r * 0.45f;
+            for (int side = -1; side <= 1; side += 2)
+            {
+                PointF[] wing = new PointF[] {
+                    new PointF(cx + side * r * 0.5f, cy),
+                    new PointF(cx + side * r * 1.65f, cy - r * 0.85f + wingFlap),
+                    new PointF(cx + side * r * 1.25f, cy + r * 0.45f + wingFlap * 0.5f)
+                };
+                using (SolidBrush wb = new SolidBrush(Color.FromArgb(190, c2)))
+                using (Pen wp = new Pen(c1, 1.5f))
+                {
+                    g.FillPolygon(wb, wing);
+                    g.DrawPolygon(wp, wing);
+                }
+            }
+
+            // Dragon Horns
+            PointF[] lHorn = new PointF[] { new PointF(cx - r * 0.5f, cy - r * 0.6f), new PointF(cx - r * 0.85f, cy - r * 1.4f), new PointF(cx - r * 0.2f, cy - r * 0.8f) };
+            PointF[] rHorn = new PointF[] { new PointF(cx + r * 0.5f, cy - r * 0.6f), new PointF(cx + r * 0.85f, cy - r * 1.4f), new PointF(cx + r * 0.2f, cy - r * 0.8f) };
+            using (SolidBrush hb = new SolidBrush(c1))
+            {
+                g.FillPolygon(hb, lHorn);
+                g.FillPolygon(hb, rHorn);
+            }
+
+            // Dragon Head
+            using (SolidBrush body = new SolidBrush(Color.FromArgb(250, 16, 18, 28)))
+            using (Pen border = new Pen(c1, 2.0f))
+            {
+                g.FillEllipse(body, cx - r * 0.85f, cy - r * 0.8f, r * 1.7f, r * 1.6f);
+                g.DrawEllipse(border, cx - r * 0.85f, cy - r * 0.8f, r * 1.7f, r * 1.6f);
+            }
+
+            DrawExpressiveEyes(g, cx, cy - r * 0.05f, r, lx, ly, c1, t);
+        }
+
+        private void DrawHoloGhost(Graphics g, float cx, float cy, float r, float lx, float ly, Color c1, Color c2, float t, float audio)
+        {
+            // Orbiting holographic energy ring
+            using (Pen orbitPen = new Pen(Color.FromArgb(180, c2), 2.0f))
+            {
+                g.DrawEllipse(orbitPen, cx - r * 1.3f, cy - r * 0.35f, r * 2.6f, r * 0.7f);
+            }
+
+            using (LinearGradientBrush holoGrad = new LinearGradientBrush(
+                new RectangleF(cx - r, cy - r, r * 2f, r * 2f),
+                Color.FromArgb(230, 18, 24, 38),
+                Color.FromArgb(210, c1),
+                90f))
+            using (Pen rim = new Pen(c1, 2f))
+            {
+                g.FillEllipse(holoGrad, cx - r * 0.85f, cy - r * 0.85f, r * 1.7f, r * 1.7f);
+                g.DrawEllipse(rim, cx - r * 0.85f, cy - r * 0.85f, r * 1.7f, r * 1.7f);
+            }
+
+            DrawExpressiveEyes(g, cx, cy, r, lx, ly, Color.White, t);
+        }
+
+        private void DrawBionicCat(Graphics g, float cx, float cy, float r, float lx, float ly, Color c1, Color c2, float t, float audio)
+        {
+            // Cat Ears
+            PointF[] lEar = new PointF[] { new PointF(cx - r * 0.8f, cy - r * 0.2f), new PointF(cx - r * 0.75f, cy - r * 1.15f), new PointF(cx - r * 0.2f, cy - r * 0.75f) };
+            PointF[] rEar = new PointF[] { new PointF(cx + r * 0.8f, cy - r * 0.2f), new PointF(cx + r * 0.75f, cy - r * 1.15f), new PointF(cx + r * 0.2f, cy - r * 0.75f) };
+
+            using (SolidBrush body = new SolidBrush(Color.FromArgb(250, 16, 18, 26)))
+            using (Pen rim = new Pen(c1, 2f))
+            {
+                g.FillPolygon(body, lEar); g.DrawPolygon(rim, lEar);
+                g.FillPolygon(body, rEar); g.DrawPolygon(rim, rEar);
+                g.FillEllipse(body, cx - r * 0.85f, cy - r * 0.78f, r * 1.7f, r * 1.56f);
+                g.DrawEllipse(rim, cx - r * 0.85f, cy - r * 0.78f, r * 1.7f, r * 1.56f);
+            }
+
+            // Neon Headphones arch when music plays!
+            using (Pen hpPen = new Pen(c2, 3.0f))
+            {
+                g.DrawArc(hpPen, cx - r * 0.98f, cy - r * 0.92f, r * 1.96f, r * 1.6f, 195, 150);
+            }
+
+            DrawExpressiveEyes(g, cx, cy, r, lx, ly, c1, t);
+        }
+
+        private void DrawMechaDrone(Graphics g, float cx, float cy, float r, float lx, float ly, Color c1, Color c2, float t, float audio)
+        {
+            // Rotating outer tech segments
+            using (Pen segPen = new Pen(c2, 2.5f))
+            {
+                float ang = (t * 110f) % 360f;
+                g.DrawArc(segPen, cx - r * 1.15f, cy - r * 1.15f, r * 2.3f, r * 2.3f, ang, 70);
+                g.DrawArc(segPen, cx - r * 1.15f, cy - r * 1.15f, r * 2.3f, r * 2.3f, ang + 180, 70);
+            }
+
+            using (SolidBrush coreB = new SolidBrush(Color.FromArgb(250, 14, 18, 28)))
+            using (Pen rim = new Pen(c1, 2.2f))
+            {
+                g.FillEllipse(coreB, cx - r * 0.85f, cy - r * 0.85f, r * 1.7f, r * 1.7f);
+                g.DrawEllipse(rim, cx - r * 0.85f, cy - r * 0.85f, r * 1.7f, r * 1.7f);
+            }
+
+            // Central glowing Cyclops AI Eye following cursor
+            float er = r * 0.36f;
+            using (SolidBrush eyeGlow = new SolidBrush(c1))
+            using (SolidBrush pupil = new SolidBrush(Color.White))
+            {
+                g.FillEllipse(eyeGlow, cx + lx - er, cy + ly - er, er * 2f, er * 2f);
+                g.FillEllipse(pupil, cx + lx * 1.2f - er * 0.4f, cy + ly * 1.2f - er * 0.4f, er * 0.8f, er * 0.8f);
+            }
+        }
+
+        private void DrawCosmicFlame(Graphics g, float cx, float cy, float r, float lx, float ly, Color c1, Color c2, float t, float audio)
+        {
+            for (int layer = 3; layer >= 1; layer--)
+            {
+                float lr = r * (0.65f + layer * 0.22f);
+                float flicker = (float)Math.Sin(t * 12f + layer * 2f) * r * 0.15f;
+                PointF[] flamePts = new PointF[] {
+                    new PointF(cx + flicker, cy - lr * 1.35f),
+                    new PointF(cx + lr * 0.9f, cy + lr * 0.1f),
+                    new PointF(cx, cy + lr * 0.85f),
+                    new PointF(cx - lr * 0.9f, cy + lr * 0.1f)
+                };
+                Color fc = (layer == 1) ? Color.FromArgb(245, 18, 20, 32) : (layer == 2 ? c1 : Color.FromArgb(160, c2));
+                using (SolidBrush fb = new SolidBrush(fc))
+                {
+                    g.FillClosedCurve(fb, flamePts);
+                }
+            }
+
+            DrawExpressiveEyes(g, cx, cy + r * 0.05f, r, lx, ly, c1, t);
+        }
+
+        private void DrawExpressiveEyes(Graphics g, float cx, float cy, float r, float lx, float ly, Color eyeColor, float t)
+        {
+            // Periodic natural blink every ~4.2 seconds
+            bool blinking = ((t % 4.2f) > 4.04f);
+            float eyeOffsetX = r * 0.34f;
+            float ew = r * 0.28f;
+            float eh = blinking ? 2.0f : r * 0.34f;
+
+            using (SolidBrush eb = new SolidBrush(eyeColor))
+            using (SolidBrush shine = new SolidBrush(Color.White))
+            {
+                // Left Eye
+                g.FillEllipse(eb, cx - eyeOffsetX + lx - ew / 2f, cy + ly - eh / 2f, ew, eh);
+                // Right Eye
+                g.FillEllipse(eb, cx + eyeOffsetX + lx - ew / 2f, cy + ly - eh / 2f, ew, eh);
+
+                if (!blinking)
+                {
+                    float sr = ew * 0.32f;
+                    g.FillEllipse(shine, cx - eyeOffsetX + lx - sr * 0.3f, cy + ly - eh * 0.25f, sr, sr);
+                    g.FillEllipse(shine, cx + eyeOffsetX + lx - sr * 0.3f, cy + ly - eh * 0.25f, sr, sr);
+                }
+            }
+        }
+    }
+
+    // =========================================================================
+    // WIN32 INTEROP & COREAUDIO REAL-TIME PEAK METER
     // =========================================================================
     public static class NativeMethods
     {
@@ -263,7 +1106,6 @@ namespace iCornerDuo
         public const uint SWP_NOMOVE = 0x0002;
         public const uint SWP_NOACTIVATE = 0x0010;
 
-        // Media Virtual Key Codes
         public const byte VK_VOLUME_MUTE = 0xAD;
         public const byte VK_VOLUME_DOWN = 0xAE;
         public const byte VK_VOLUME_UP = 0xAF;
@@ -365,9 +1207,6 @@ namespace iCornerDuo
         }
     }
 
-    // =========================================================================
-    // WINDOWS COREAUDIO PEAK METER (REAL-TIME AUDIO BEAT & SPECTRUM DETECTION)
-    // =========================================================================
     [ComImport, Guid("BCDE0395-E52F-467C-8E3D-C4579291692E")]
     internal class MMDeviceEnumeratorComObject { }
 
@@ -393,17 +1232,14 @@ namespace iCornerDuo
     public class LiveMediaAndAudioTracker
     {
         private IAudioMeterInformation audioMeter;
-        public float CurrentAudioPeak = 0f;     // Smooth 0..1 audio level
-        public float RawAudioPeak = 0f;
+        public float CurrentAudioPeak = 0f;
         public bool IsAudioActive = false;
 
         public MediaSourceType ActiveSource = MediaSourceType.None;
         public string TrackTitle = "Aucune musique détectée";
         public string TrackArtist = "Spotify • Apple Music • YouTube";
-        public IntPtr ActiveMediaWindowHandle = IntPtr.Zero;
 
         private long lastWindowScanTicks = 0;
-        private Random rng = new Random();
         public float[] SpectrumBars = new float[18];
 
         public LiveMediaAndAudioTracker()
@@ -418,7 +1254,6 @@ namespace iCornerDuo
             {
                 IMMDeviceEnumerator enumerator = (IMMDeviceEnumerator)(new MMDeviceEnumeratorComObject());
                 IMMDevice device;
-                // eRender = 0, eMultimedia = 1
                 if (enumerator.GetDefaultAudioEndpoint(0, 1, out device) == 0 && device != null)
                 {
                     Guid iidMeter = new Guid("C02216F6-8C67-4B5B-9D00-D008E73E0064");
@@ -434,14 +1269,11 @@ namespace iCornerDuo
 
         public void UpdateTick(float globalTime)
         {
-            // 1. Read real-time audio peak from Windows CoreAudio
             float peak = 0f;
             if (audioMeter != null)
             {
                 try { audioMeter.GetPeakValue(out peak); } catch { }
             }
-            RawAudioPeak = peak;
-            // Smooth attack/decay
             if (peak > CurrentAudioPeak)
                 CurrentAudioPeak = CurrentAudioPeak * 0.45f + peak * 0.55f;
             else
@@ -449,7 +1281,6 @@ namespace iCornerDuo
 
             IsAudioActive = (CurrentAudioPeak > 0.015f);
 
-            // 2. Update 18 animated spectrum bars driven by real audio peak (or subtle idle wave)
             for (int i = 0; i < SpectrumBars.Length; i++)
             {
                 float target;
@@ -468,9 +1299,8 @@ namespace iCornerDuo
                 SpectrumBars[i] = SpectrumBars[i] * 0.6f + target * 0.4f;
             }
 
-            // 3. Periodically scan media windows (every ~1.5 seconds)
             long now = DateTime.UtcNow.Ticks;
-            if ((now - lastWindowScanTicks) > 15000000L) // 1.5s
+            if ((now - lastWindowScanTicks) > 15000000L)
             {
                 lastWindowScanTicks = now;
                 ScanMediaWindows();
@@ -485,7 +1315,6 @@ namespace iCornerDuo
                 MediaSourceType foundSource = MediaSourceType.None;
                 string foundTitle = null;
                 string foundArtist = null;
-                IntPtr foundHwnd = IntPtr.Zero;
 
                 foreach (Process p in procs)
                 {
@@ -500,10 +1329,8 @@ namespace iCornerDuo
                     }
                     catch { continue; }
 
-                    // 1. SPOTIFY DESKTOP APP
                     if (pname == "spotify")
                     {
-                        foundHwnd = p.MainWindowHandle;
                         foundSource = MediaSourceType.Spotify;
                         if (wtitle.StartsWith("Spotify", StringComparison.OrdinalIgnoreCase))
                         {
@@ -521,13 +1348,11 @@ namespace iCornerDuo
                             foundTitle = wtitle;
                             foundArtist = "Spotify";
                         }
-                        break; // Priority to Spotify desktop
+                        break;
                     }
 
-                    // 2. APPLE MUSIC / ITUNES DESKTOP APP
                     if (pname == "applemusic" || pname == "itunes")
                     {
-                        foundHwnd = p.MainWindowHandle;
                         foundSource = MediaSourceType.AppleMusic;
                         if (wtitle.Equals("Apple Music", StringComparison.OrdinalIgnoreCase) || wtitle.Equals("iTunes", StringComparison.OrdinalIgnoreCase))
                         {
@@ -548,13 +1373,11 @@ namespace iCornerDuo
                         break;
                     }
 
-                    // 3. BROWSERS (YouTube, YouTube Music, Spotify Web, Apple Music Web, Deezer, SoundCloud)
                     if (pname == "chrome" || pname == "msedge" || pname == "firefox" || pname == "brave" || pname == "opera" || pname == "vivaldi")
                     {
                         string clean = StripBrowserSuffix(wtitle);
                         if (clean.IndexOf("YouTube Music", StringComparison.OrdinalIgnoreCase) >= 0)
                         {
-                            foundHwnd = p.MainWindowHandle;
                             foundSource = MediaSourceType.YouTube;
                             foundTitle = clean.Replace("- YouTube Music", "").Replace("YouTube Music", "").Trim();
                             if (string.IsNullOrEmpty(foundTitle)) foundTitle = "YouTube Music";
@@ -562,15 +1385,13 @@ namespace iCornerDuo
                         }
                         else if (clean.IndexOf("YouTube", StringComparison.OrdinalIgnoreCase) >= 0)
                         {
-                            foundHwnd = p.MainWindowHandle;
                             foundSource = MediaSourceType.YouTube;
                             foundTitle = clean.Replace("- YouTube", "").Replace("YouTube", "").Trim();
-                            if (string.IsNullOrEmpty(foundTitle)) foundTitle = "Vidéo / Musique YouTube";
+                            if (string.IsNullOrEmpty(foundTitle)) foundTitle = "YouTube";
                             foundArtist = "YouTube";
                         }
                         else if (clean.IndexOf("Apple Music", StringComparison.OrdinalIgnoreCase) >= 0)
                         {
-                            foundHwnd = p.MainWindowHandle;
                             foundSource = MediaSourceType.AppleMusic;
                             foundTitle = clean.Replace("- Apple Music", "").Replace("Apple Music", "").Trim();
                             if (string.IsNullOrEmpty(foundTitle)) foundTitle = "Apple Music Web";
@@ -578,29 +1399,11 @@ namespace iCornerDuo
                         }
                         else if (clean.IndexOf("Spotify", StringComparison.OrdinalIgnoreCase) >= 0)
                         {
-                            foundHwnd = p.MainWindowHandle;
                             foundSource = MediaSourceType.Spotify;
                             foundTitle = clean.Replace("- Spotify", "").Replace("Spotify", "").Trim();
-                            if (string.IsNullOrEmpty(foundTitle)) foundTitle = "Spotify Web Player";
+                            if (string.IsNullOrEmpty(foundTitle)) foundTitle = "Spotify Web";
                             foundArtist = "Spotify";
                         }
-                        else if (clean.IndexOf("Deezer", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                 clean.IndexOf("SoundCloud", StringComparison.OrdinalIgnoreCase) >= 0)
-                        {
-                            foundHwnd = p.MainWindowHandle;
-                            foundSource = MediaSourceType.BrowserMedia;
-                            foundTitle = clean;
-                            foundArtist = "Lecteur Web";
-                        }
-                    }
-
-                    // 4. VLC / WINDOWS MEDIA PLAYER
-                    if (pname == "vlc" || pname == "music.ui" || pname == "mediaplayer")
-                    {
-                        foundHwnd = p.MainWindowHandle;
-                        foundSource = MediaSourceType.SystemAudio;
-                        foundTitle = wtitle.Replace("- Lecteur multimédia VLC", "").Replace("- VLC media player", "").Trim();
-                        foundArtist = "Lecteur Multimédia";
                     }
                 }
 
@@ -609,19 +1412,18 @@ namespace iCornerDuo
                     ActiveSource = foundSource;
                     TrackTitle = foundTitle;
                     TrackArtist = foundArtist;
-                    ActiveMediaWindowHandle = foundHwnd;
                 }
                 else if (IsAudioActive)
                 {
                     ActiveSource = MediaSourceType.SystemAudio;
                     TrackTitle = "Audio Système en cours";
-                    TrackArtist = "Flux audio actif • Contrôles multimédias";
+                    TrackArtist = "Flux audio actif";
                 }
                 else
                 {
                     ActiveSource = MediaSourceType.None;
-                    TrackTitle = "iCorner Duo Music Hub";
-                    TrackArtist = "Survolez pour contrôler Spotify • Apple Music • YouTube";
+                    TrackTitle = "iCorner Duo Hub";
+                    TrackArtist = "Musique • Minuteur • Compagnon • IA";
                 }
             }
             catch { }
@@ -630,33 +1432,16 @@ namespace iCornerDuo
         private static string StripBrowserSuffix(string title)
         {
             string t = title.Trim();
-            // Strip leading notification count like "(1) "
             if (t.StartsWith("(") && t.IndexOf(") ") > 0 && t.IndexOf(") ") < 6)
-            {
                 t = t.Substring(t.IndexOf(") ") + 2).Trim();
-            }
             string[] suffixes = new string[] {
-                " - Google Chrome",
-                " - Microsoft​ Edge",
-                " - Microsoft Edge",
-                " — Mozilla Firefox",
-                " - Mozilla Firefox",
-                " - Brave",
-                " - Opera",
-                " - Vivaldi"
+                " - Google Chrome", " - Microsoft​ Edge", " - Microsoft Edge",
+                " — Mozilla Firefox", " - Mozilla Firefox", " - Brave", " - Opera", " - Vivaldi"
             };
             foreach (string s in suffixes)
             {
                 if (t.EndsWith(s, StringComparison.OrdinalIgnoreCase))
-                {
                     t = t.Substring(0, t.Length - s.Length).Trim();
-                }
-            }
-            // Also strip Edge "and X more pages"
-            int edgeMore = t.IndexOf(" et ", StringComparison.OrdinalIgnoreCase);
-            if (edgeMore > 0 && t.IndexOf(" page", edgeMore, StringComparison.OrdinalIgnoreCase) > 0)
-            {
-                t = t.Substring(0, edgeMore).Trim();
             }
             return t;
         }
@@ -670,7 +1455,7 @@ namespace iCornerDuo
                     Process[] sp = Process.GetProcessesByName("Spotify");
                     if (sp.Length > 0 && sp[0].MainWindowHandle != IntPtr.Zero)
                     {
-                        NativeMethods.ShowWindow(sp[0].MainWindowHandle, 9); // SW_RESTORE
+                        NativeMethods.ShowWindow(sp[0].MainWindowHandle, 9);
                         NativeMethods.SetForegroundWindow(sp[0].MainWindowHandle);
                         return;
                     }
@@ -702,47 +1487,18 @@ namespace iCornerDuo
     // =========================================================================
     public static class ThemeColorEngine
     {
-        public static Color[] GetPalette(AppSettings settings, float timeSeconds, MediaSourceType activeMedia = MediaSourceType.None)
+        public static Color[] GetPalette(AppSettings settings, float timeSeconds)
         {
-            // Optional automatic brand color adaptation when music is actively playing
-            if (settings.IslandAutoAdaptBrandColor && activeMedia != MediaSourceType.None)
-            {
-                if (activeMedia == MediaSourceType.Spotify && settings.Theme == ColorTheme.SpotifyNeonGreen)
-                {
-                    // Handled below
-                }
-            }
-
             switch (settings.Theme)
             {
                 case ColorTheme.iOSBlueCyan:
-                    return new Color[] {
-                        Color.FromArgb(255, 0, 210, 255),
-                        Color.FromArgb(255, 10, 132, 255),
-                        Color.FromArgb(255, 94, 92, 230),
-                        Color.FromArgb(255, 110, 235, 255)
-                    };
+                    return new Color[] { Color.FromArgb(255, 0, 210, 255), Color.FromArgb(255, 10, 132, 255), Color.FromArgb(255, 94, 92, 230), Color.FromArgb(255, 110, 235, 255) };
                 case ColorTheme.SpotifyNeonGreen:
-                    return new Color[] {
-                        Color.FromArgb(255, 29, 185, 84),   // Spotify Official Green
-                        Color.FromArgb(255, 30, 215, 96),   // Neon Green
-                        Color.FromArgb(255, 0, 235, 165),   // Mint Cyan
-                        Color.FromArgb(255, 110, 255, 145)
-                    };
+                    return new Color[] { Color.FromArgb(255, 29, 185, 84), Color.FromArgb(255, 30, 215, 96), Color.FromArgb(255, 0, 235, 165), Color.FromArgb(255, 110, 255, 145) };
                 case ColorTheme.AppleMusicRose:
-                    return new Color[] {
-                        Color.FromArgb(255, 250, 36, 60),   // Apple Music Red-Rose
-                        Color.FromArgb(255, 255, 55, 95),   // Hot Pink
-                        Color.FromArgb(255, 191, 90, 242),  // Purple
-                        Color.FromArgb(255, 255, 135, 160)
-                    };
+                    return new Color[] { Color.FromArgb(255, 250, 36, 60), Color.FromArgb(255, 255, 55, 95), Color.FromArgb(255, 191, 90, 242), Color.FromArgb(255, 255, 135, 160) };
                 case ColorTheme.YouTubeCrimson:
-                    return new Color[] {
-                        Color.FromArgb(255, 255, 0, 51),    // YouTube Crimson
-                        Color.FromArgb(255, 255, 85, 0),    // Fiery Orange
-                        Color.FromArgb(255, 255, 0, 128),   // Magenta
-                        Color.FromArgb(255, 255, 190, 30)   // Gold
-                    };
+                    return new Color[] { Color.FromArgb(255, 255, 0, 51), Color.FromArgb(255, 255, 85, 0), Color.FromArgb(255, 255, 0, 128), Color.FromArgb(255, 255, 190, 30) };
                 case ColorTheme.CyberpunkRainbow:
                     return new Color[] {
                         FromHsv((timeSeconds * 90f) % 360f, 0.9f, 1.0f),
@@ -751,60 +1507,24 @@ namespace iCornerDuo
                         FromHsv((timeSeconds * 90f + 270f) % 360f, 0.9f, 1.0f)
                     };
                 case ColorTheme.SunsetPro:
-                    return new Color[] {
-                        Color.FromArgb(255, 255, 69, 58),
-                        Color.FromArgb(255, 255, 55, 95),
-                        Color.FromArgb(255, 191, 90, 242),
-                        Color.FromArgb(255, 255, 159, 10)
-                    };
+                    return new Color[] { Color.FromArgb(255, 255, 69, 58), Color.FromArgb(255, 255, 55, 95), Color.FromArgb(255, 191, 90, 242), Color.FromArgb(255, 255, 159, 10) };
                 case ColorTheme.UltraVioletNebula:
-                    return new Color[] {
-                        Color.FromArgb(255, 165, 60, 255),
-                        Color.FromArgb(255, 94, 92, 230),
-                        Color.FromArgb(255, 255, 60, 195),
-                        Color.FromArgb(255, 70, 190, 255)
-                    };
+                    return new Color[] { Color.FromArgb(255, 165, 60, 255), Color.FromArgb(255, 94, 92, 230), Color.FromArgb(255, 255, 60, 195), Color.FromArgb(255, 70, 190, 255) };
                 case ColorTheme.MagmaGold:
-                    return new Color[] {
-                        Color.FromArgb(255, 255, 200, 20),
-                        Color.FromArgb(255, 255, 105, 0),
-                        Color.FromArgb(255, 255, 35, 35),
-                        Color.FromArgb(255, 255, 235, 110)
-                    };
+                    return new Color[] { Color.FromArgb(255, 255, 200, 20), Color.FromArgb(255, 255, 105, 0), Color.FromArgb(255, 255, 35, 35), Color.FromArgb(255, 255, 235, 110) };
                 case ColorTheme.ArcticAurora:
-                    return new Color[] {
-                        Color.FromArgb(255, 0, 255, 160),
-                        Color.FromArgb(255, 0, 205, 255),
-                        Color.FromArgb(255, 80, 120, 255),
-                        Color.FromArgb(255, 140, 255, 220)
-                    };
+                    return new Color[] { Color.FromArgb(255, 0, 255, 160), Color.FromArgb(255, 0, 205, 255), Color.FromArgb(255, 80, 120, 255), Color.FromArgb(255, 140, 255, 220) };
                 case ColorTheme.SakuraPastel:
-                    return new Color[] {
-                        Color.FromArgb(255, 255, 155, 200),
-                        Color.FromArgb(255, 205, 155, 255),
-                        Color.FromArgb(255, 255, 195, 160),
-                        Color.FromArgb(255, 150, 220, 255)
-                    };
+                    return new Color[] { Color.FromArgb(255, 255, 155, 200), Color.FromArgb(255, 205, 155, 255), Color.FromArgb(255, 255, 195, 160), Color.FromArgb(255, 150, 220, 255) };
                 case ColorTheme.MinimalMonochrome:
-                    return new Color[] {
-                        Color.FromArgb(255, 245, 247, 255),
-                        Color.FromArgb(255, 195, 205, 220),
-                        Color.FromArgb(255, 150, 160, 175),
-                        Color.FromArgb(255, 255, 255, 255)
-                    };
+                    return new Color[] { Color.FromArgb(255, 245, 247, 255), Color.FromArgb(255, 195, 205, 220), Color.FromArgb(255, 150, 160, 175), Color.FromArgb(255, 255, 255, 255) };
                 case ColorTheme.CustomColors:
                     Color c1 = Color.FromArgb(255, Color.FromArgb(settings.CustomColor1Argb));
                     Color c2 = Color.FromArgb(255, Color.FromArgb(settings.CustomColor2Argb));
-                    Color mid = Interpolate(c1, c2, 0.5f);
-                    return new Color[] { c1, c2, mid, Interpolate(c1, Color.White, 0.35f) };
+                    return new Color[] { c1, c2, Interpolate(c1, c2, 0.5f), Interpolate(c1, Color.White, 0.35f) };
                 case ColorTheme.AppleIntelligence:
                 default:
-                    return new Color[] {
-                        Color.FromArgb(255, 64, 205, 255),  // Siri Cyan
-                        Color.FromArgb(255, 185, 80, 255),  // Intelligence Purple
-                        Color.FromArgb(255, 255, 70, 160),  // Rose Magenta
-                        Color.FromArgb(255, 255, 165, 60)   // Warm Amber
-                    };
+                    return new Color[] { Color.FromArgb(255, 64, 205, 255), Color.FromArgb(255, 185, 80, 255), Color.FromArgb(255, 255, 70, 160), Color.FromArgb(255, 255, 165, 60) };
             }
         }
 
@@ -840,7 +1560,6 @@ namespace iCornerDuo
             int p = Convert.ToInt32(value * (1 - saturation));
             int q = Convert.ToInt32(value * (1 - f * saturation));
             int t = Convert.ToInt32(value * (1 - (1 - f) * saturation));
-
             if (hi == 0) return Color.FromArgb(255, v, t, p);
             if (hi == 1) return Color.FromArgb(255, q, v, p);
             if (hi == 2) return Color.FromArgb(255, p, v, t);
@@ -875,10 +1594,7 @@ namespace iCornerDuo
                               NativeMethods.WS_EX_TOPMOST |
                               NativeMethods.WS_EX_TOOLWINDOW |
                               NativeMethods.WS_EX_NOACTIVATE;
-                if (clickThrough)
-                {
-                    cp.ExStyle |= NativeMethods.WS_EX_TRANSPARENT;
-                }
+                if (clickThrough) cp.ExStyle |= NativeMethods.WS_EX_TRANSPARENT;
                 return cp;
             }
         }
@@ -938,7 +1654,7 @@ namespace iCornerDuo
     }
 
     // =========================================================================
-    // CORNER OVERLAY MANAGER PER MONITOR (WITH CONTINUOUS ANIMATIONS!)
+    // CORNER OVERLAY MANAGER PER MONITOR
     // =========================================================================
     public enum CornerPosition
     {
@@ -953,7 +1669,7 @@ namespace iCornerDuo
         public Screen Monitor;
         public Rectangle Bounds;
         public LayeredOverlayForm[] CornerForms = new LayeredOverlayForm[4];
-        public float PulseGlowAmount = 0f; // 0..1 during transition entrance
+        public float PulseGlowAmount = 0f;
 
         public MonitorCorners(Screen screen)
         {
@@ -976,7 +1692,6 @@ namespace iCornerDuo
 
             bool[] active = new bool[] { settings.TopLeft, settings.TopRight, settings.BottomLeft, settings.BottomRight };
             int r = settings.CornerRadius;
-
             float beatExtra = (settings.CornerAnim == CornerAnimationMode.AudioBeatSync) ? (audioPeak * 0.85f) : 0f;
             float totalGlow = Math.Min(1.2f, PulseGlowAmount + beatExtra);
 
@@ -991,7 +1706,6 @@ namespace iCornerDuo
                     CornerForms[i].Hide();
                     continue;
                 }
-
                 if (!CornerForms[i].Visible) CornerForms[i].Show();
 
                 CornerPosition pos = (CornerPosition)i;
@@ -1010,14 +1724,8 @@ namespace iCornerDuo
         }
 
         public static Bitmap RenderCornerBitmap(
-            int size,
-            int radius,
-            CornerPosition pos,
-            AppSettings settings,
-            float pulseGlow,
-            Color[] themeColors,
-            float animPhase = 0f,
-            float audioPeak = 0f)
+            int size, int radius, CornerPosition pos, AppSettings settings,
+            float pulseGlow, Color[] themeColors, float animPhase = 0f, float audioPeak = 0f)
         {
             Bitmap bmp = new Bitmap(size, size, PixelFormat.Format32bppArgb);
             using (Graphics g = Graphics.FromImage(bmp))
@@ -1030,7 +1738,6 @@ namespace iCornerDuo
                 GraphicsPath cornerMask = CreateCornerMaskPath(size, radius, pos, settings.Curve);
                 GraphicsPath curveLine = CreateCornerCurvePath(size, radius, pos, settings.Curve);
 
-                // Determine dynamic color based on CornerAnimationMode
                 Color cPrimary = (themeColors != null && themeColors.Length > 0) ? themeColors[0] : Color.Cyan;
                 Color cSecondary = (themeColors != null && themeColors.Length > 1) ? themeColors[1] : Color.Magenta;
                 float cornerOffset = (int)pos * 0.75f;
@@ -1067,7 +1774,6 @@ namespace iCornerDuo
 
                 float effectiveGlow = Math.Min(1.25f, pulseGlow + animGlowBoost * (settings.BezelGlowOpacity / 100f));
 
-                // 1. Multi-layer soft neon glow along the corner curve
                 if (settings.CornerBezelGlow && effectiveGlow > 0.02f)
                 {
                     for (int layer = 4; layer >= 1; layer--)
@@ -1085,7 +1791,6 @@ namespace iCornerDuo
                     }
                 }
 
-                // 2. Crisp Bezel Line
                 if (settings.CornerBezelGlow && settings.BezelGlowOpacity > 0)
                 {
                     int bezelAlpha = (int)(settings.BezelGlowOpacity * 2.55f);
@@ -1103,7 +1808,6 @@ namespace iCornerDuo
                     }
                 }
 
-                // 3. Optional Sparkle Stars along the curve
                 if (settings.CornerAnim == CornerAnimationMode.SparkleShimmer && settings.CornerBezelGlow)
                 {
                     PointF[] pts = GetCornerCurvePoints(size, radius, pos, settings.Curve);
@@ -1124,7 +1828,6 @@ namespace iCornerDuo
                     }
                 }
 
-                // 4. Pitch-black outer corner mask so the screen corner is physically rounded
                 using (SolidBrush blackBrush = new SolidBrush(Color.FromArgb(255, 0, 0, 0)))
                 {
                     g.FillPath(blackBrush, cornerMask);
@@ -1141,7 +1844,6 @@ namespace iCornerDuo
 
             float cx = (pos == CornerPosition.TopRight || pos == CornerPosition.BottomRight) ? size : 0;
             float cy = (pos == CornerPosition.BottomLeft || pos == CornerPosition.BottomRight) ? size : 0;
-
             float dx = (pos == CornerPosition.TopRight || pos == CornerPosition.BottomRight) ? -1f : 1f;
             float dy = (pos == CornerPosition.BottomLeft || pos == CornerPosition.BottomRight) ? -1f : 1f;
 
@@ -1151,15 +1853,9 @@ namespace iCornerDuo
             for (int i = 0; i <= steps; i++)
             {
                 double t = (Math.PI / 2.0) * ((double)i / steps);
-                double cosT = Math.Cos(t);
-                double sinT = Math.Sin(t);
-
-                double u = Math.Pow(cosT, 2.0 / n) * radius;
-                double v = Math.Pow(sinT, 2.0 / n) * radius;
-
-                float px = centerX - dx * (float)u;
-                float py = centerY - dy * (float)v;
-                pts[i] = new PointF(px, py);
+                double u = Math.Pow(Math.Cos(t), 2.0 / n) * radius;
+                double v = Math.Pow(Math.Sin(t), 2.0 / n) * radius;
+                pts[i] = new PointF(centerX - dx * (float)u, centerY - dy * (float)v);
             }
             return pts;
         }
@@ -1167,8 +1863,7 @@ namespace iCornerDuo
         private static GraphicsPath CreateCornerCurvePath(int size, int radius, CornerPosition pos, CurveType curveType)
         {
             GraphicsPath path = new GraphicsPath();
-            PointF[] pts = GetCornerCurvePoints(size, radius, pos, curveType);
-            path.AddLines(pts);
+            path.AddLines(GetCornerCurvePoints(size, radius, pos, curveType));
             return path;
         }
 
@@ -1180,7 +1875,6 @@ namespace iCornerDuo
 
             float cx = (pos == CornerPosition.TopRight || pos == CornerPosition.BottomRight) ? size : 0;
             float cy = (pos == CornerPosition.BottomLeft || pos == CornerPosition.BottomRight) ? size : 0;
-
             float ox = (cx == 0) ? -1f : size + 1f;
             float oy = (cy == 0) ? -1f : size + 1f;
 
@@ -1193,9 +1887,7 @@ namespace iCornerDuo
         public void EnsureTopMost()
         {
             for (int i = 0; i < 4; i++)
-            {
                 if (CornerForms[i] != null) CornerForms[i].EnsureTopMost();
-            }
         }
 
         public void Dispose()
@@ -1212,30 +1904,170 @@ namespace iCornerDuo
     }
 
     // =========================================================================
-    // INTERACTIVE DYNAMIC ISLAND MUSIC PLAYER & LIVE HUB
+    // FLOATING QUICK AI PROMPT DIALOG (OPENS RIGHT UNDER THE DYNAMIC ISLAND)
+    // =========================================================================
+    public class QuickAiPromptDialog : Form
+    {
+        private TextBox inputBox;
+        private Label responseLabel;
+        private ComboBox providerCombo;
+        private AppSettings settings;
+        private AiAssistantEngine aiEngine;
+        private CyberCompanionEngine companion;
+
+        public QuickAiPromptDialog(AppSettings s, AiAssistantEngine ai, CyberCompanionEngine comp, Point topCenterScreen)
+        {
+            settings = s;
+            aiEngine = ai;
+            companion = comp;
+
+            Text = "🤖 Assistant IA & Compagnon — Dynamic Island";
+            Size = new Size(460, 270);
+            FormBorderStyle = FormBorderStyle.FixedToolWindow;
+            StartPosition = FormStartPosition.Manual;
+            Location = new Point(topCenterScreen.X - 230, topCenterScreen.Y + 195);
+            BackColor = Color.FromArgb(16, 18, 28);
+            ForeColor = Color.White;
+            TopMost = true;
+            Font = new Font("Segoe UI", 9.2f, FontStyle.Regular);
+
+            Label topLbl = new Label
+            {
+                Text = "💬 Discuter avec " + s.CompanionName + " via :",
+                Location = new Point(14, 14),
+                AutoSize = true,
+                Font = new Font("Segoe UI Semibold", 9.5f, FontStyle.Bold),
+                ForeColor = Color.FromArgb(110, 210, 255)
+            };
+            Controls.Add(topLbl);
+
+            providerCombo = new ComboBox
+            {
+                Location = new Point(265, 11),
+                Width = 165,
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                BackColor = Color.FromArgb(30, 34, 48),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
+            };
+            providerCombo.Items.AddRange(new string[] { "✨ Google Gemini", "🧠 Anthropic Claude", "🟢 OpenAI ChatGPT", "🌪️ Mistral AI" });
+            providerCombo.SelectedIndex = (int)s.ActiveAiProvider;
+            providerCombo.SelectedIndexChanged += (sender, e) =>
+            {
+                settings.ActiveAiProvider = (AiProvider)providerCombo.SelectedIndex;
+                settings.Save();
+            };
+            Controls.Add(providerCombo);
+
+            responseLabel = new Label
+            {
+                Location = new Point(14, 44),
+                Size = new Size(416, 112),
+                BackColor = Color.FromArgb(24, 27, 40),
+                ForeColor = Color.FromArgb(230, 238, 255),
+                Padding = new Padding(10),
+                Text = aiEngine.LastResponse,
+                Font = new Font("Segoe UI", 9.0f, FontStyle.Regular)
+            };
+            Controls.Add(responseLabel);
+
+            inputBox = new TextBox
+            {
+                Location = new Point(14, 168),
+                Size = new Size(320, 28),
+                BackColor = Color.FromArgb(30, 34, 50),
+                ForeColor = Color.White,
+                BorderStyle = BorderStyle.FixedSingle,
+                Font = new Font("Segoe UI", 9.8f)
+            };
+            inputBox.KeyDown += (sender, e) =>
+            {
+                if (e.KeyCode == Keys.Enter)
+                {
+                    e.SuppressKeyPress = true;
+                    SendCurrentPrompt();
+                }
+            };
+            Controls.Add(inputBox);
+
+            Button sendBtn = new Button
+            {
+                Text = "Envoyer 🚀",
+                Location = new Point(342, 166),
+                Size = new Size(88, 30),
+                FlatStyle = FlatStyle.Flat,
+                BackColor = Color.FromArgb(0, 122, 255),
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI Semibold", 9f, FontStyle.Bold),
+                Cursor = Cursors.Hand
+            };
+            sendBtn.FlatAppearance.BorderSize = 0;
+            sendBtn.Click += (sender, e) => SendCurrentPrompt();
+            Controls.Add(sendBtn);
+        }
+
+        private void SendCurrentPrompt()
+        {
+            string q = inputBox.Text.Trim();
+            if (string.IsNullOrEmpty(q)) return;
+            inputBox.Text = "";
+            responseLabel.Text = "⏳ " + settings.ActiveAiProvider + " réfléchit...";
+            aiEngine.SendPromptAsync(settings, q, reply =>
+            {
+                if (!IsDisposed && IsHandleCreated)
+                {
+                    BeginInvoke((Action)(() =>
+                    {
+                        responseLabel.Text = reply;
+                        string shortBubble = reply.Length > 75 ? reply.Substring(0, 72) + "..." : reply;
+                        companion.Say(shortBubble, 6500);
+                    }));
+                }
+            });
+        }
+    }
+
+    // =========================================================================
+    // INTERACTIVE DYNAMIC ISLAND HUB (MUSIC + APPLE TIMER + CYBER COMPANION + AI)
     // =========================================================================
     public class DynamicIslandWidget : IDisposable
     {
         private LayeredOverlayForm islandForm;
-        private float expandProgress = 0f; // 0 = Compact Pill, 1 = Expanded Music Hub
-        private float transitionBoost = 0f; // Boost when switching screens
-        private float currentScreenCenterX = -1f;
+        public IslandActiveTab CurrentTab = IslandActiveTab.Music;
+        public IslandTimerEngine TimerEngine = new IslandTimerEngine();
+        public CyberCompanionEngine CompanionEngine = new CyberCompanionEngine();
+        public AiAssistantEngine AiEngine = new AiAssistantEngine();
+
+        private float spawnFactor = 1.0f;   // 0 = Hidden, 1 = Spawned onto screen
+        private float expandProgress = 0f;  // 0 = Compact Pill, 1 = Expanded Multi-Tab Hub
+        private float transitionBoost = 0f;
+        private float currentScreenCenterX = -9999f;
         private float currentScreenTopY = 8f;
 
-        private Rectangle currentWindowRect = Rectangle.Empty;
-        private int hoveredButtonIndex = -1; // 0=Prev, 1=PlayPause, 2=Next, 3=VolDown, 4=VolUp, 5=Spotify, 6=AppleMusic, 7=YouTube, 8=Theme, 9=Settings
+        private Rectangle currentPillScreenRect = Rectangle.Empty;
+        private int hoveredTabIndex = -1;
+        private int hoveredActionIndex = -1;
         private bool wasMouseDown = false;
-        private float buttonFlashEffect = 0f;
         private string transientBannerText = null;
         private long transientBannerUntilTicks = 0;
+        private QuickAiPromptDialog activeAiDialog = null;
 
         public event Action OnOpenSettingsRequested;
         public event Action OnCycleThemeRequested;
+        public event Action OnTimerFinishedBurstRequested;
 
         public DynamicIslandWidget()
         {
             islandForm = new LayeredOverlayForm(true);
             islandForm.Show();
+
+            TimerEngine.OnTimerFinished += () =>
+            {
+                ShowTransientBanner("⏰ MINUTEUR TERMINÉ !", 5000);
+                CompanionEngine.Say("⏰ Bip bip ! Ton minuteur est terminé !", 5500);
+                transitionBoost = 1.0f;
+                if (OnTimerFinishedBurstRequested != null) OnTimerFinishedBurstRequested();
+            };
         }
 
         public void TriggerTransitionNotification(string screenName, string res)
@@ -1259,39 +2091,52 @@ namespace iCornerDuo
             Color[] palette,
             float globalTime)
         {
+            TimerEngine.StepTick();
+            CompanionEngine.StepTick(globalTime, media.IsAudioActive);
+
             if (!settings.Enabled || settings.IslandMode == IslandVisibilityMode.Disabled)
             {
                 islandForm.Hide();
                 return;
             }
 
-            if (transitionBoost > 0f)
-            {
-                transitionBoost = Math.Max(0f, transitionBoost - 0.025f);
-            }
-
-            bool shouldShow = true;
-            if (settings.IslandMode == IslandVisibilityMode.OnlyOnTransition)
-            {
-                shouldShow = (transitionBoost > 0.02f);
-            }
-            else if (settings.IslandMode == IslandVisibilityMode.WhenMediaOrTransition)
-            {
-                shouldShow = (media.IsAudioActive || media.ActiveSource != MediaSourceType.None || transitionBoost > 0.02f);
-            }
-
-            if (!shouldShow)
-            {
-                islandForm.Hide();
-                return;
-            }
+            if (transitionBoost > 0f) transitionBoost = Math.Max(0f, transitionBoost - 0.025f);
 
             Rectangle targetScreen = (settings.IslandPlacement == IslandPlacementMode.PrimaryScreenOnly)
                 ? primaryScreenBounds
                 : activeScreenBounds;
 
+            // Determine target visibility based on Spawn System (IslandVisibilityMode)
+            bool wantVisible = true;
+            if (settings.IslandMode == IslandVisibilityMode.OnlyOnTransition)
+            {
+                wantVisible = (transitionBoost > 0.02f || TimerEngine.FinishedAlertActive);
+            }
+            else if (settings.IslandMode == IslandVisibilityMode.SmartAutoActivity)
+            {
+                wantVisible = (media.IsAudioActive || media.ActiveSource != MediaSourceType.None ||
+                               TimerEngine.IsRunning || TimerEngine.FinishedAlertActive ||
+                               CompanionEngine.HasActiveSpeech || transitionBoost > 0.02f);
+            }
+            else if (settings.IslandMode == IslandVisibilityMode.HotTopEdgeTrigger)
+            {
+                bool nearTopCenter = (cursorPos.Y <= targetScreen.Top + 42 &&
+                                      Math.Abs(cursorPos.X - (targetScreen.Left + targetScreen.Width / 2)) < 280);
+                wantVisible = nearTopCenter || expandProgress > 0.05f || transitionBoost > 0.02f || TimerEngine.FinishedAlertActive;
+            }
+
+            // Animate spawnFactor (0..1)
+            float targetSpawn = wantVisible ? 1.0f : 0.0f;
+            spawnFactor = spawnFactor * 0.80f + targetSpawn * 0.20f;
+            if (spawnFactor <= 0.015f && !wantVisible)
+            {
+                spawnFactor = 0f;
+                islandForm.Hide();
+                return;
+            }
+
             float targetCenterX = targetScreen.Left + targetScreen.Width / 2f;
-            float targetTopY = targetScreen.Top + 8f;
+            float targetTopY = targetScreen.Top + 10f;
 
             if (currentScreenCenterX < -9000f || Math.Abs(currentScreenCenterX - targetCenterX) > 5000f)
             {
@@ -1300,59 +2145,99 @@ namespace iCornerDuo
             }
             else
             {
-                // Smooth glide when switching monitors!
                 currentScreenCenterX = currentScreenCenterX * 0.78f + targetCenterX * 0.22f;
                 currentScreenTopY = currentScreenTopY * 0.78f + targetTopY * 0.22f;
             }
 
             float scale = settings.IslandScalePercent / 100f;
 
-            // Check if cursor is hovering over the Dynamic Island
+            // Hover detection
             bool isHovering = false;
-            if (settings.IslandExpandOnHover && currentWindowRect != Rectangle.Empty)
+            if (settings.IslandExpandOnHover && currentPillScreenRect != Rectangle.Empty)
             {
-                Rectangle hitBox = currentWindowRect;
-                hitBox.Inflate(10, 8);
+                Rectangle hitBox = currentPillScreenRect;
+                hitBox.Inflate(14, 12);
                 isHovering = hitBox.Contains(cursorPos);
             }
 
-            // Smooth spring interpolation for expandProgress (0..1)
             float targetExpand = isHovering ? 1.0f : 0.0f;
-            expandProgress = expandProgress * 0.80f + targetExpand * 0.20f;
+            expandProgress = expandProgress * 0.78f + targetExpand * 0.22f;
             if (Math.Abs(expandProgress - targetExpand) < 0.005f) expandProgress = targetExpand;
 
-            if (buttonFlashEffect > 0f) buttonFlashEffect = Math.Max(0f, buttonFlashEffect - 0.08f);
-
-            // Calculate dimensions from Compact Pill -> Expanded Media Hub
-            float compactW = 290f * scale;
-            float compactH = 38f * scale;
-            float expandedW = 440f * scale;
-            float expandedH = 166f * scale;
-
-            float curPillW = (compactW + (expandedW - compactW) * expandProgress) * (1.0f + transitionBoost * 0.06f);
-            float curPillH = (compactH + (expandedH - compactH) * expandProgress) * (1.0f + transitionBoost * 0.05f);
-
-            int margin = 22;
-            int winW = (int)curPillW + margin * 2;
-            int winH = (int)curPillH + margin * 2;
-            int winX = (int)(currentScreenCenterX - winW / 2f);
-            int winY = (int)currentScreenTopY - margin / 2;
-
-            currentWindowRect = new Rectangle(winX + margin, winY + margin / 2, (int)curPillW, (int)curPillH);
-
-            // Handle interactive hover & mouse clicks when expanded!
-            hoveredButtonIndex = -1;
-            if (expandProgress > 0.65f && isHovering)
+            // Compute Spawn Animation transform (LiquidDropDown, SpringUnfold, WormholePortal, CyberNeonSnap, NovaBloom)
+            float spawnScaleX = 1.0f;
+            float spawnScaleY = 1.0f;
+            float spawnOffsetY = 0f;
+            if (spawnFactor < 0.99f)
             {
-                Point localPt = new Point(cursorPos.X - winX, cursorPos.Y - winY);
-                HandleExpandedInteraction(localPt, margin, margin / 2, curPillW, curPillH, scale, media);
+                switch (settings.SpawnAnim)
+                {
+                    case IslandSpawnAnimation.LiquidDropDown:
+                        spawnOffsetY = -55f * (1f - spawnFactor);
+                        spawnScaleX = 0.55f + 0.45f * spawnFactor;
+                        spawnScaleY = 1.35f - 0.35f * spawnFactor;
+                        break;
+                    case IslandSpawnAnimation.SpringUnfold:
+                        spawnScaleX = 0.15f + 0.85f * spawnFactor;
+                        spawnScaleY = 0.8f + 0.2f * spawnFactor;
+                        break;
+                    case IslandSpawnAnimation.WormholePortal:
+                        spawnScaleX = spawnFactor;
+                        spawnScaleY = spawnFactor;
+                        break;
+                    case IslandSpawnAnimation.CyberNeonSnap:
+                        spawnScaleX = 1.4f - 0.4f * spawnFactor;
+                        spawnScaleY = Math.Max(0.08f, spawnFactor);
+                        break;
+                    case IslandSpawnAnimation.NovaBloom:
+                        spawnScaleX = 1.25f - 0.25f * spawnFactor;
+                        spawnScaleY = 1.25f - 0.25f * spawnFactor;
+                        break;
+                }
+            }
+
+            float compactW = (TimerEngine.IsRunning ? 320f : 295f) * scale;
+            float compactH = 38f * scale;
+            float expandedW = 475f * scale;
+            float expandedH = 204f * scale;
+
+            float rawPillW = (compactW + (expandedW - compactW) * expandProgress) * (1.0f + transitionBoost * 0.06f);
+            float rawPillH = (compactH + (expandedH - compactH) * expandProgress) * (1.0f + transitionBoost * 0.05f);
+
+            float curPillW = Math.Max(40f, rawPillW * spawnScaleX);
+            float curPillH = Math.Max(14f, rawPillH * spawnScaleY);
+
+            // Extra top/side margin for Companion perched on or floating next to the Island + Speech Bubble
+            int padX = (settings.Companion != CompanionSpecies.None) ? (int)(95 * scale) : 28;
+            int padTop = (settings.Companion != CompanionSpecies.None && settings.CompanionPos == CompanionPositionMode.PerchedOnIsland)
+                ? (int)(52 * scale) : 20;
+            int padBottom = 26;
+
+            int winW = (int)curPillW + padX * 2;
+            int winH = (int)curPillH + padTop + padBottom;
+            int winX = (int)(currentScreenCenterX - winW / 2f);
+            int winY = (int)(currentScreenTopY - padTop + spawnOffsetY);
+
+            RectangleF pillRect = new RectangleF(padX, padTop, curPillW, curPillH);
+            currentPillScreenRect = new Rectangle(winX + padX - 24, winY + 4, (int)curPillW + 48, (int)curPillH + padTop);
+
+            // Handle mouse hover & clicks inside the Expanded Island OR clicking the Companion!
+            Point localPt = new Point(cursorPos.X - winX, cursorPos.Y - winY);
+            RectangleF companionRect = GetCompanionRect(pillRect, settings, scale);
+            Point companionScreenCenter = new Point(winX + (int)(companionRect.X + companionRect.Width / 2f), winY + (int)(companionRect.Y + companionRect.Height / 2f));
+
+            hoveredTabIndex = -1;
+            hoveredActionIndex = -1;
+            if (isHovering)
+            {
+                HandleMouseInteraction(localPt, pillRect, companionRect, scale, settings, media, new Point((int)currentScreenCenterX, (int)currentScreenTopY));
             }
             else
             {
                 wasMouseDown = (NativeMethods.GetAsyncKeyState(0x01) & 0x8000) != 0;
             }
 
-            // Render Dynamic Island Bitmap
+            // Render Bitmap
             using (Bitmap bmp = new Bitmap(winW, winH, PixelFormat.Format32bppArgb))
             using (Graphics g = Graphics.FromImage(bmp))
             {
@@ -1361,79 +2246,720 @@ namespace iCornerDuo
                 g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
                 g.Clear(Color.Transparent);
 
-                RectangleF pillRect = new RectangleF(margin, margin / 2f, curPillW, curPillH);
-                float cornerRad = Math.Min(curPillH / 2f, (19f + 15f * expandProgress) * scale);
-
                 Color accent1 = palette[0];
                 Color accent2 = palette[1 % palette.Length];
-                if (settings.IslandAutoAdaptBrandColor && media.ActiveSource != MediaSourceType.None)
+                if (TimerEngine.FinishedAlertActive)
+                {
+                    accent1 = Color.FromArgb(255, 255, 149, 0); // Apple Timer Amber Alert
+                    accent2 = Color.FromArgb(255, 255, 59, 48);
+                }
+                else if (settings.IslandAutoAdaptBrandColor && media.ActiveSource != MediaSourceType.None)
                 {
                     accent1 = ThemeColorEngine.GetMediaBrandColor(media.ActiveSource, palette[0]);
                 }
 
+                float cornerRad = Math.Min(curPillH / 2f, (19f + 16f * expandProgress) * scale);
                 using (GraphicsPath pillPath = ScreenTransitionAnimator.CreateRoundedRectPath(pillRect, cornerRad))
                 {
-                    // 1. Animated Outer Glow / Border Halo
+                    // 1. Outer Halo
                     DrawIslandOuterGlow(g, pillRect, pillPath, settings.IslandBorder, accent1, accent2, palette, globalTime, media.CurrentAudioPeak, transitionBoost);
 
-                    // 2. Deep Obsidian Glass Pill Body
-                    using (SolidBrush bodyBrush = new SolidBrush(Color.FromArgb(248, 8, 9, 14)))
+                    // 2. Deep Obsidian Pill Body
+                    using (SolidBrush bodyBrush = new SolidBrush(Color.FromArgb(250, 8, 9, 14)))
                     {
                         g.FillPath(bodyBrush, pillPath);
                     }
 
-                    // 3. Subtle Inner Top Specular Highlight
+                    // 3. Rim Highlight
                     using (LinearGradientBrush glassGrad = new LinearGradientBrush(
-                        pillRect,
-                        Color.FromArgb(180, accent1),
-                        Color.FromArgb(140, accent2),
-                        (globalTime * 45f) % 360f))
+                        pillRect, Color.FromArgb(190, accent1), Color.FromArgb(145, accent2), (globalTime * 45f) % 360f))
                     using (Pen rimPen = new Pen(glassGrad, 1.6f))
                     {
                         g.DrawPath(rimPen, pillPath);
                     }
                 }
 
-                // 4. Draw Compact Content vs Expanded Media Player Content
-                if (expandProgress < 0.45f)
+                // 4. Compact vs Expanded Content
+                if (expandProgress < 0.42f)
                 {
-                    float compactAlpha = 1.0f - (expandProgress / 0.45f);
-                    DrawCompactIslandContent(g, pillRect, scale, compactAlpha, media, accent1, accent2, globalTime, settings.IslandShowClockWhenIdle);
+                    float cAlpha = (1.0f - expandProgress / 0.42f) * spawnFactor;
+                    DrawCompactIslandContent(g, pillRect, scale, cAlpha, media, accent1, accent2, globalTime, settings);
                 }
                 else
                 {
-                    float expAlpha = (expandProgress - 0.45f) / 0.55f;
-                    DrawExpandedIslandPlayer(g, pillRect, scale, expAlpha, media, accent1, accent2, palette, globalTime);
+                    float eAlpha = ((expandProgress - 0.42f) / 0.58f) * spawnFactor;
+                    DrawExpandedMultiTabHub(g, pillRect, scale, eAlpha, media, accent1, accent2, palette, globalTime, settings, cursorPos, companionScreenCenter);
+                }
+
+                // 5. Draw Original Cyber Companion (if perched on or floating next to the Island)
+                if (settings.Companion != CompanionSpecies.None && settings.CompanionPos != CompanionPositionMode.InsideIsland)
+                {
+                    CompanionEngine.DrawCompanion(
+                        g, companionRect, settings.Companion, cursorPos, companionScreenCenter,
+                        accent1, accent2, globalTime, media.CurrentAudioPeak, settings.CompanionFollowCursorEyes);
+
+                    if (settings.CompanionShowSpeechBubbles && CompanionEngine.HasActiveSpeech)
+                    {
+                        DrawCompanionSpeechBubble(g, companionRect, pillRect, CompanionEngine.SpeechBubbleText, accent1, scale);
+                    }
                 }
 
                 if (!islandForm.Visible) islandForm.Show();
-                islandForm.SetBitmap(bmp, winX, winY, 255);
+                byte masterAlpha = (byte)Math.Max(0, Math.Min(255, (int)(spawnFactor * 255)));
+                islandForm.SetBitmap(bmp, winX, winY, masterAlpha);
             }
         }
 
+        private RectangleF GetCompanionRect(RectangleF pillRect, AppSettings settings, float scale)
+        {
+            float cSize = 44f * (settings.CompanionScalePercent / 100f) * scale;
+            if (settings.CompanionPos == CompanionPositionMode.PerchedOnIsland)
+            {
+                return new RectangleF(pillRect.Right - cSize - 18f * scale, pillRect.Y - cSize * 0.78f, cSize, cSize);
+            }
+            else if (settings.CompanionPos == CompanionPositionMode.FloatingNextToIsland)
+            {
+                return new RectangleF(pillRect.Right + 10f * scale, pillRect.Y + (pillRect.Height - cSize) / 2f, cSize, cSize);
+            }
+            else
+            {
+                return new RectangleF(pillRect.X + 8f * scale, pillRect.Y + (pillRect.Height - cSize * 0.75f) / 2f, cSize * 0.75f, cSize * 0.75f);
+            }
+        }
+
+        private void DrawCompanionSpeechBubble(Graphics g, RectangleF compRect, RectangleF pillRect, string text, Color accent, float scale)
+        {
+            using (Font f = new Font("Segoe UI Semibold", 8.2f * scale, FontStyle.Bold))
+            {
+                string clean = text.Length > 48 ? text.Substring(0, 46) + "…" : text;
+                SizeF sz = g.MeasureString(clean, f);
+                float bw = Math.Min(pillRect.Width * 0.85f, sz.Width + 18f * scale);
+                float bh = 24f * scale;
+                float bx = Math.Max(4f, compRect.X - bw + compRect.Width * 0.3f);
+                float by = Math.Max(2f, compRect.Y - 4f);
+
+                RectangleF bRect = new RectangleF(bx, by, bw, bh);
+                using (GraphicsPath bp = ScreenTransitionAnimator.CreateRoundedRectPath(bRect, bh / 2f))
+                using (SolidBrush bg = new SolidBrush(Color.FromArgb(240, 14, 16, 26)))
+                using (Pen border = new Pen(accent, 1.3f))
+                using (SolidBrush tb = new SolidBrush(Color.White))
+                {
+                    g.FillPath(bg, bp);
+                    g.DrawPath(border, bp);
+                    g.DrawString(clean, f, tb, bx + 9f * scale, by + (bh - sz.Height) / 2f);
+                }
+            }
+        }
+
+        private void DrawCompactIslandContent(
+            Graphics g, RectangleF pill, float scale, float alphaF,
+            LiveMediaAndAudioTracker media, Color accent1, Color accent2, float globalTime, AppSettings settings)
+        {
+            int alpha = (int)(Math.Max(0f, Math.Min(1f, alphaF)) * 255);
+            if (alpha <= 5) return;
+
+            float leftOffset = pill.X + pill.Height * 0.22f;
+
+            // Left Element: Companion Inside OR Apple Circular Timer Ring OR Spinning Vinyl
+            if (settings.Companion != CompanionSpecies.None && settings.CompanionPos == CompanionPositionMode.InsideIsland)
+            {
+                float cs = pill.Height * 0.82f;
+                RectangleF cr = new RectangleF(leftOffset, pill.Y + (pill.Height - cs) / 2f, cs, cs);
+                CompanionEngine.DrawCompanion(g, cr, settings.Companion, Cursor.Position, Point.Empty, accent1, accent2, globalTime, media.CurrentAudioPeak, false);
+                leftOffset += cs + 6f * scale;
+            }
+            else if (TimerEngine.IsRunning || TimerEngine.FinishedAlertActive)
+            {
+                // Apple iOS Dynamic Island Orange Circular Countdown Ring!
+                float ringSize = pill.Height * 0.64f;
+                float rx = leftOffset;
+                float ry = pill.Y + (pill.Height - ringSize) / 2f;
+                Color timerOrange = Color.FromArgb(alpha, 255, 159, 10);
+                using (Pen bgRing = new Pen(Color.FromArgb(alpha / 3, 255, 159, 10), 2.6f * scale))
+                using (Pen fgRing = new Pen(timerOrange, 2.6f * scale))
+                {
+                    g.DrawEllipse(bgRing, rx, ry, ringSize, ringSize);
+                    g.DrawArc(fgRing, rx, ry, ringSize, ringSize, -90f, 360f * TimerEngine.ProgressRatio);
+                }
+                leftOffset += ringSize + 8f * scale;
+            }
+            else
+            {
+                float discSize = pill.Height * 0.64f;
+                float discY = pill.Y + (pill.Height - discSize) / 2f;
+                using (LinearGradientBrush discBrush = new LinearGradientBrush(
+                    new RectangleF(leftOffset, discY, discSize, discSize),
+                    Color.FromArgb(alpha, accent1), Color.FromArgb(alpha, accent2), (globalTime * 120f) % 360f))
+                {
+                    g.FillEllipse(discBrush, leftOffset, discY, discSize, discSize);
+                }
+                float hole = discSize * 0.32f;
+                using (SolidBrush centerHole = new SolidBrush(Color.FromArgb(alpha, 10, 11, 16)))
+                {
+                    g.FillEllipse(centerHole, leftOffset + (discSize - hole) / 2f, discY + (discSize - hole) / 2f, hole, hole);
+                }
+                leftOffset += discSize + 8f * scale;
+            }
+
+            // Center Text: Transient banner OR Active Timer Countdown OR Music Track OR Clock
+            string centerText = media.TrackTitle;
+            Color textColor = Color.FromArgb(alpha, 242, 245, 255);
+
+            if (transientBannerText != null && DateTime.UtcNow.Ticks < transientBannerUntilTicks)
+            {
+                centerText = transientBannerText;
+            }
+            else if (TimerEngine.IsRunning || TimerEngine.FinishedAlertActive)
+            {
+                centerText = "⏱ " + TimerEngine.FormattedTime + " • " + TimerEngine.TimerLabel;
+                textColor = Color.FromArgb(alpha, 255, 185, 60);
+            }
+            else if (media.ActiveSource == MediaSourceType.None && !media.IsAudioActive && settings.IslandShowClockWhenIdle)
+            {
+                centerText = DateTime.Now.ToString("HH:mm") + "  •  " + settings.CompanionName;
+            }
+
+            if (centerText.Length > 25) centerText = centerText.Substring(0, 24) + "…";
+
+            using (Font f = new Font("Segoe UI Semibold", 8.8f * scale, FontStyle.Bold))
+            using (SolidBrush tb = new SolidBrush(textColor))
+            {
+                float textY = pill.Y + (pill.Height - 16f * scale) / 2f;
+                g.DrawString(centerText, f, tb, leftOffset, textY);
+            }
+
+            // Right Live 6-Bar Audio Waveform
+            int barCount = 6;
+            float barW = 3.0f * scale;
+            float barGap = 2.5f * scale;
+            float waveStartX = pill.Right - barCount * (barW + barGap) - 12f * scale;
+            float maxBarH = pill.Height * 0.56f;
+
+            for (int i = 0; i < barCount; i++)
+            {
+                float bh = Math.Max(4f * scale, maxBarH * media.SpectrumBars[i * 2]);
+                float bx = waveStartX + i * (barW + barGap);
+                float by = pill.Y + (pill.Height - bh) / 2f;
+                Color barCol = ThemeColorEngine.Interpolate(accent1, accent2, i / (float)(barCount - 1));
+                using (SolidBrush bb = new SolidBrush(Color.FromArgb(alpha, barCol)))
+                {
+                    g.FillRectangle(bb, bx, by, barW, bh);
+                }
+            }
+        }
+
+        private void DrawExpandedMultiTabHub(
+            Graphics g, RectangleF pill, float scale, float alphaF,
+            LiveMediaAndAudioTracker media, Color accent1, Color accent2, Color[] palette,
+            float globalTime, AppSettings settings, Point cursorPos, Point companionCenter)
+        {
+            int alpha = (int)(Math.Max(0f, Math.Min(1f, alphaF)) * 255);
+            if (alpha <= 5) return;
+
+            // 1. Top Navigation Tab Bar inside the Expanded Dynamic Island (4 Tabs + Settings gear)
+            RectangleF[] tabRects = GetTopTabRects(pill, scale);
+            string[] tabTitles = new string[] { "🎵 Musique", "⏱️ Minuteur", "🦊 Compagnon", "🤖 IA (" + settings.ActiveAiProvider + ")", "⚙️" };
+
+            using (Font tabFont = new Font("Segoe UI Semibold", 8.0f * scale, FontStyle.Bold))
+            {
+                for (int i = 0; i < tabRects.Length; i++)
+                {
+                    bool isSelected = (i < 4 && (int)CurrentTab == i);
+                    bool isHovered = (hoveredTabIndex == i);
+                    RectangleF tr = tabRects[i];
+
+                    using (GraphicsPath tp = ScreenTransitionAnimator.CreateRoundedRectPath(tr, tr.Height / 2f))
+                    {
+                        Color bg = isSelected
+                            ? Color.FromArgb(alpha, accent1)
+                            : (isHovered ? Color.FromArgb(alpha, 48, 55, 78) : Color.FromArgb(alpha, 22, 25, 36));
+                        using (SolidBrush b = new SolidBrush(bg))
+                        {
+                            g.FillPath(b, tp);
+                        }
+                    }
+
+                    SizeF sz = g.MeasureString(tabTitles[i], tabFont);
+                    Color fg = isSelected ? Color.FromArgb(alpha, 10, 12, 18) : Color.FromArgb(alpha, 235, 240, 255);
+                    using (SolidBrush tb = new SolidBrush(fg))
+                    {
+                        g.DrawString(tabTitles[i], tabFont, tb, tr.X + (tr.Width - sz.Width) / 2f, tr.Y + (tr.Height - sz.Height) / 2f);
+                    }
+                }
+            }
+
+            // 2. Render Active Tab Body
+            if (CurrentTab == IslandActiveTab.Music)
+            {
+                DrawMusicTabBody(g, pill, scale, alpha, media, accent1, accent2, globalTime);
+            }
+            else if (CurrentTab == IslandActiveTab.Timer)
+            {
+                DrawTimerTabBody(g, pill, scale, alpha, accent1, accent2);
+            }
+            else if (CurrentTab == IslandActiveTab.Companion)
+            {
+                DrawCompanionTabBody(g, pill, scale, alpha, settings, accent1, accent2, globalTime, media.CurrentAudioPeak, cursorPos, companionCenter);
+            }
+            else if (CurrentTab == IslandActiveTab.AiAssistant)
+            {
+                DrawAiAssistantTabBody(g, pill, scale, alpha, settings, accent1, accent2);
+            }
+        }
+
+        private void DrawMusicTabBody(Graphics g, RectangleF pill, float scale, int alpha, LiveMediaAndAudioTracker media, Color accent1, Color accent2, float globalTime)
+        {
+            float pad = 16f * scale;
+            float bodyTop = pill.Y + 44f * scale;
+
+            // Album Disc
+            float artSize = 48f * scale;
+            RectangleF artRect = new RectangleF(pill.X + pad, bodyTop, artSize, artSize);
+            using (GraphicsPath artPath = ScreenTransitionAnimator.CreateRoundedRectPath(artRect, 12f * scale))
+            using (LinearGradientBrush artBrush = new LinearGradientBrush(artRect, Color.FromArgb(alpha, accent1), Color.FromArgb(alpha, accent2), (globalTime * 80f) % 360f))
+            {
+                g.FillPath(artBrush, artPath);
+            }
+            using (Font iconFont = new Font("Segoe UI Symbol", 16f * scale, FontStyle.Bold))
+            using (SolidBrush wb = new SolidBrush(Color.FromArgb(alpha, Color.White)))
+            {
+                g.DrawString("♫", iconFont, wb, artRect.X + 9f * scale, artRect.Y + 7f * scale);
+            }
+
+            // Track Info
+            float textLeft = artRect.Right + 12f * scale;
+            using (Font badgeFont = new Font("Segoe UI Semibold", 7.5f * scale, FontStyle.Bold))
+            using (Font titleFont = new Font("Segoe UI Semibold", 10.0f * scale, FontStyle.Bold))
+            using (Font artistFont = new Font("Segoe UI", 8.4f * scale, FontStyle.Regular))
+            using (SolidBrush badgeB = new SolidBrush(Color.FromArgb(alpha, accent1)))
+            using (SolidBrush titleB = new SolidBrush(Color.FromArgb(alpha, 250, 252, 255)))
+            using (SolidBrush artistB = new SolidBrush(Color.FromArgb((int)(alpha * 0.75f), 180, 190, 215)))
+            {
+                g.DrawString(GetSourceBadgeText(media.ActiveSource), badgeFont, badgeB, textLeft, bodyTop);
+                string tTitle = media.TrackTitle.Length > 30 ? media.TrackTitle.Substring(0, 29) + "…" : media.TrackTitle;
+                g.DrawString(tTitle, titleFont, titleB, textLeft, bodyTop + 14f * scale);
+                string tArtist = media.TrackArtist.Length > 38 ? media.TrackArtist.Substring(0, 37) + "…" : media.TrackArtist;
+                g.DrawString(tArtist, artistFont, artistB, textLeft, bodyTop + 33f * scale);
+            }
+
+            // 12-Bar Spectrum on right
+            int specCount = 12;
+            float sbW = 3.2f * scale;
+            float sbGap = 2.4f * scale;
+            float specRightX = pill.Right - pad - specCount * (sbW + sbGap);
+            float specCenterY = bodyTop + 24f * scale;
+            for (int i = 0; i < specCount; i++)
+            {
+                float bh = Math.Max(4f * scale, 34f * scale * media.SpectrumBars[i]);
+                Color bc = ThemeColorEngine.Interpolate(accent1, accent2, i / (float)(specCount - 1));
+                using (SolidBrush b = new SolidBrush(Color.FromArgb(alpha, bc)))
+                {
+                    g.FillRectangle(b, specRightX + i * (sbW + sbGap), specCenterY - bh / 2f, sbW, bh);
+                }
+            }
+
+            // Action Buttons (Transport + Service Launchers)
+            RectangleF[] btns = GetActionButtonsForCurrentTab(pill, scale);
+            string[] labels = new string[] { "⏮", "⏯", "⏭", "🔉", "🔊", "🟢 Spotify", "🔴 Apple Music", "▶️ YouTube", "🎨 Thème" };
+            DrawActionButtonsGrid(g, btns, labels, alpha, scale, accent1, 1);
+        }
+
+        private void DrawTimerTabBody(Graphics g, RectangleF pill, float scale, int alpha, Color accent1, Color accent2)
+        {
+            float bodyTop = pill.Y + 46f * scale;
+            Color appleAmber = Color.FromArgb(alpha, 255, 159, 10);
+
+            // Big Circular iOS Countdown Ring on Left
+            float ringSize = 62f * scale;
+            float rx = pill.X + 24f * scale;
+            float ry = bodyTop + 4f * scale;
+
+            using (Pen bgRing = new Pen(Color.FromArgb(alpha / 4, 255, 159, 10), 5.0f * scale))
+            using (Pen fgRing = new Pen(appleAmber, 5.0f * scale))
+            {
+                fgRing.StartCap = LineCap.Round;
+                fgRing.EndCap = LineCap.Round;
+                g.DrawEllipse(bgRing, rx, ry, ringSize, ringSize);
+                g.DrawArc(fgRing, rx, ry, ringSize, ringSize, -90f, 360f * TimerEngine.ProgressRatio);
+            }
+
+            // Big Digital Countdown Display
+            using (Font digiFont = new Font("Segoe UI Semibold", 22f * scale, FontStyle.Bold))
+            using (Font subFont = new Font("Segoe UI Semibold", 8.8f * scale, FontStyle.Bold))
+            using (SolidBrush amberB = new SolidBrush(appleAmber))
+            using (SolidBrush whiteB = new SolidBrush(Color.FromArgb(alpha, Color.White)))
+            {
+                g.DrawString(TimerEngine.FormattedTime, digiFont, whiteB, rx + ringSize + 16f * scale, ry + 2f * scale);
+                string status = TimerEngine.IsRunning
+                    ? ("🔥 EN COURS • " + TimerEngine.TimerLabel.ToUpper())
+                    : ("⏸ EN PAUSE • " + TimerEngine.TimerLabel.ToUpper());
+                g.DrawString(status, subFont, amberB, rx + ringSize + 18f * scale, ry + 42f * scale);
+            }
+
+            // Timer Action Buttons: [⏯ Start/Pause] [🔄 Reset] [⏱ 1m] [⏱ 5m] [🍅 25m Pomodoro] [➕ +1m] [⏱ Chrono]
+            RectangleF[] btns = GetActionButtonsForCurrentTab(pill, scale);
+            string[] labels = new string[] {
+                TimerEngine.IsRunning ? "⏸ Pause" : "▶️ Démarrer",
+                "🔄 Reset",
+                "⏱ 1 min",
+                "⏱ 5 min",
+                "🍅 25m Pomo",
+                "➕ +1 min",
+                "⏱️ Chrono"
+            };
+            DrawActionButtonsGrid(g, btns, labels, alpha, scale, appleAmber, 0);
+        }
+
+        private void DrawCompanionTabBody(
+            Graphics g, RectangleF pill, float scale, int alpha, AppSettings settings,
+            Color accent1, Color accent2, float globalTime, float audioPeak, Point cursorPos, Point companionCenter)
+        {
+            float bodyTop = pill.Y + 46f * scale;
+
+            // Companion Avatar Showcase Box on Left
+            RectangleF avatarBox = new RectangleF(pill.X + 20f * scale, bodyTop, 68f * scale, 68f * scale);
+            using (GraphicsPath ap = ScreenTransitionAnimator.CreateRoundedRectPath(avatarBox, 16f * scale))
+            using (SolidBrush ab = new SolidBrush(Color.FromArgb(alpha, 18, 22, 34)))
+            using (Pen border = new Pen(Color.FromArgb(alpha, accent1), 1.5f))
+            {
+                g.FillPath(ab, ap);
+                g.DrawPath(border, ap);
+            }
+
+            CompanionSpecies spec = (settings.Companion == CompanionSpecies.None) ? CompanionSpecies.KitsuneCyberFox : settings.Companion;
+            CompanionEngine.DrawCompanion(g, avatarBox, spec, cursorPos, companionCenter, accent1, accent2, globalTime, audioPeak, true);
+
+            // Companion Stats & Mood
+            float tx = avatarBox.Right + 14f * scale;
+            using (Font nameF = new Font("Segoe UI Semibold", 11f * scale, FontStyle.Bold))
+            using (Font infoF = new Font("Segoe UI", 8.6f * scale, FontStyle.Regular))
+            using (SolidBrush wb = new SolidBrush(Color.FromArgb(alpha, Color.White)))
+            using (SolidBrush cb = new SolidBrush(Color.FromArgb(alpha, accent1)))
+            {
+                g.DrawString(settings.CompanionName + "  •  Niv. " + CompanionEngine.Level + " (" + CompanionEngine.Xp + "/100 XP)", nameF, wb, tx, bodyTop + 2f * scale);
+                g.DrawString("Espèce : " + spec + "   |   Humeur : " + CompanionEngine.Mood, infoF, cb, tx, bodyTop + 24f * scale);
+                string quote = CompanionEngine.HasActiveSpeech ? CompanionEngine.SpeechBubbleText : "« Clique sur Caresser, Changer d'espèce ou Discuter IA ! »";
+                if (quote.Length > 48) quote = quote.Substring(0, 46) + "…";
+                g.DrawString(quote, infoF, wb, tx, bodyTop + 44f * scale);
+            }
+
+            // Companion Interactive Buttons
+            RectangleF[] btns = GetActionButtonsForCurrentTab(pill, scale);
+            string[] labels = new string[] {
+                "⚡ Booster / Caresser (+XP)",
+                "🦊 Changer de Compagnon",
+                "📍 Position (" + settings.CompanionPos + ")",
+                "🤖 Demander une blague IA"
+            };
+            DrawActionButtonsGrid(g, btns, labels, alpha, scale, accent1, 0);
+        }
+
+        private void DrawAiAssistantTabBody(Graphics g, RectangleF pill, float scale, int alpha, AppSettings settings, Color accent1, Color accent2)
+        {
+            float bodyTop = pill.Y + 46f * scale;
+
+            // AI Response Box inside Dynamic Island
+            RectangleF respBox = new RectangleF(pill.X + 18f * scale, bodyTop, pill.Width - 36f * scale, 68f * scale);
+            using (GraphicsPath rp = ScreenTransitionAnimator.CreateRoundedRectPath(respBox, 12f * scale))
+            using (SolidBrush rb = new SolidBrush(Color.FromArgb(alpha, 18, 22, 34)))
+            using (Pen border = new Pen(Color.FromArgb(alpha / 2, accent1), 1.2f))
+            {
+                g.FillPath(rb, rp);
+                g.DrawPath(border, rp);
+            }
+
+            using (Font respF = new Font("Segoe UI", 8.5f * scale, FontStyle.Regular))
+            using (SolidBrush tb = new SolidBrush(Color.FromArgb(alpha, 235, 240, 255)))
+            {
+                RectangleF textArea = RectangleF.Inflate(respBox, -10f * scale, -8f * scale);
+                g.DrawString(AiEngine.LastResponse, respF, tb, textArea);
+            }
+
+            // AI Action Buttons: [💬 Poser une question] [🔄 Fournisseur: Gemini/Claude/ChatGPT/Mistral] [✨ Conseil Productivité] [🎲 Fun Fact]
+            RectangleF[] btns = GetActionButtonsForCurrentTab(pill, scale);
+            string[] labels = new string[] {
+                "💬 Ouvrir le Chat IA",
+                "🔄 API : " + settings.ActiveAiProvider,
+                "✨ Idée / Astuce IA",
+                "🎲 Blague Cyber"
+            };
+            DrawActionButtonsGrid(g, btns, labels, alpha, scale, accent1, 0);
+        }
+
+        private void DrawActionButtonsGrid(Graphics g, RectangleF[] btns, string[] labels, int alpha, float scale, Color accent, int primaryIndex)
+        {
+            using (Font f = new Font("Segoe UI Semibold", 8.3f * scale, FontStyle.Bold))
+            {
+                int count = Math.Min(btns.Length, labels.Length);
+                for (int i = 0; i < count; i++)
+                {
+                    bool hovered = (hoveredActionIndex == i);
+                    RectangleF br = btns[i];
+                    using (GraphicsPath bp = ScreenTransitionAnimator.CreateRoundedRectPath(br, br.Height / 2f))
+                    {
+                        Color bg = (i == primaryIndex)
+                            ? (hovered ? accent : Color.FromArgb(alpha, 42, 54, 82))
+                            : (hovered ? Color.FromArgb(alpha, 55, 64, 94) : Color.FromArgb(alpha, 24, 28, 40));
+
+                        using (SolidBrush bb = new SolidBrush(bg))
+                        {
+                            g.FillPath(bb, bp);
+                        }
+                        using (Pen borderP = new Pen(hovered ? Color.FromArgb(alpha, accent) : Color.FromArgb(alpha / 3, 110, 125, 160), 1.2f))
+                        {
+                            g.DrawPath(borderP, bp);
+                        }
+                    }
+
+                    SizeF sz = g.MeasureString(labels[i], f);
+                    using (SolidBrush fb = new SolidBrush(Color.FromArgb(alpha, Color.White)))
+                    {
+                        g.DrawString(labels[i], f, fb, br.X + (br.Width - sz.Width) / 2f, br.Y + (br.Height - sz.Height) / 2f);
+                    }
+                }
+            }
+        }
+
+        private RectangleF[] GetTopTabRects(RectangleF pill, float scale)
+        {
+            float y = pill.Y + 10f * scale;
+            float h = 25f * scale;
+            float gap = 6f * scale;
+            float w1 = 88f * scale;
+            float w2 = 92f * scale;
+            float w3 = 102f * scale;
+            float w4 = 112f * scale;
+            float w5 = 34f * scale;
+            float total = w1 + w2 + w3 + w4 + w5 + gap * 4;
+            float x = pill.X + (pill.Width - total) / 2f;
+
+            RectangleF[] r = new RectangleF[5];
+            r[0] = new RectangleF(x, y, w1, h); x += w1 + gap;
+            r[1] = new RectangleF(x, y, w2, h); x += w2 + gap;
+            r[2] = new RectangleF(x, y, w3, h); x += w3 + gap;
+            r[3] = new RectangleF(x, y, w4, h); x += w4 + gap;
+            r[4] = new RectangleF(x, y, w5, h);
+            return r;
+        }
+
+        private RectangleF[] GetActionButtonsForCurrentTab(RectangleF pill, float scale)
+        {
+            if (CurrentTab == IslandActiveTab.Music)
+            {
+                RectangleF[] r = new RectangleF[9];
+                float row1Y = pill.Y + 104f * scale;
+                float btnH = 32f * scale;
+                float smallW = 48f * scale;
+                float playW = 68f * scale;
+                float gap = 10f * scale;
+                float total1 = smallW * 4 + playW + gap * 4;
+                float sx = pill.X + (pill.Width - total1) / 2f;
+
+                r[0] = new RectangleF(sx, row1Y, smallW, btnH); sx += smallW + gap;
+                r[1] = new RectangleF(sx, row1Y, playW, btnH); sx += playW + gap;
+                r[2] = new RectangleF(sx, row1Y, smallW, btnH); sx += smallW + gap;
+                r[3] = new RectangleF(sx, row1Y, smallW, btnH); sx += smallW + gap;
+                r[4] = new RectangleF(sx, row1Y, smallW, btnH);
+
+                float row2Y = pill.Y + 148f * scale;
+                float chipH = 26f * scale;
+                float cGap = 8f * scale;
+                float cw = 98f * scale;
+                float total2 = cw * 4 + cGap * 3;
+                float cx = pill.X + (pill.Width - total2) / 2f;
+                for (int i = 0; i < 4; i++)
+                {
+                    r[5 + i] = new RectangleF(cx, row2Y, cw, chipH);
+                    cx += cw + cGap;
+                }
+                return r;
+            }
+            else if (CurrentTab == IslandActiveTab.Timer)
+            {
+                RectangleF[] r = new RectangleF[7];
+                float row1Y = pill.Y + 118f * scale;
+                float row2Y = pill.Y + 154f * scale;
+                float h = 28f * scale;
+                float gap = 8f * scale;
+
+                // Row 1: Start/Pause, Reset, +1 min, Chrono
+                float w = 100f * scale;
+                float sx = pill.X + (pill.Width - (w * 4 + gap * 3)) / 2f;
+                r[0] = new RectangleF(sx, row1Y, w, h); sx += w + gap;
+                r[1] = new RectangleF(sx, row1Y, w, h); sx += w + gap;
+                r[5] = new RectangleF(sx, row1Y, w, h); sx += w + gap;
+                r[6] = new RectangleF(sx, row1Y, w, h);
+
+                // Row 2: 1 min, 5 min, 25m Pomodoro
+                float w2 = 135f * scale;
+                float sx2 = pill.X + (pill.Width - (w2 * 3 + gap * 2)) / 2f;
+                r[2] = new RectangleF(sx2, row2Y, w2, h); sx2 += w2 + gap;
+                r[3] = new RectangleF(sx2, row2Y, w2, h); sx2 += w2 + gap;
+                r[4] = new RectangleF(sx2, row2Y, w2, h);
+                return r;
+            }
+            else
+            {
+                // Companion & AI tabs: 2x2 grid of wide action buttons
+                RectangleF[] r = new RectangleF[4];
+                float row1Y = pill.Y + 120f * scale;
+                float row2Y = pill.Y + 156f * scale;
+                float w = 205f * scale;
+                float h = 29f * scale;
+                float gap = 12f * scale;
+                float sx = pill.X + (pill.Width - (w * 2 + gap)) / 2f;
+
+                r[0] = new RectangleF(sx, row1Y, w, h);
+                r[1] = new RectangleF(sx + w + gap, row1Y, w, h);
+                r[2] = new RectangleF(sx, row2Y, w, h);
+                r[3] = new RectangleF(sx + w + gap, row2Y, w, h);
+                return r;
+            }
+        }
+
+        private void HandleMouseInteraction(
+            Point localPt, RectangleF pill, RectangleF companionRect, float scale,
+            AppSettings settings, LiveMediaAndAudioTracker media, Point screenTopCenter)
+        {
+            bool isMouseDown = (NativeMethods.GetAsyncKeyState(0x01) & 0x8000) != 0;
+            bool clicked = (isMouseDown && !wasMouseDown);
+            wasMouseDown = isMouseDown;
+
+            // Check click on the Companion directly!
+            if (settings.Companion != CompanionSpecies.None && companionRect.Contains(localPt.X, localPt.Y))
+            {
+                if (clicked) CompanionEngine.InteractPetOrBoost();
+                return;
+            }
+
+            if (expandProgress < 0.6f) return;
+
+            // Check Top Tabs
+            RectangleF[] tabs = GetTopTabRects(pill, scale);
+            for (int i = 0; i < tabs.Length; i++)
+            {
+                if (tabs[i].Contains(localPt.X, localPt.Y))
+                {
+                    hoveredTabIndex = i;
+                    if (clicked)
+                    {
+                        if (i < 4) CurrentTab = (IslandActiveTab)i;
+                        else if (OnOpenSettingsRequested != null) OnOpenSettingsRequested();
+                    }
+                    return;
+                }
+            }
+
+            // Check Active Tab Action Buttons
+            RectangleF[] btns = GetActionButtonsForCurrentTab(pill, scale);
+            for (int i = 0; i < btns.Length; i++)
+            {
+                if (btns[i].Contains(localPt.X, localPt.Y))
+                {
+                    hoveredActionIndex = i;
+                    if (clicked) ExecuteTabAction(i, settings, media, screenTopCenter);
+                    return;
+                }
+            }
+        }
+
+        private void ExecuteTabAction(int idx, AppSettings settings, LiveMediaAndAudioTracker media, Point screenTopCenter)
+        {
+            if (CurrentTab == IslandActiveTab.Music)
+            {
+                switch (idx)
+                {
+                    case 0: NativeMethods.SendMediaKey(NativeMethods.VK_MEDIA_PREV_TRACK); break;
+                    case 1: NativeMethods.SendMediaKey(NativeMethods.VK_MEDIA_PLAY_PAUSE); break;
+                    case 2: NativeMethods.SendMediaKey(NativeMethods.VK_MEDIA_NEXT_TRACK); break;
+                    case 3: NativeMethods.SendMediaKey(NativeMethods.VK_VOLUME_DOWN); NativeMethods.SendMediaKey(NativeMethods.VK_VOLUME_DOWN); break;
+                    case 4: NativeMethods.SendMediaKey(NativeMethods.VK_VOLUME_UP); NativeMethods.SendMediaKey(NativeMethods.VK_VOLUME_UP); break;
+                    case 5: media.LaunchOrFocusService("spotify"); break;
+                    case 6: media.LaunchOrFocusService("applemusic"); break;
+                    case 7: media.LaunchOrFocusService("youtube"); break;
+                    case 8: if (OnCycleThemeRequested != null) OnCycleThemeRequested(); break;
+                }
+            }
+            else if (CurrentTab == IslandActiveTab.Timer)
+            {
+                switch (idx)
+                {
+                    case 0: TimerEngine.ToggleStartPause(); break;
+                    case 1: TimerEngine.Reset(); break;
+                    case 2: TimerEngine.StartCountdown(60, "1 Minute"); CompanionEngine.Say("⏱ Minuteur de 1 minute lancé !"); break;
+                    case 3: TimerEngine.StartCountdown(300, "5 Minutes"); CompanionEngine.Say("⏱ Minuteur de 5 minutes lancé !"); break;
+                    case 4: TimerEngine.StartCountdown(1500, "Pomodoro 25m"); CompanionEngine.Say("🍅 Session Pomodoro 25 min démarrée !"); break;
+                    case 5: TimerEngine.AddSeconds(60); break;
+                    case 6: TimerEngine.SwitchToStopwatch(); break;
+                }
+            }
+            else if (CurrentTab == IslandActiveTab.Companion)
+            {
+                switch (idx)
+                {
+                    case 0:
+                        CompanionEngine.InteractPetOrBoost();
+                        break;
+                    case 1:
+                        int nextSpec = ((int)settings.Companion % 6) + 1;
+                        settings.Companion = (CompanionSpecies)nextSpec;
+                        settings.Save();
+                        CompanionEngine.Say("✨ Transformation en " + settings.Companion + " !");
+                        break;
+                    case 2:
+                        settings.CompanionPos = (CompanionPositionMode)(((int)settings.CompanionPos + 1) % 3);
+                        settings.Save();
+                        break;
+                    case 3:
+                        CurrentTab = IslandActiveTab.AiAssistant;
+                        AiEngine.SendPromptAsync(settings, "Raconte-moi une blague courte de geek ou donne-moi une punchline stylée !", reply => CompanionEngine.Say(reply, 6000));
+                        break;
+                }
+            }
+            else if (CurrentTab == IslandActiveTab.AiAssistant)
+            {
+                switch (idx)
+                {
+                    case 0:
+                        OpenQuickAiDialog(settings, screenTopCenter);
+                        break;
+                    case 1:
+                        settings.ActiveAiProvider = (AiProvider)(((int)settings.ActiveAiProvider + 1) % 4);
+                        settings.Save();
+                        break;
+                    case 2:
+                        AiEngine.SendPromptAsync(settings, "Donne-moi un conseil ultra court et motivant de productivité ou de focus pour ma journée !", reply => CompanionEngine.Say(reply, 6000));
+                        break;
+                    case 3:
+                        AiEngine.SendPromptAsync(settings, "Donne-moi un fait insolite et fascinant sur la tech ou l'espace en 2 phrases max !", reply => CompanionEngine.Say(reply, 6000));
+                        break;
+                }
+            }
+        }
+
+        public void OpenQuickAiDialog(AppSettings settings, Point screenTopCenter)
+        {
+            if (activeAiDialog == null || activeAiDialog.IsDisposed)
+            {
+                activeAiDialog = new QuickAiPromptDialog(settings, AiEngine, CompanionEngine, screenTopCenter);
+            }
+            activeAiDialog.Show();
+            activeAiDialog.BringToFront();
+            activeAiDialog.Activate();
+        }
+
         private void DrawIslandOuterGlow(
-            Graphics g,
-            RectangleF pillRect,
-            GraphicsPath pillPath,
-            IslandBorderAnimation borderMode,
-            Color accent1,
-            Color accent2,
-            Color[] palette,
-            float globalTime,
-            float audioPeak,
-            float transBoost)
+            Graphics g, RectangleF pillRect, GraphicsPath pillPath,
+            IslandBorderAnimation borderMode, Color accent1, Color accent2, Color[] palette,
+            float globalTime, float audioPeak, float transBoost)
         {
             if (borderMode == IslandBorderAnimation.MinimalClean && transBoost <= 0.02f) return;
 
             float glowIntensity = 0.55f + transBoost * 0.45f;
             if (borderMode == IslandBorderAnimation.AudioReactiveHalo)
-            {
                 glowIntensity = 0.25f + audioPeak * 1.15f + transBoost * 0.4f;
-            }
             else if (borderMode == IslandBorderAnimation.BreathingGlass)
-            {
                 glowIntensity = 0.25f + 0.35f * (float)(0.5 + 0.5 * Math.Sin(globalTime * 2.2f));
-            }
 
             Color cA = accent1;
             Color cB = accent2;
@@ -1453,336 +2979,12 @@ namespace iCornerDuo
                 if (alpha <= 3) continue;
 
                 using (LinearGradientBrush gb = new LinearGradientBrush(
-                    RectangleF.Inflate(pillRect, 12, 12),
-                    Color.FromArgb(alpha, cA),
-                    Color.FromArgb(alpha, cB),
-                    (globalTime * 65f) % 360f))
+                    RectangleF.Inflate(pillRect, 12, 12), Color.FromArgb(alpha, cA), Color.FromArgb(alpha, cB), (globalTime * 65f) % 360f))
                 using (Pen glowPen = new Pen(gb, layer * 3.0f))
                 {
                     g.DrawPath(glowPen, pillPath);
                 }
             }
-        }
-
-        private void DrawCompactIslandContent(
-            Graphics g,
-            RectangleF pill,
-            float scale,
-            float alphaF,
-            LiveMediaAndAudioTracker media,
-            Color accent1,
-            Color accent2,
-            float globalTime,
-            bool showClock)
-        {
-            int alpha = (int)(Math.Max(0f, Math.Min(1f, alphaF)) * 255);
-            if (alpha <= 5) return;
-
-            // Left spinning Vinyl / Album Disc
-            float discSize = pill.Height * 0.64f;
-            float discX = pill.X + pill.Height * 0.20f;
-            float discY = pill.Y + (pill.Height - discSize) / 2f;
-
-            using (LinearGradientBrush discBrush = new LinearGradientBrush(
-                new RectangleF(discX, discY, discSize, discSize),
-                Color.FromArgb(alpha, accent1),
-                Color.FromArgb(alpha, accent2),
-                (globalTime * 120f) % 360f))
-            {
-                g.FillEllipse(discBrush, discX, discY, discSize, discSize);
-            }
-            // Inner vinyl hole
-            float hole = discSize * 0.32f;
-            using (SolidBrush centerHole = new SolidBrush(Color.FromArgb(alpha, 10, 11, 16)))
-            {
-                g.FillEllipse(centerHole, discX + (discSize - hole) / 2f, discY + (discSize - hole) / 2f, hole, hole);
-            }
-
-            // Center Text (Transient banner OR Track Title OR Clock)
-            string displayTitle = media.TrackTitle;
-            if (transientBannerText != null && DateTime.UtcNow.Ticks < transientBannerUntilTicks)
-            {
-                displayTitle = transientBannerText;
-            }
-            else if (media.ActiveSource == MediaSourceType.None && !media.IsAudioActive && showClock)
-            {
-                displayTitle = DateTime.Now.ToString("HH:mm") + "  •  iCorner Duo";
-            }
-
-            if (displayTitle.Length > 26) displayTitle = displayTitle.Substring(0, 25) + "…";
-
-            using (Font f = new Font("Segoe UI Semibold", 8.8f * scale, FontStyle.Bold))
-            using (SolidBrush tb = new SolidBrush(Color.FromArgb(alpha, 242, 245, 255)))
-            {
-                float textX = discX + discSize + 9f * scale;
-                float textY = pill.Y + (pill.Height - 16f * scale) / 2f;
-                g.DrawString(displayTitle, f, tb, textX, textY);
-            }
-
-            // Right Live 6-Bar Audio Waveform Visualizer
-            int barCount = 6;
-            float barW = 3.0f * scale;
-            float barGap = 2.6f * scale;
-            float totalWaveW = barCount * (barW + barGap);
-            float waveStartX = pill.Right - totalWaveW - 12f * scale;
-            float maxBarH = pill.Height * 0.56f;
-
-            for (int i = 0; i < barCount; i++)
-            {
-                float level = media.SpectrumBars[i * 2];
-                float bh = Math.Max(4f * scale, maxBarH * level);
-                float bx = waveStartX + i * (barW + barGap);
-                float by = pill.Y + (pill.Height - bh) / 2f;
-
-                Color barCol = ThemeColorEngine.Interpolate(accent1, accent2, i / (float)(barCount - 1));
-                using (SolidBrush bb = new SolidBrush(Color.FromArgb(alpha, barCol)))
-                {
-                    g.FillRectangle(bb, bx, by, barW, bh);
-                }
-            }
-        }
-
-        private void DrawExpandedIslandPlayer(
-            Graphics g,
-            RectangleF pill,
-            float scale,
-            float alphaF,
-            LiveMediaAndAudioTracker media,
-            Color accent1,
-            Color accent2,
-            Color[] palette,
-            float globalTime)
-        {
-            int alpha = (int)(Math.Max(0f, Math.Min(1f, alphaF)) * 255);
-            if (alpha <= 5) return;
-
-            float pad = 16f * scale;
-
-            // 1. Album Art / Rotating Disc on top-left
-            float artSize = 48f * scale;
-            RectangleF artRect = new RectangleF(pill.X + pad, pill.Y + 14f * scale, artSize, artSize);
-            using (GraphicsPath artPath = ScreenTransitionAnimator.CreateRoundedRectPath(artRect, 12f * scale))
-            using (LinearGradientBrush artBrush = new LinearGradientBrush(artRect, Color.FromArgb(alpha, accent1), Color.FromArgb(alpha, accent2), (globalTime * 80f) % 360f))
-            {
-                g.FillPath(artBrush, artPath);
-            }
-            // Music note icon inside album art
-            using (Font iconFont = new Font("Segoe UI Symbol", 16f * scale, FontStyle.Bold))
-            using (SolidBrush whiteBrush = new SolidBrush(Color.FromArgb(alpha, 255, 255, 255)))
-            {
-                g.DrawString("♫", iconFont, whiteBrush, artRect.X + 9f * scale, artRect.Y + 7f * scale);
-            }
-
-            // 2. Source Badge + Track Title + Artist
-            string sourceBadge = GetSourceBadgeText(media.ActiveSource);
-            float textLeft = artRect.Right + 12f * scale;
-            float textMaxW = pill.Width - (textLeft - pill.X) - 115f * scale;
-
-            using (Font badgeFont = new Font("Segoe UI Semibold", 7.5f * scale, FontStyle.Bold))
-            using (Font titleFont = new Font("Segoe UI Semibold", 10.2f * scale, FontStyle.Bold))
-            using (Font artistFont = new Font("Segoe UI", 8.5f * scale, FontStyle.Regular))
-            using (SolidBrush badgeBrush = new SolidBrush(Color.FromArgb(alpha, accent1)))
-            using (SolidBrush titleBrush = new SolidBrush(Color.FromArgb(alpha, 250, 252, 255)))
-            using (SolidBrush artistBrush = new SolidBrush(Color.FromArgb((int)(alpha * 0.75f), 180, 190, 215)))
-            {
-                g.DrawString(sourceBadge, badgeFont, badgeBrush, textLeft, pill.Y + 13f * scale);
-
-                string tTitle = media.TrackTitle;
-                if (tTitle.Length > 28) tTitle = tTitle.Substring(0, 27) + "…";
-                g.DrawString(tTitle, titleFont, titleBrush, textLeft, pill.Y + 27f * scale);
-
-                string tArtist = media.TrackArtist;
-                if (tArtist.Length > 36) tArtist = tArtist.Substring(0, 35) + "…";
-                g.DrawString(tArtist, artistFont, artistBrush, textLeft, pill.Y + 46f * scale);
-            }
-
-            // 3. Top-Right 12-Bar Live Spectrum Visualizer
-            int specCount = 12;
-            float sbW = 3.2f * scale;
-            float sbGap = 2.5f * scale;
-            float specRightX = pill.Right - pad - specCount * (sbW + sbGap);
-            float specMaxH = 34f * scale;
-            float specCenterY = pill.Y + 38f * scale;
-
-            for (int i = 0; i < specCount; i++)
-            {
-                float lv = media.SpectrumBars[i];
-                float bh = Math.Max(4f * scale, specMaxH * lv);
-                Color bc = ThemeColorEngine.Interpolate(accent1, accent2, i / (float)(specCount - 1));
-                using (SolidBrush b = new SolidBrush(Color.FromArgb(alpha, bc)))
-                {
-                    g.FillRectangle(b, specRightX + i * (sbW + sbGap), specCenterY - bh / 2f, sbW, bh);
-                }
-            }
-
-            // 4. Interactive Transport Control Row (Prev, Play/Pause, Next, Vol-, Vol+)
-            RectangleF[] btnRects = GetExpandedButtonRects(pill.X, pill.Y, pill.Width, pill.Height, scale);
-            string[] btnLabels = new string[] { "⏮", "⏯", "⏭", "🔉", "🔊" };
-
-            using (Font btnFont = new Font("Segoe UI Symbol", 11.5f * scale, FontStyle.Bold))
-            {
-                for (int i = 0; i < 5; i++)
-                {
-                    bool hovered = (hoveredButtonIndex == i);
-                    RectangleF br = btnRects[i];
-                    using (GraphicsPath bp = ScreenTransitionAnimator.CreateRoundedRectPath(br, br.Height / 2f))
-                    {
-                        Color bgCol = (i == 1)
-                            ? (hovered ? accent1 : Color.FromArgb(alpha, 45, 52, 74))
-                            : (hovered ? Color.FromArgb(alpha, 55, 62, 88) : Color.FromArgb(alpha, 24, 27, 38));
-
-                        using (SolidBrush bb = new SolidBrush(bgCol))
-                        {
-                            g.FillPath(bb, bp);
-                        }
-                        if (hovered)
-                        {
-                            using (Pen hp = new Pen(Color.FromArgb(alpha, accent1), 1.5f))
-                            {
-                                g.DrawPath(hp, bp);
-                            }
-                        }
-                    }
-
-                    SizeF sz = g.MeasureString(btnLabels[i], btnFont);
-                    using (SolidBrush fb = new SolidBrush(Color.FromArgb(alpha, Color.White)))
-                    {
-                        g.DrawString(btnLabels[i], btnFont, fb, br.X + (br.Width - sz.Width) / 2f, br.Y + (br.Height - sz.Height) / 2f + 1f);
-                    }
-                }
-            }
-
-            // 5. Bottom Quick-Launch / Switch Bar (Spotify, Apple Music, YouTube, Theme, Settings)
-            string[] chipLabels = new string[] { "🟢 Spotify", "🔴 Apple Music", "▶️ YouTube", "🎨 Thème", "⚙️" };
-            using (Font chipFont = new Font("Segoe UI Semibold", 7.8f * scale, FontStyle.Bold))
-            {
-                for (int i = 5; i < 10; i++)
-                {
-                    bool hovered = (hoveredButtonIndex == i);
-                    RectangleF cr = btnRects[i];
-                    using (GraphicsPath cp = ScreenTransitionAnimator.CreateRoundedRectPath(cr, cr.Height / 2f))
-                    {
-                        Color chipBg = hovered
-                            ? Color.FromArgb(alpha, 58, 66, 94)
-                            : Color.FromArgb(alpha, 20, 22, 32);
-                        using (SolidBrush cb = new SolidBrush(chipBg))
-                        {
-                            g.FillPath(cb, cp);
-                        }
-                        using (Pen borderP = new Pen(hovered ? Color.FromArgb(alpha, accent1) : Color.FromArgb(alpha / 3, 120, 130, 160), 1f))
-                        {
-                            g.DrawPath(borderP, cp);
-                        }
-                    }
-
-                    string lbl = chipLabels[i - 5];
-                    SizeF sz = g.MeasureString(lbl, chipFont);
-                    using (SolidBrush tb = new SolidBrush(Color.FromArgb(alpha, 235, 240, 255)))
-                    {
-                        g.DrawString(lbl, chipFont, tb, cr.X + (cr.Width - sz.Width) / 2f, cr.Y + (cr.Height - sz.Height) / 2f);
-                    }
-                }
-            }
-        }
-
-        private RectangleF[] GetExpandedButtonRects(float px, float py, float pw, float ph, float scale)
-        {
-            RectangleF[] rects = new RectangleF[10];
-
-            // Row 1: Transport Controls (centered at Y = py + 74 * scale)
-            float row1Y = py + 72f * scale;
-            float btnH = 34f * scale;
-            float smallW = 46f * scale;
-            float playW = 64f * scale;
-            float gap = 10f * scale;
-            float totalRow1 = smallW * 4 + playW + gap * 4;
-            float startX = px + (pw - totalRow1) / 2f;
-
-            rects[0] = new RectangleF(startX, row1Y, smallW, btnH); // Prev
-            rects[1] = new RectangleF(startX + smallW + gap, row1Y, playW, btnH); // Play/Pause
-            rects[2] = new RectangleF(startX + smallW + playW + gap * 2, row1Y, smallW, btnH); // Next
-            rects[3] = new RectangleF(startX + smallW * 2 + playW + gap * 3, row1Y, smallW, btnH); // Vol-
-            rects[4] = new RectangleF(startX + smallW * 3 + playW + gap * 4, row1Y, smallW, btnH); // Vol+
-
-            // Row 2: Quick Service Chips (Spotify, Apple Music, YouTube, Theme, Settings)
-            float row2Y = py + 118f * scale;
-            float chipH = 26f * scale;
-            float cGap = 6f * scale;
-            float wSpot = 78f * scale;
-            float wApple = 98f * scale;
-            float wYT = 82f * scale;
-            float wTheme = 72f * scale;
-            float wSet = 36f * scale;
-            float totalRow2 = wSpot + wApple + wYT + wTheme + wSet + cGap * 4;
-            float cx = px + (pw - totalRow2) / 2f;
-
-            rects[5] = new RectangleF(cx, row2Y, wSpot, chipH); cx += wSpot + cGap;
-            rects[6] = new RectangleF(cx, row2Y, wApple, chipH); cx += wApple + cGap;
-            rects[7] = new RectangleF(cx, row2Y, wYT, chipH); cx += wYT + cGap;
-            rects[8] = new RectangleF(cx, row2Y, wTheme, chipH); cx += wTheme + cGap;
-            rects[9] = new RectangleF(cx, row2Y, wSet, chipH);
-
-            return rects;
-        }
-
-        private void HandleExpandedInteraction(Point localPt, float px, float py, float pw, float ph, float scale, LiveMediaAndAudioTracker media)
-        {
-            RectangleF[] rects = GetExpandedButtonRects(px, py, pw, ph, scale);
-            for (int i = 0; i < rects.Length; i++)
-            {
-                if (rects[i].Contains(localPt.X, localPt.Y))
-                {
-                    hoveredButtonIndex = i;
-                    break;
-                }
-            }
-
-            bool isMouseDown = (NativeMethods.GetAsyncKeyState(0x01) & 0x8000) != 0;
-            if (isMouseDown && !wasMouseDown && hoveredButtonIndex >= 0)
-            {
-                buttonFlashEffect = 1.0f;
-                switch (hoveredButtonIndex)
-                {
-                    case 0:
-                        NativeMethods.SendMediaKey(NativeMethods.VK_MEDIA_PREV_TRACK);
-                        ShowTransientBanner("⏮ Piste précédente", 1200);
-                        break;
-                    case 1:
-                        NativeMethods.SendMediaKey(NativeMethods.VK_MEDIA_PLAY_PAUSE);
-                        ShowTransientBanner("⏯ Lecture / Pause", 1200);
-                        break;
-                    case 2:
-                        NativeMethods.SendMediaKey(NativeMethods.VK_MEDIA_NEXT_TRACK);
-                        ShowTransientBanner("⏭ Piste suivante", 1200);
-                        break;
-                    case 3:
-                        NativeMethods.SendMediaKey(NativeMethods.VK_VOLUME_DOWN);
-                        NativeMethods.SendMediaKey(NativeMethods.VK_VOLUME_DOWN);
-                        ShowTransientBanner("🔉 Volume -", 900);
-                        break;
-                    case 4:
-                        NativeMethods.SendMediaKey(NativeMethods.VK_VOLUME_UP);
-                        NativeMethods.SendMediaKey(NativeMethods.VK_VOLUME_UP);
-                        ShowTransientBanner("🔊 Volume +", 900);
-                        break;
-                    case 5:
-                        media.LaunchOrFocusService("spotify");
-                        break;
-                    case 6:
-                        media.LaunchOrFocusService("applemusic");
-                        break;
-                    case 7:
-                        media.LaunchOrFocusService("youtube");
-                        break;
-                    case 8:
-                        if (OnCycleThemeRequested != null) OnCycleThemeRequested();
-                        break;
-                    case 9:
-                        if (OnOpenSettingsRequested != null) OnOpenSettingsRequested();
-                        break;
-                }
-            }
-            wasMouseDown = isMouseDown;
         }
 
         private static string GetSourceBadgeText(MediaSourceType src)
@@ -1794,7 +2996,7 @@ namespace iCornerDuo
                 case MediaSourceType.YouTube: return "▶️ YOUTUBE MUSIC";
                 case MediaSourceType.BrowserMedia: return "🌐 LECTEUR WEB";
                 case MediaSourceType.SystemAudio: return "🔊 AUDIO SYSTÈME";
-                default: return " DYNAMIC ISLAND HUB";
+                default: return "🎵 DYNAMIC ISLAND PLAYER";
             }
         }
 
@@ -1805,6 +3007,7 @@ namespace iCornerDuo
 
         public void Dispose()
         {
+            if (activeAiDialog != null && !activeAiDialog.IsDisposed) activeAiDialog.Close();
             if (islandForm != null)
             {
                 islandForm.Close();
@@ -1814,7 +3017,7 @@ namespace iCornerDuo
     }
 
     // =========================================================================
-    // MULTI-SCREEN TRANSITION ANIMATOR (8 APPLE & NEON TRANSITION STYLES)
+    // MULTI-SCREEN TRANSITION ANIMATOR (8 TRANSITION STYLES)
     // =========================================================================
     public enum ScreenEdge
     {
@@ -1853,12 +3056,7 @@ namespace iCornerDuo
             get { return isAnimating || isProximityActive; }
         }
 
-        public void TriggerTransition(
-            Rectangle fromBounds,
-            Rectangle toBounds,
-            Point cursorPos,
-            MonitorCorners targetCorners,
-            AppSettings settings)
+        public void TriggerTransition(Rectangle fromBounds, Rectangle toBounds, Point cursorPos, MonitorCorners targetCorners, AppSettings settings)
         {
             if (!settings.Enabled || !settings.EnableTransition) return;
 
@@ -1883,16 +3081,9 @@ namespace iCornerDuo
             else { entryEdge = ScreenEdge.Bottom; exitEdge = ScreenEdge.Top; }
         }
 
-        public void UpdateProximity(
-            Rectangle currentBounds,
-            ScreenEdge nearEdge,
-            Point cursorPos,
-            float proximityFactor,
-            AppSettings settings,
-            Color[] palette)
+        public void UpdateProximity(Rectangle currentBounds, ScreenEdge nearEdge, Point cursorPos, float proximityFactor, AppSettings settings, Color[] palette)
         {
             if (isAnimating) return;
-
             if (!settings.Enabled || !settings.EnableTransition || !settings.EnableMagneticProximity || proximityFactor <= 0.02f)
             {
                 if (isProximityActive)
@@ -1905,19 +3096,7 @@ namespace iCornerDuo
 
             isProximityActive = true;
             float scale = settings.IntensityPercent / 100f;
-
-            RenderEdgePortal(
-                entryEdgeForm,
-                currentBounds,
-                nearEdge,
-                cursorPos,
-                proximityFactor * 0.42f,
-                proximityFactor * 0.78f,
-                scale,
-                settings.Style,
-                palette,
-                true,
-                0f);
+            RenderEdgePortal(entryEdgeForm, currentBounds, nearEdge, cursorPos, proximityFactor * 0.42f, proximityFactor * 0.78f, scale, settings.Style, palette, true, 0f);
         }
 
         public void StepAnimation(AppSettings settings, Color[] palette)
@@ -1932,61 +3111,28 @@ namespace iCornerDuo
                 isAnimating = false;
                 entryEdgeForm.Hide();
                 exitEdgeForm.Hide();
-                if (TargetMonitorCorners != null)
-                {
-                    TargetMonitorCorners.PulseGlowAmount = 0f;
-                }
+                if (TargetMonitorCorners != null) TargetMonitorCorners.PulseGlowAmount = 0f;
                 return;
             }
 
             float scale = settings.IntensityPercent / 100f;
-
-            // 1. Corner Pulse on entered monitor
             if (TargetMonitorCorners != null)
             {
                 float cornerPulse = (float)(Math.Sin(Math.Min(1.0, t * 1.25) * Math.PI));
                 TargetMonitorCorners.PulseGlowAmount = Math.Max(0f, cornerPulse);
             }
 
-            // 2. Render Entry & Exit Portals
             if (settings.Style != TransitionStyle.DynamicIslandBounce)
             {
-                float entryEnvelope = (t < 0.22f)
-                    ? EaseOutBack(t / 0.22f)
-                    : 1.0f - EaseInOutCubic((t - 0.22f) / 0.78f);
-
+                float entryEnvelope = (t < 0.22f) ? EaseOutBack(t / 0.22f) : 1.0f - EaseInOutCubic((t - 0.22f) / 0.78f);
                 float entryAlpha = (t < 0.14f) ? (t / 0.14f) : (1.0f - (t - 0.14f) / 0.86f);
 
-                RenderEdgePortal(
-                    entryEdgeForm,
-                    entryScreenBounds,
-                    entryEdge,
-                    crossingPoint,
-                    entryEnvelope,
-                    Math.Max(0f, Math.Min(1f, entryAlpha)),
-                    scale,
-                    settings.Style,
-                    palette,
-                    false,
-                    t);
+                RenderEdgePortal(entryEdgeForm, entryScreenBounds, entryEdge, crossingPoint, entryEnvelope, Math.Max(0f, Math.Min(1f, entryAlpha)), scale, settings.Style, palette, false, t);
 
                 if (t < 0.46f && exitScreenBounds != entryScreenBounds)
                 {
                     float exitT = t / 0.46f;
-                    float exitEnvelope = (1.0f - EaseOutCubic(exitT)) * 0.65f;
-                    float exitAlpha = (1.0f - exitT) * 0.85f;
-                    RenderEdgePortal(
-                        exitEdgeForm,
-                        exitScreenBounds,
-                        exitEdge,
-                        crossingPoint,
-                        exitEnvelope,
-                        exitAlpha,
-                        scale,
-                        settings.Style,
-                        palette,
-                        true,
-                        t);
+                    RenderEdgePortal(exitEdgeForm, exitScreenBounds, exitEdge, crossingPoint, (1.0f - EaseOutCubic(exitT)) * 0.65f, (1.0f - exitT) * 0.85f, scale, settings.Style, palette, true, t);
                 }
                 else
                 {
@@ -2000,18 +3146,7 @@ namespace iCornerDuo
             }
         }
 
-        private void RenderEdgePortal(
-            LayeredOverlayForm form,
-            Rectangle screenBounds,
-            ScreenEdge edge,
-            Point cursor,
-            float bulgeAmount,
-            float alphaFactor,
-            float scale,
-            TransitionStyle style,
-            Color[] palette,
-            bool isExitSide,
-            float rawTime)
+        private void RenderEdgePortal(LayeredOverlayForm form, Rectangle screenBounds, ScreenEdge edge, Point cursor, float bulgeAmount, float alphaFactor, float scale, TransitionStyle style, Color[] palette, bool isExitSide, float rawTime)
         {
             if (alphaFactor <= 0.01f || bulgeAmount <= 0.005f)
             {
@@ -2063,46 +3198,23 @@ namespace iCornerDuo
                     ? Clamp(cursor.Y - winY, (int)(portalLength * 0.2f), (int)(portalLength * 0.8f))
                     : Clamp(cursor.X - winX, (int)(portalLength * 0.2f), (int)(portalLength * 0.8f));
 
-                // 1. Chromatic Wave (for Combo, Siri Glow, Liquid Bridge, Plasma, Particle Burst)
-                if (style == TransitionStyle.ComboUltimate ||
-                    style == TransitionStyle.SiriIntelligenceGlow ||
-                    style == TransitionStyle.LiquidBridge ||
-                    style == TransitionStyle.ElectricPlasmaPortal ||
-                    style == TransitionStyle.CosmicParticleBurst)
-                {
+                if (style == TransitionStyle.ComboUltimate || style == TransitionStyle.SiriIntelligenceGlow || style == TransitionStyle.LiquidBridge || style == TransitionStyle.ElectricPlasmaPortal || style == TransitionStyle.CosmicParticleBurst)
                     DrawChromaticEdgeWave(g, winW, winH, edge, centerAlong, bulgeAmount, alphaFactor, scale, palette, rawTime);
-                }
 
-                // 2. Liquid Metaball Bridge
-                if (style == TransitionStyle.ComboUltimate ||
-                    style == TransitionStyle.LiquidBridge)
-                {
+                if (style == TransitionStyle.ComboUltimate || style == TransitionStyle.LiquidBridge)
                     DrawLiquidBridgeMetaball(g, winW, winH, edge, centerAlong, bulgeAmount, alphaFactor, scale, palette, isExitSide, rawTime);
-                }
 
-                // 3. Cosmic Particles & Stars Burst
                 if (!isExitSide && (style == TransitionStyle.ComboUltimate || style == TransitionStyle.CosmicParticleBurst))
-                {
                     DrawCosmicParticles(g, winW, winH, edge, centerAlong, alphaFactor, scale, palette, rawTime);
-                }
 
-                // 4. Electric Plasma Lightning Arcs
                 if (style == TransitionStyle.ElectricPlasmaPortal)
-                {
                     DrawPlasmaLightning(g, winW, winH, edge, centerAlong, bulgeAmount, alphaFactor, scale, palette, rawTime);
-                }
 
-                // 5. Sonar Shockwave Ripples
                 if (style == TransitionStyle.SonarShockwave)
-                {
                     DrawSonarShockwave(g, winW, winH, edge, centerAlong, alphaFactor, scale, palette, rawTime);
-                }
 
-                // 6. Neon Laser Blade
                 if (style == TransitionStyle.NeonLaserBlade)
-                {
                     DrawNeonLaserBlade(g, winW, winH, edge, centerAlong, bulgeAmount, alphaFactor, scale, palette);
-                }
 
                 if (!form.Visible) form.Show();
                 form.SetBitmap(bmp, winX, winY, 255);
@@ -2122,7 +3234,6 @@ namespace iCornerDuo
                 float offsetAlong = (float)Math.Sin(rawTime * 9.0 + i * 1.6) * (46f * scale);
                 float segHalfLen = (length * (0.43f - i * 0.06f)) * (0.6f + 0.4f * bulge);
                 float reach = maxReach * (1.0f - i * 0.16f);
-
                 int layerAlpha = (int)(alpha * (165 - i * 30));
                 if (layerAlpha <= 2) continue;
                 if (layerAlpha > 255) layerAlpha = 255;
@@ -2155,7 +3266,6 @@ namespace iCornerDuo
                         g.DrawPath(rimPen, liquidPath);
                     }
                 }
-
                 int bodyAlpha = (int)(Math.Min(1.0f, alpha * 1.35f) * 255);
                 using (SolidBrush blackBrush = new SolidBrush(Color.FromArgb(bodyAlpha, 5, 6, 10)))
                 {
@@ -2166,12 +3276,10 @@ namespace iCornerDuo
 
         private void DrawCosmicParticles(Graphics g, int w, int h, ScreenEdge edge, float centerAlong, float alpha, float scale, Color[] palette, float rawTime)
         {
-            int particleCount = 16;
-            for (int i = 0; i < particleCount; i++)
+            for (int i = 0; i < 16; i++)
             {
                 float seed = (i * 1.37f) + 0.5f;
-                float speed = 0.65f + (i % 5) * 0.22f;
-                float pTime = (rawTime * speed);
+                float pTime = rawTime * (0.65f + (i % 5) * 0.22f);
                 if (pTime > 1f) continue;
 
                 float dist = (15f + 145f * EaseOutCubic(pTime)) * scale * (0.5f + 0.5f * (float)Math.Sin(seed * 3.1f));
@@ -2185,13 +3293,9 @@ namespace iCornerDuo
                 if (pAlpha <= 4) continue;
 
                 using (SolidBrush glowB = new SolidBrush(Color.FromArgb(pAlpha / 2, c)))
-                {
                     g.FillEllipse(glowB, pt.X - pRadius * 1.8f, pt.Y - pRadius * 1.8f, pRadius * 3.6f, pRadius * 3.6f);
-                }
                 using (SolidBrush coreB = new SolidBrush(Color.FromArgb(pAlpha, Color.White)))
-                {
                     g.FillEllipse(coreB, pt.X - pRadius * 0.7f, pt.Y - pRadius * 0.7f, pRadius * 1.4f, pRadius * 1.4f);
-                }
             }
         }
 
@@ -2227,8 +3331,7 @@ namespace iCornerDuo
                 if (rt <= 0f || rt >= 1f) continue;
                 float rad = rt * 175f * scale;
                 int rAlpha = (int)((1f - rt) * alpha * 230);
-                Color c = palette[ring % palette.Length];
-                using (Pen rp = new Pen(Color.FromArgb(rAlpha, c), (4.5f - 3f * rt) * scale))
+                using (Pen rp = new Pen(Color.FromArgb(rAlpha, palette[ring % palette.Length]), (4.5f - 3f * rt) * scale))
                 {
                     g.DrawEllipse(rp, origin.X - rad, origin.Y - rad, rad * 2f, rad * 2f);
                 }
@@ -2302,11 +3405,7 @@ namespace iCornerDuo
             float d = radius * 2f;
             if (d > rect.Width) d = rect.Width;
             if (d > rect.Height) d = rect.Height;
-            if (d <= 1f)
-            {
-                path.AddRectangle(rect);
-                return path;
-            }
+            if (d <= 1f) { path.AddRectangle(rect); return path; }
             path.AddArc(rect.X, rect.Y, d, d, 180, 90);
             path.AddArc(rect.Right - d, rect.Y, d, d, 270, 90);
             path.AddArc(rect.Right - d, rect.Bottom - d, d, d, 0, 90);
@@ -2323,23 +3422,9 @@ namespace iCornerDuo
             return (int)val;
         }
 
-        private static float EaseOutCubic(float x)
-        {
-            float f = 1f - x;
-            return 1f - f * f * f;
-        }
-
-        private static float EaseInOutCubic(float x)
-        {
-            return x < 0.5f ? 4f * x * x * x : 1f - (float)Math.Pow(-2f * x + 2f, 3) / 2f;
-        }
-
-        private static float EaseOutBack(float x)
-        {
-            const float c1 = 1.70158f;
-            const float c3 = c1 + 1f;
-            return 1f + c3 * (float)Math.Pow(x - 1f, 3) + c1 * (float)Math.Pow(x - 1f, 2);
-        }
+        private static float EaseOutCubic(float x) { float f = 1f - x; return 1f - f * f * f; }
+        private static float EaseInOutCubic(float x) { return x < 0.5f ? 4f * x * x * x : 1f - (float)Math.Pow(-2f * x + 2f, 3) / 2f; }
+        private static float EaseOutBack(float x) { const float c1 = 1.70158f; const float c3 = c1 + 1f; return 1f + c3 * (float)Math.Pow(x - 1f, 3) + c1 * (float)Math.Pow(x - 1f, 2); }
 
         public void Dispose()
         {
@@ -2359,7 +3444,7 @@ namespace iCornerDuo
         public DynamicIslandWidget DynamicIsland;
         public LiveMediaAndAudioTracker MediaTracker;
 
-        private Timer tickTimer;
+        private System.Windows.Forms.Timer tickTimer;
         private int lastMonitorIndex = -1;
         private int topMostTickCounter = 0;
         private int cornerAnimTickCounter = 0;
@@ -2378,6 +3463,7 @@ namespace iCornerDuo
             MediaTracker = new LiveMediaAndAudioTracker();
 
             DynamicIsland.OnOpenSettingsRequested += ShowSettingsWindow;
+            DynamicIsland.OnTimerFinishedBurstRequested += TriggerDemoTransition;
             DynamicIsland.OnCycleThemeRequested += () =>
             {
                 int next = ((int)Settings.Theme + 1) % 12;
@@ -2396,8 +3482,8 @@ namespace iCornerDuo
                 if (OnMonitorsChanged != null) OnMonitorsChanged();
             };
 
-            tickTimer = new Timer();
-            tickTimer.Interval = 16; // ~60 FPS
+            tickTimer = new System.Windows.Forms.Timer();
+            tickTimer.Interval = 16;
             tickTimer.Tick += OnTick;
             tickTimer.Start();
         }
@@ -2413,7 +3499,7 @@ namespace iCornerDuo
             Monitors.Clear();
 
             Screen[] screens = Screen.AllScreens;
-            Color[] palette = ThemeColorEngine.GetPalette(Settings, GlobalTimeSeconds, MediaTracker.ActiveSource);
+            Color[] palette = ThemeColorEngine.GetPalette(Settings, GlobalTimeSeconds);
             for (int i = 0; i < screens.Length; i++)
             {
                 MonitorCorners mc = new MonitorCorners(screens[i]);
@@ -2423,28 +3509,22 @@ namespace iCornerDuo
 
             NativeMethods.POINT pt;
             if (NativeMethods.GetCursorPos(out pt))
-            {
                 lastMonitorIndex = FindMonitorIndex(new Point(pt.X, pt.Y));
-            }
         }
 
         public void RefreshAllCorners()
         {
             float t = GlobalTimeSeconds;
-            Color[] palette = ThemeColorEngine.GetPalette(Settings, t, MediaTracker.ActiveSource);
+            Color[] palette = ThemeColorEngine.GetPalette(Settings, t);
             foreach (var m in Monitors)
-            {
                 m.UpdateCorners(Settings, palette, t, MediaTracker.CurrentAudioPeak);
-            }
             Settings.Save();
         }
 
         private int FindMonitorIndex(Point pt)
         {
             for (int i = 0; i < Monitors.Count; i++)
-            {
                 if (Monitors[i].Bounds.Contains(pt)) return i;
-            }
             int bestIdx = 0;
             double bestDist = double.MaxValue;
             for (int i = 0; i < Monitors.Count; i++)
@@ -2462,29 +3542,20 @@ namespace iCornerDuo
         {
             float t = GlobalTimeSeconds;
             MediaTracker.UpdateTick(t);
-            Color[] palette = ThemeColorEngine.GetPalette(Settings, t, MediaTracker.ActiveSource);
+            Color[] palette = ThemeColorEngine.GetPalette(Settings, t);
 
             Point cursorPt = Point.Empty;
             NativeMethods.POINT rawPt;
             if (NativeMethods.GetCursorPos(out rawPt))
-            {
                 cursorPt = new Point(rawPt.X, rawPt.Y);
-            }
 
             int currentIdx = (Monitors.Count > 0) ? FindMonitorIndex(cursorPt) : -1;
 
-            // 1. Check screen crossing
             if (Monitors.Count > 0 && currentIdx >= 0)
             {
                 if (lastMonitorIndex != -1 && currentIdx != lastMonitorIndex && lastMonitorIndex < Monitors.Count)
                 {
-                    Animator.TriggerTransition(
-                        Monitors[lastMonitorIndex].Bounds,
-                        Monitors[currentIdx].Bounds,
-                        cursorPt,
-                        Monitors[currentIdx],
-                        Settings);
-
+                    Animator.TriggerTransition(Monitors[lastMonitorIndex].Bounds, Monitors[currentIdx].Bounds, cursorPt, Monitors[currentIdx], Settings);
                     Rectangle tb = Monitors[currentIdx].Bounds;
                     DynamicIsland.TriggerTransitionNotification("Écran " + (currentIdx + 1), tb.Width + "×" + tb.Height);
                 }
@@ -2495,30 +3566,23 @@ namespace iCornerDuo
                 lastMonitorIndex = currentIdx;
             }
 
-            // 2. Step inter-screen transition animation
             Animator.StepAnimation(Settings, palette);
 
-            // 3. Update animated corners (at ~30 FPS when continuous corner animation is active, or 60 FPS during transition)
             cornerAnimTickCounter++;
             bool needsContinuousCornerUpdate = (Settings.CornerAnim != CornerAnimationMode.Static || Settings.Theme == ColorTheme.CyberpunkRainbow);
             if (Animator.IsBusy || (needsContinuousCornerUpdate && cornerAnimTickCounter % 2 == 0))
             {
                 float phase = t * (Settings.CornerAnimSpeed / 100f);
                 foreach (var m in Monitors)
-                {
                     m.UpdateCorners(Settings, palette, phase, MediaTracker.CurrentAudioPeak);
-                }
             }
 
-            // 4. Update Interactive Dynamic Island
             if (Monitors.Count > 0)
             {
                 Rectangle activeBounds = (currentIdx >= 0 && currentIdx < Monitors.Count) ? Monitors[currentIdx].Bounds : Screen.PrimaryScreen.Bounds;
-                Rectangle primaryBounds = Screen.PrimaryScreen.Bounds;
-                DynamicIsland.UpdateAndRender(Settings, activeBounds, primaryBounds, cursorPt, MediaTracker, palette, t);
+                DynamicIsland.UpdateAndRender(Settings, activeBounds, Screen.PrimaryScreen.Bounds, cursorPt, MediaTracker, palette, t);
             }
 
-            // 5. Periodically re-assert TOPMOST
             topMostTickCounter++;
             if (topMostTickCounter >= 90)
             {
@@ -2577,30 +3641,23 @@ namespace iCornerDuo
                     }
                 }
             }
-
             Animator.UpdateProximity(cur, bestEdge, pt, bestProx, Settings, palette);
         }
 
         public void TriggerDemoTransition()
         {
             if (Monitors.Count == 0) return;
-
             int targetIdx = 0;
             NativeMethods.POINT rawPt;
             if (NativeMethods.GetCursorPos(out rawPt))
-            {
                 targetIdx = FindMonitorIndex(new Point(rawPt.X, rawPt.Y));
-            }
             int fromIdx = (Monitors.Count > 1) ? ((targetIdx + 1) % Monitors.Count) : targetIdx;
 
             Rectangle toB = Monitors[targetIdx].Bounds;
             Rectangle fromB = Monitors[fromIdx].Bounds;
-
             Point demoPoint = new Point(toB.Left + 4, toB.Top + toB.Height / 2);
             if (Monitors.Count > 1 && fromB.Left > toB.Left)
-            {
                 demoPoint = new Point(toB.Right - 4, toB.Top + toB.Height / 2);
-            }
 
             Animator.TriggerTransition(fromB, toB, demoPoint, Monitors[targetIdx], Settings);
             DynamicIsland.TriggerTransitionNotification("Écran " + (targetIdx + 1), toB.Width + "×" + toB.Height);
@@ -2622,7 +3679,7 @@ namespace iCornerDuo
         private void SetupTrayIcon()
         {
             trayIcon = new NotifyIcon();
-            trayIcon.Text = "iCorner Duo — Bords Arrondis & Dynamic Island";
+            trayIcon.Text = "iCorner Duo — Bords, Compagnon & IA";
             trayIcon.Icon = LoadAppIcon() ?? SystemIcons.Application;
             trayIcon.Visible = true;
 
@@ -2634,19 +3691,14 @@ namespace iCornerDuo
             ToolStripMenuItem demoItem = new ToolStripMenuItem("✨ Tester l'animation de transition");
             demoItem.Click += (s, e) => TriggerDemoTransition();
 
+            ToolStripMenuItem timerItem = new ToolStripMenuItem("🍅 Lancer un Pomodoro (25 min)");
+            timerItem.Click += (s, e) => DynamicIsland.TimerEngine.StartCountdown(1500, "Pomodoro 25m");
+
+            ToolStripMenuItem aiItem = new ToolStripMenuItem("🤖 Ouvrir le Chat IA (" + Settings.ActiveAiProvider + ")");
+            aiItem.Click += (s, e) => DynamicIsland.OpenQuickAiDialog(Settings, new Point(Screen.PrimaryScreen.Bounds.Width / 2, 10));
+
             ToolStripMenuItem playPauseItem = new ToolStripMenuItem("⏯ Lecture / Pause Musique");
             playPauseItem.Click += (s, e) => NativeMethods.SendMediaKey(NativeMethods.VK_MEDIA_PLAY_PAUSE);
-
-            ToolStripMenuItem nextTrackItem = new ToolStripMenuItem("⏭ Piste suivante");
-            nextTrackItem.Click += (s, e) => NativeMethods.SendMediaKey(NativeMethods.VK_MEDIA_NEXT_TRACK);
-
-            ToolStripMenuItem toggleItem = new ToolStripMenuItem(Settings.Enabled ? "✅ Actif (Cliquer pour suspendre)" : "⏸ Suspendu (Cliquer pour activer)");
-            toggleItem.Click += (s, e) =>
-            {
-                Settings.Enabled = !Settings.Enabled;
-                toggleItem.Text = Settings.Enabled ? "✅ Actif (Cliquer pour suspendre)" : "⏸ Suspendu (Cliquer pour activer)";
-                RefreshAllCorners();
-            };
 
             ToolStripMenuItem exitItem = new ToolStripMenuItem("❌ Quitter iCorner Duo");
             exitItem.Click += (s, e) =>
@@ -2657,11 +3709,10 @@ namespace iCornerDuo
 
             menu.Items.Add(openItem);
             menu.Items.Add(demoItem);
+            menu.Items.Add(timerItem);
+            menu.Items.Add(aiItem);
             menu.Items.Add(new ToolStripSeparator());
             menu.Items.Add(playPauseItem);
-            menu.Items.Add(nextTrackItem);
-            menu.Items.Add(new ToolStripSeparator());
-            menu.Items.Add(toggleItem);
             menu.Items.Add(new ToolStripSeparator());
             menu.Items.Add(exitItem);
 
@@ -2672,9 +3723,7 @@ namespace iCornerDuo
         public void ShowSettingsWindow()
         {
             if (settingsForm == null || settingsForm.IsDisposed)
-            {
                 settingsForm = new SettingsForm(this);
-            }
             settingsForm.Show();
             settingsForm.BringToFront();
             settingsForm.Activate();
@@ -2691,32 +3740,31 @@ namespace iCornerDuo
     }
 
     // =========================================================================
-    // SETTINGS STUDIO WINDOW (3 FULL CARDS: CORNERS, TRANSITIONS & COLORS, DYNAMIC ISLAND)
+    // REDESIGNED SIDEBAR STUDIO SETTINGS INTERFACE (5 DEDICATED PAGES)
     // =========================================================================
     public class SettingsForm : Form
     {
         private OverlayController controller;
-        private Label radiusValueLabel;
-        private Label glowValueLabel;
-        private Label thicknessValueLabel;
-        private Label durationValueLabel;
-        private Label intensityValueLabel;
-        private Label islandSizeValueLabel;
-        private Label monitorsInfoLabel;
-        private Panel previewBox;
+        private Button[] navButtons = new Button[5];
+        private Panel[] pages = new Panel[5];
+        private int activePageIndex = 0;
+
+        private Panel cornerPreviewBox;
+        private Panel companionPreviewBox;
         private ComboBox themeCombo;
-        private Button customCol1Btn;
-        private Button customCol2Btn;
+        private Label aiStatusLabel;
+        private TextBox aiChatTestInput;
+        private System.Windows.Forms.Timer uiPreviewTimer;
 
         public SettingsForm(OverlayController ctrl)
         {
             controller = ctrl;
-            Text = "iCorner Duo Studio — Bords Arrondis, Transitions & Dynamic Island Music";
-            Size = new Size(1120, 770);
+            Text = "iCorner Duo Studio Ultimate — Bords Arrondis, Transitions, Dynamic Island, Compagnon & IA";
+            Size = new Size(1060, 760);
             StartPosition = FormStartPosition.CenterScreen;
-            BackColor = Color.FromArgb(13, 14, 20);
+            BackColor = Color.FromArgb(12, 13, 19);
             ForeColor = Color.FromArgb(240, 242, 250);
-            Font = new Font("Segoe UI", 9.2f, FontStyle.Regular);
+            Font = new Font("Segoe UI", 9.3f, FontStyle.Regular);
             FormBorderStyle = FormBorderStyle.FixedSingle;
             MaximizeBox = false;
             DoubleBuffered = true;
@@ -2724,273 +3772,285 @@ namespace iCornerDuo
             Icon appIco = OverlayController.LoadAppIcon();
             if (appIco != null) Icon = appIco;
 
-            BuildUI();
+            BuildModernSidebarLayout();
 
-            controller.OnMonitorsChanged += UpdateMonitorSummary;
-            controller.OnSettingsUpdatedExternally += () =>
+            uiPreviewTimer = new System.Windows.Forms.Timer { Interval = 50 };
+            uiPreviewTimer.Tick += (s, e) =>
             {
-                if (themeCombo != null && (int)controller.Settings.Theme < themeCombo.Items.Count)
-                    themeCombo.SelectedIndex = (int)controller.Settings.Theme;
-                if (previewBox != null) previewBox.Invalidate();
+                if (Visible)
+                {
+                    if (activePageIndex == 0 && cornerPreviewBox != null) cornerPreviewBox.Invalidate();
+                    if (activePageIndex == 3 && companionPreviewBox != null) companionPreviewBox.Invalidate();
+                }
             };
+            uiPreviewTimer.Start();
         }
 
-        private void BuildUI()
+        private void BuildModernSidebarLayout()
         {
-            // Top Header Banner
+            // 1. TOP STUDIO HEADER
             Panel header = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 84,
-                BackColor = Color.FromArgb(20, 22, 32)
+                Height = 78,
+                BackColor = Color.FromArgb(18, 20, 30)
             };
             header.Paint += (s, e) =>
             {
                 e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
                 using (LinearGradientBrush grad = new LinearGradientBrush(
-                    header.ClientRectangle,
-                    Color.FromArgb(55, 64, 200, 255),
-                    Color.FromArgb(55, 220, 65, 185),
-                    12f))
+                    header.ClientRectangle, Color.FromArgb(55, 64, 200, 255), Color.FromArgb(55, 220, 65, 185), 12f))
                 {
                     e.Graphics.FillRectangle(grad, header.ClientRectangle);
                 }
-                using (Pen bottomLine = new Pen(Color.FromArgb(75, 110, 160, 255), 1f))
+                using (Pen bottomLine = new Pen(Color.FromArgb(70, 110, 160, 255), 1f))
                 {
                     e.Graphics.DrawLine(bottomLine, 0, header.Height - 1, header.Width, header.Height - 1);
                 }
-                if (Icon != null)
-                {
-                    e.Graphics.DrawIcon(Icon, new Rectangle(20, 16, 52, 52));
-                }
+                if (Icon != null) e.Graphics.DrawIcon(Icon, new Rectangle(18, 13, 50, 50));
             };
 
             Label titleLbl = new Label
             {
-                Text = "iCorner Duo Studio  •  Pro Edition",
-                Font = new Font("Segoe UI Semibold", 16.5f, FontStyle.Bold),
+                Text = "iCorner Duo Studio  •  Ultimate Edition",
+                Font = new Font("Segoe UI Semibold", 16f, FontStyle.Bold),
                 ForeColor = Color.White,
                 AutoSize = true,
                 BackColor = Color.Transparent,
-                Location = new Point(84, 14)
+                Location = new Point(80, 12)
             };
-
             Label subLbl = new Label
             {
-                Text = "Bords arrondis animés • Transitions inter-écrans Apple Duo • Dynamic Island Music Player (Spotify, Apple Music, YouTube)",
-                Font = new Font("Segoe UI", 9.2f, FontStyle.Regular),
+                Text = "Bords arrondis animés • Transitions Multi-Écrans • Dynamic Island Musique & Minuteur • Compagnon Cyber • API IA (Gemini, Claude, ChatGPT, Mistral)",
+                Font = new Font("Segoe UI", 8.8f),
                 ForeColor = Color.FromArgb(185, 200, 230),
                 AutoSize = true,
                 BackColor = Color.Transparent,
-                Location = new Point(86, 48)
+                Location = new Point(82, 44)
             };
 
-            Button testBtn = new Button
-            {
-                Text = "✨ Tester la transition",
-                Size = new Size(195, 42),
-                Location = new Point(885, 21),
-                FlatStyle = FlatStyle.Flat,
-                BackColor = Color.FromArgb(0, 122, 255),
-                ForeColor = Color.White,
-                Font = new Font("Segoe UI Semibold", 10f, FontStyle.Bold),
-                Cursor = Cursors.Hand
-            };
-            testBtn.FlatAppearance.BorderSize = 0;
-            testBtn.Click += (s, e) => controller.TriggerDemoTransition();
-
+            Button testTransBtn = CreateActionBtn("✨ Tester Transition", 855, 19, 175, 40, Color.FromArgb(0, 122, 255), () => controller.TriggerDemoTransition());
             header.Controls.Add(titleLbl);
             header.Controls.Add(subLbl);
-            header.Controls.Add(testBtn);
+            header.Controls.Add(testTransBtn);
             Controls.Add(header);
 
-            // =================================================================
-            // COLUMN 1: BORDS ARRONDIS & ANIMATIONS DES ANGLES
-            // =================================================================
-            Panel col1 = CreateCard(18, 100, 348, 615, "📐 1. Bords Arrondis & Angles Animés");
-            Controls.Add(col1);
-
-            CheckBox enableCornersChk = CreateCheckBox("Activer les bords arrondis et overlays", 16, 42, controller.Settings.Enabled);
-            enableCornersChk.CheckedChanged += (s, e) =>
+            // 2. LEFT NAVIGATION SIDEBAR
+            Panel sidebar = new Panel
             {
-                controller.Settings.Enabled = enableCornersChk.Checked;
-                controller.RefreshAllCorners();
-                previewBox.Invalidate();
+                Location = new Point(0, 78),
+                Size = new Size(245, 650),
+                BackColor = Color.FromArgb(16, 18, 26)
             };
-            col1.Controls.Add(enableCornersChk);
-
-            // Radius Slider
-            col1.Controls.Add(CreateLabel("Rayon de l'arrondi :", 16, 74));
-            radiusValueLabel = CreateValueLabel(controller.Settings.CornerRadius + " px", 275, 74);
-            col1.Controls.Add(radiusValueLabel);
-
-            TrackBar radiusSlider = CreateSlider(12, 94, 322, 0, 110, controller.Settings.CornerRadius);
-            radiusSlider.ValueChanged += (s, e) =>
+            sidebar.Paint += (s, e) =>
             {
-                controller.Settings.CornerRadius = radiusSlider.Value;
-                radiusValueLabel.Text = radiusSlider.Value + " px";
-                controller.RefreshAllCorners();
-                previewBox.Invalidate();
+                using (Pen p = new Pen(Color.FromArgb(45, 100, 120, 180), 1f))
+                {
+                    e.Graphics.DrawLine(p, sidebar.Width - 1, 0, sidebar.Width - 1, sidebar.Height);
+                }
             };
-            col1.Controls.Add(radiusSlider);
+            Controls.Add(sidebar);
 
-            // Curve Type
-            col1.Controls.Add(CreateLabel("Géométrie de la courbe :", 16, 130));
-            ComboBox curveCombo = CreateComboBox(16, 152, 314, new string[] {
-                " Squircle Apple (Courbure continue iOS/macOS)",
+            string[] navLabels = new string[] {
+                "📐  1. Bords Arrondis & Angles",
+                "🌊  2. Transitions & 13 Couleurs",
+                "💊  3. Dynamic Island & Minuteur",
+                "🦊  4. Compagnon Cyber (Original)",
+                "🤖  5. Assistant IA (4 API)"
+            };
+
+            for (int i = 0; i < 5; i++)
+            {
+                int idx = i;
+                Button nb = new Button
+                {
+                    Text = navLabels[i],
+                    TextAlign = ContentAlignment.MiddleLeft,
+                    Padding = new Padding(12, 0, 0, 0),
+                    Location = new Point(12, 18 + i * 52),
+                    Size = new Size(220, 44),
+                    FlatStyle = FlatStyle.Flat,
+                    Font = new Font("Segoe UI Semibold", 9.5f, FontStyle.Bold),
+                    Cursor = Cursors.Hand
+                };
+                nb.FlatAppearance.BorderSize = 0;
+                nb.Click += (s, e) => SwitchPage(idx);
+                navButtons[i] = nb;
+                sidebar.Controls.Add(nb);
+            }
+
+            // Quick status & Startup checkbox at bottom of sidebar
+            CheckBox startupChk = CreateCheckBox("Lancer avec Windows", 16, 520, IsStartupEnabled());
+            startupChk.CheckedChanged += (s, e) => SetStartup(startupChk.Checked);
+            sidebar.Controls.Add(startupChk);
+
+            Button hideTrayBtn = CreateActionBtn("📥 Réduire en barre système", 12, 558, 220, 38, Color.FromArgb(36, 42, 62), () => Hide());
+            sidebar.Controls.Add(hideTrayBtn);
+
+            // 3. BUILD THE 5 CONTENT PAGES
+            pages[0] = BuildPage1Corners();
+            pages[1] = BuildPage2TransitionsAndColors();
+            pages[2] = BuildPage3DynamicIslandAndTimer();
+            pages[3] = BuildPage4Companion();
+            pages[4] = BuildPage5AiAssistant();
+
+            for (int i = 0; i < 5; i++) Controls.Add(pages[i]);
+            SwitchPage(0);
+        }
+
+        private void SwitchPage(int idx)
+        {
+            activePageIndex = idx;
+            for (int i = 0; i < 5; i++)
+            {
+                pages[i].Visible = (i == idx);
+                navButtons[i].BackColor = (i == idx) ? Color.FromArgb(0, 122, 255) : Color.FromArgb(24, 27, 40);
+                navButtons[i].ForeColor = (i == idx) ? Color.White : Color.FromArgb(190, 200, 225);
+            }
+        }
+
+        // ---------------------------------------------------------------------
+        // PAGE 1: BORDS ARRONDIS & ANIMATIONS DES ANGLES
+        // ---------------------------------------------------------------------
+        private Panel BuildPage1Corners()
+        {
+            Panel page = CreatePageContainer();
+
+            Panel leftCard = CreateCard(18, 16, 370, 595, "📐 Géométrie & Rayon des Angles");
+            page.Controls.Add(leftCard);
+
+            CheckBox enableChk = CreateCheckBox("Activer les bords arrondis sur tous mes écrans", 18, 46, controller.Settings.Enabled);
+            enableChk.CheckedChanged += (s, e) => { controller.Settings.Enabled = enableChk.Checked; controller.RefreshAllCorners(); };
+            leftCard.Controls.Add(enableChk);
+
+            leftCard.Controls.Add(CreateLabel("Rayon de l'arrondi (0 à 110 px) :", 18, 86));
+            Label radVal = CreateValueLabel(controller.Settings.CornerRadius + " px", 295, 86);
+            leftCard.Controls.Add(radVal);
+
+            TrackBar radSlider = CreateSlider(14, 108, 340, 0, 110, controller.Settings.CornerRadius);
+            radSlider.ValueChanged += (s, e) => { controller.Settings.CornerRadius = radSlider.Value; radVal.Text = radSlider.Value + " px"; controller.RefreshAllCorners(); };
+            leftCard.Controls.Add(radSlider);
+
+            leftCard.Controls.Add(CreateLabel("Courbe mathématique de l'angle :", 18, 152));
+            ComboBox curveCombo = CreateComboBox(18, 176, 332, new string[] {
+                " Squircle Continue (Superellipse $n=4.2$)",
                 "◯ Cercle Classique (Arc circulaire standard)"
             }, (int)controller.Settings.Curve);
-            curveCombo.SelectedIndexChanged += (s, e) =>
-            {
-                controller.Settings.Curve = (CurveType)curveCombo.SelectedIndex;
-                controller.RefreshAllCorners();
-                previewBox.Invalidate();
-            };
-            col1.Controls.Add(curveCombo);
+            curveCombo.SelectedIndexChanged += (s, e) => { controller.Settings.Curve = (CurveType)curveCombo.SelectedIndex; controller.RefreshAllCorners(); };
+            leftCard.Controls.Add(curveCombo);
 
-            // Continuous Corner Animation Mode
-            col1.Controls.Add(CreateLabel("Animation continue des 4 angles :", 16, 188));
-            ComboBox cornerAnimCombo = CreateComboBox(16, 210, 314, new string[] {
+            leftCard.Controls.Add(CreateLabel("Angles actifs par écran :", 18, 222));
+            CheckBox tl = CreateCheckBox("Haut-Gauche", 18, 248, controller.Settings.TopLeft);
+            CheckBox tr = CreateCheckBox("Haut-Droit", 185, 248, controller.Settings.TopRight);
+            CheckBox bl = CreateCheckBox("Bas-Gauche", 18, 278, controller.Settings.BottomLeft);
+            CheckBox br = CreateCheckBox("Bas-Droit", 185, 278, controller.Settings.BottomRight);
+            EventHandler ch = (s, e) => { controller.Settings.TopLeft = tl.Checked; controller.Settings.TopRight = tr.Checked; controller.Settings.BottomLeft = bl.Checked; controller.Settings.BottomRight = br.Checked; controller.RefreshAllCorners(); };
+            tl.CheckedChanged += ch; tr.CheckedChanged += ch; bl.CheckedChanged += ch; br.CheckedChanged += ch;
+            leftCard.Controls.Add(tl); leftCard.Controls.Add(tr); leftCard.Controls.Add(bl); leftCard.Controls.Add(br);
+
+            // Monitors detected box
+            StringBuilder msb = new StringBuilder();
+            msb.AppendFormat("🖥 {0} écran(s) détecté(s) :\n", controller.Monitors.Count);
+            for (int i = 0; i < controller.Monitors.Count; i++)
+            {
+                Rectangle b = controller.Monitors[i].Bounds;
+                msb.AppendFormat("• Écran {0} : {1}×{2} (X={3}, Y={4})\n", i + 1, b.Width, b.Height, b.X, b.Y);
+            }
+            Label monLbl = new Label { Location = new Point(18, 325), Size = new Size(332, 85), ForeColor = Color.FromArgb(150, 210, 255), Text = msb.ToString() };
+            leftCard.Controls.Add(monLbl);
+
+            Button refBtn = CreateActionBtn("🔄 Rafraîchir la détection des écrans", 18, 420, 332, 36, Color.FromArgb(38, 44, 66), () => controller.RebuildMonitors());
+            leftCard.Controls.Add(refBtn);
+
+            // Right Card: Continuous Corner Animations & Live Preview
+            Panel rightCard = CreateCard(404, 16, 370, 595, "✨ Animations Continues des 4 Angles");
+            page.Controls.Add(rightCard);
+
+            CheckBox bezelChk = CreateCheckBox("Activer le liseré lumineux (Bezel Glow)", 18, 46, controller.Settings.CornerBezelGlow);
+            bezelChk.CheckedChanged += (s, e) => { controller.Settings.CornerBezelGlow = bezelChk.Checked; controller.RefreshAllCorners(); };
+            rightCard.Controls.Add(bezelChk);
+
+            rightCard.Controls.Add(CreateLabel("Mode d'animation continue des angles :", 18, 84));
+            ComboBox animCombo = CreateComboBox(18, 108, 332, new string[] {
                 "✨ Fixe élégant (Classique)",
-                "🌈 Rotation Chromatique 360° (Apple Glow)",
+                "🌈 Rotation Chromatique 360° (Dégradé tournant)",
                 "💨 Respiration Lumineuse Douce (Breathing)",
                 "🎵 Réactif à la Musique / Basses (Audio Beat Sync)",
                 "⭐ Scintillement d'Étoiles (Sparkle Shimmer)",
                 "⚡ Onde Néon Tournante (Neon Chase)"
             }, (int)controller.Settings.CornerAnim);
-            cornerAnimCombo.SelectedIndexChanged += (s, e) =>
+            animCombo.SelectedIndexChanged += (s, e) => { controller.Settings.CornerAnim = (CornerAnimationMode)animCombo.SelectedIndex; controller.RefreshAllCorners(); };
+            rightCard.Controls.Add(animCombo);
+
+            rightCard.Controls.Add(CreateLabel("Opacité lumineuse du liseré :", 18, 154));
+            Label opVal = CreateValueLabel(controller.Settings.BezelGlowOpacity + " %", 295, 154);
+            rightCard.Controls.Add(opVal);
+            TrackBar opSlider = CreateSlider(14, 176, 340, 0, 100, controller.Settings.BezelGlowOpacity);
+            opSlider.ValueChanged += (s, e) => { controller.Settings.BezelGlowOpacity = opSlider.Value; opVal.Text = opSlider.Value + " %"; controller.RefreshAllCorners(); };
+            rightCard.Controls.Add(opSlider);
+
+            rightCard.Controls.Add(CreateLabel("Épaisseur du liseré :", 18, 218));
+            Label thVal = CreateValueLabel((controller.Settings.BezelThickness / 10.0).ToString("0.0") + " px", 295, 218);
+            rightCard.Controls.Add(thVal);
+            TrackBar thSlider = CreateSlider(14, 240, 340, 10, 75, controller.Settings.BezelThickness);
+            thSlider.ValueChanged += (s, e) => { controller.Settings.BezelThickness = thSlider.Value; thVal.Text = (thSlider.Value / 10.0).ToString("0.0") + " px"; controller.RefreshAllCorners(); };
+            rightCard.Controls.Add(thSlider);
+
+            rightCard.Controls.Add(CreateLabel("Vitesse d'animation :", 18, 282));
+            Label spVal = CreateValueLabel(controller.Settings.CornerAnimSpeed + " %", 295, 282);
+            rightCard.Controls.Add(spVal);
+            TrackBar spSlider = CreateSlider(14, 304, 340, 25, 250, controller.Settings.CornerAnimSpeed);
+            spSlider.ValueChanged += (s, e) => { controller.Settings.CornerAnimSpeed = spSlider.Value; spVal.Text = spSlider.Value + " %"; controller.Settings.Save(); };
+            rightCard.Controls.Add(spSlider);
+
+            rightCard.Controls.Add(CreateLabel("Aperçu temps réel des angles :", 18, 355));
+            cornerPreviewBox = new Panel { Location = new Point(18, 380), Size = new Size(332, 120), BackColor = Color.FromArgb(28, 32, 48) };
+            cornerPreviewBox.Paint += (s, e) =>
             {
-                controller.Settings.CornerAnim = (CornerAnimationMode)cornerAnimCombo.SelectedIndex;
-                controller.RefreshAllCorners();
-                previewBox.Invalidate();
+                Graphics g = e.Graphics;
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                Rectangle r = cornerPreviewBox.ClientRectangle;
+                Color[] pal = ThemeColorEngine.GetPalette(controller.Settings, controller.GlobalTimeSeconds);
+                using (LinearGradientBrush wp = new LinearGradientBrush(r, Color.FromArgb(255, 25, 45, 88), Color.FromArgb(255, 78, 32, 102), 25f))
+                    g.FillRectangle(wp, r);
+                int pr = Math.Min(65, controller.Settings.CornerRadius);
+                if (controller.Settings.Enabled && pr > 2)
+                {
+                    int sz = pr + 24;
+                    float ph = controller.GlobalTimeSeconds * (controller.Settings.CornerAnimSpeed / 100f);
+                    using (Bitmap b1 = MonitorCorners.RenderCornerBitmap(sz, pr, CornerPosition.TopLeft, controller.Settings, 0.35f, pal, ph, controller.MediaTracker.CurrentAudioPeak))
+                    using (Bitmap b2 = MonitorCorners.RenderCornerBitmap(sz, pr, CornerPosition.TopRight, controller.Settings, 0.35f, pal, ph, controller.MediaTracker.CurrentAudioPeak))
+                    {
+                        g.DrawImage(b1, 0, 0);
+                        g.DrawImage(b2, r.Width - b2.Width, 0);
+                    }
+                }
             };
-            col1.Controls.Add(cornerAnimCombo);
+            rightCard.Controls.Add(cornerPreviewBox);
 
-            // Active Corners Checkboxes
-            CheckBox tlChk = CreateCheckBox("Haut-Gauche", 16, 248, controller.Settings.TopLeft);
-            CheckBox trChk = CreateCheckBox("Haut-Droit", 175, 248, controller.Settings.TopRight);
-            CheckBox blChk = CreateCheckBox("Bas-Gauche", 16, 274, controller.Settings.BottomLeft);
-            CheckBox brChk = CreateCheckBox("Bas-Droit", 175, 274, controller.Settings.BottomRight);
-            EventHandler cornerCheckHandler = (s, e) =>
-            {
-                controller.Settings.TopLeft = tlChk.Checked;
-                controller.Settings.TopRight = trChk.Checked;
-                controller.Settings.BottomLeft = blChk.Checked;
-                controller.Settings.BottomRight = brChk.Checked;
-                controller.RefreshAllCorners();
-                previewBox.Invalidate();
-            };
-            tlChk.CheckedChanged += cornerCheckHandler;
-            trChk.CheckedChanged += cornerCheckHandler;
-            blChk.CheckedChanged += cornerCheckHandler;
-            brChk.CheckedChanged += cornerCheckHandler;
-            col1.Controls.Add(tlChk);
-            col1.Controls.Add(trChk);
-            col1.Controls.Add(blChk);
-            col1.Controls.Add(brChk);
+            return page;
+        }
 
-            // Bezel Glow & Thickness
-            CheckBox bezelChk = CreateCheckBox("Activer le liseré lumineux (Bezel Glow)", 16, 306, controller.Settings.CornerBezelGlow);
-            bezelChk.CheckedChanged += (s, e) =>
-            {
-                controller.Settings.CornerBezelGlow = bezelChk.Checked;
-                controller.RefreshAllCorners();
-                previewBox.Invalidate();
-            };
-            col1.Controls.Add(bezelChk);
+        // ---------------------------------------------------------------------
+        // PAGE 2: TRANSITIONS INTER-ÉCRANS & 13 THÈMES DE COULEURS
+        // ---------------------------------------------------------------------
+        private Panel BuildPage2TransitionsAndColors()
+        {
+            Panel page = CreatePageContainer();
 
-            col1.Controls.Add(CreateLabel("Intensité lumineuse du liseré :", 16, 334));
-            glowValueLabel = CreateValueLabel(controller.Settings.BezelGlowOpacity + " %", 275, 334);
-            col1.Controls.Add(glowValueLabel);
+            Panel leftCard = CreateCard(18, 16, 370, 595, "🌊 Transitions Inter-Écrans (8 Styles)");
+            page.Controls.Add(leftCard);
 
-            TrackBar glowSlider = CreateSlider(12, 354, 322, 0, 100, controller.Settings.BezelGlowOpacity);
-            glowSlider.ValueChanged += (s, e) =>
-            {
-                controller.Settings.BezelGlowOpacity = glowSlider.Value;
-                glowValueLabel.Text = glowSlider.Value + " %";
-                controller.RefreshAllCorners();
-                previewBox.Invalidate();
-            };
-            col1.Controls.Add(glowSlider);
+            CheckBox enTrans = CreateCheckBox("Activer l'animation au passage d'un écran à l'autre", 18, 46, controller.Settings.EnableTransition);
+            enTrans.CheckedChanged += (s, e) => { controller.Settings.EnableTransition = enTrans.Checked; controller.Settings.Save(); };
+            leftCard.Controls.Add(enTrans);
 
-            col1.Controls.Add(CreateLabel("Épaisseur du trait :", 16, 390));
-            thicknessValueLabel = CreateValueLabel((controller.Settings.BezelThickness / 10.0).ToString("0.0") + " px", 275, 390);
-            col1.Controls.Add(thicknessValueLabel);
+            CheckBox magChk = CreateCheckBox("Effet magnétique quand la souris approche du bord", 18, 76, controller.Settings.EnableMagneticProximity);
+            magChk.CheckedChanged += (s, e) => { controller.Settings.EnableMagneticProximity = magChk.Checked; controller.Settings.Save(); };
+            leftCard.Controls.Add(magChk);
 
-            TrackBar thickSlider = CreateSlider(12, 410, 322, 10, 75, controller.Settings.BezelThickness);
-            thickSlider.ValueChanged += (s, e) =>
-            {
-                controller.Settings.BezelThickness = thickSlider.Value;
-                thicknessValueLabel.Text = (thickSlider.Value / 10.0).ToString("0.0") + " px";
-                controller.RefreshAllCorners();
-                previewBox.Invalidate();
-            };
-            col1.Controls.Add(thickSlider);
-
-            // Live Preview Box
-            previewBox = new Panel
-            {
-                Location = new Point(16, 450),
-                Size = new Size(314, 72),
-                BackColor = Color.FromArgb(30, 34, 50)
-            };
-            previewBox.Paint += PaintPreviewBox;
-            col1.Controls.Add(previewBox);
-
-            // Detected Monitors Summary
-            monitorsInfoLabel = new Label
-            {
-                Location = new Point(16, 532),
-                Size = new Size(218, 72),
-                Font = new Font("Segoe UI", 8.4f, FontStyle.Regular),
-                ForeColor = Color.FromArgb(160, 210, 255)
-            };
-            UpdateMonitorSummary();
-            col1.Controls.Add(monitorsInfoLabel);
-
-            Button refreshMonBtn = new Button
-            {
-                Text = "🔄 Écrans",
-                Location = new Point(240, 544),
-                Size = new Size(90, 36),
-                FlatStyle = FlatStyle.Flat,
-                BackColor = Color.FromArgb(40, 45, 66),
-                ForeColor = Color.White,
-                Cursor = Cursors.Hand
-            };
-            refreshMonBtn.FlatAppearance.BorderSize = 0;
-            refreshMonBtn.Click += (s, e) =>
-            {
-                controller.RebuildMonitors();
-                UpdateMonitorSummary();
-            };
-            col1.Controls.Add(refreshMonBtn);
-
-            // =================================================================
-            // COLUMN 2: TRANSITIONS INTER-ÉCRANS & PALETTES DE COULEURS
-            // =================================================================
-            Panel col2 = CreateCard(380, 100, 348, 615, "🌊 2. Transitions & Couleurs (13 Thèmes)");
-            Controls.Add(col2);
-
-            CheckBox enableTransChk = CreateCheckBox("Activer la transition au changement d'écran", 16, 42, controller.Settings.EnableTransition);
-            enableTransChk.CheckedChanged += (s, e) =>
-            {
-                controller.Settings.EnableTransition = enableTransChk.Checked;
-                controller.Settings.Save();
-            };
-            col2.Controls.Add(enableTransChk);
-
-            CheckBox magProxChk = CreateCheckBox("Effet magnétique à l'approche du bord d'écran", 16, 70, controller.Settings.EnableMagneticProximity);
-            magProxChk.CheckedChanged += (s, e) =>
-            {
-                controller.Settings.EnableMagneticProximity = magProxChk.Checked;
-                controller.Settings.Save();
-            };
-            col2.Controls.Add(magProxChk);
-
-            // 8 Transition Styles
-            col2.Controls.Add(CreateLabel("Style d'animation de passage d'écran (8 styles) :", 16, 106));
-            ComboBox styleCombo = CreateComboBox(16, 128, 314, new string[] {
+            leftCard.Controls.Add(CreateLabel("Style d'animation de traversée :", 18, 118));
+            ComboBox styleCombo = CreateComboBox(18, 142, 332, new string[] {
                 "✨ Combo Ultime Pro (Pont Liquide + Siri + Étoiles)",
                 "💧 Apple Liquid Bridge (Pont métaballe liquide)",
                 "🌈 Apple Intelligence (Onde chromatique Siri)",
@@ -3000,17 +4060,32 @@ namespace iCornerDuo
                 "🔥 Lame Laser Néon (Faisceau haute intensité)",
                 "💊 Dynamic Island Bounce (Pilule & Rebond Angles)"
             }, (int)controller.Settings.Style);
-            styleCombo.SelectedIndexChanged += (s, e) =>
-            {
-                controller.Settings.Style = (TransitionStyle)styleCombo.SelectedIndex;
-                controller.Settings.Save();
-                controller.TriggerDemoTransition();
-            };
-            col2.Controls.Add(styleCombo);
+            styleCombo.SelectedIndexChanged += (s, e) => { controller.Settings.Style = (TransitionStyle)styleCombo.SelectedIndex; controller.Settings.Save(); controller.TriggerDemoTransition(); };
+            leftCard.Controls.Add(styleCombo);
 
-            // 13 Color Themes
-            col2.Controls.Add(CreateLabel("Palette de couleurs globale (13 thèmes) :", 16, 168));
-            themeCombo = CreateComboBox(16, 190, 314, new string[] {
+            leftCard.Controls.Add(CreateLabel("Durée de la transition :", 18, 195));
+            Label durVal = CreateValueLabel(controller.Settings.DurationMs + " ms", 285, 195);
+            leftCard.Controls.Add(durVal);
+            TrackBar durSlider = CreateSlider(14, 218, 340, 350, 2000, controller.Settings.DurationMs);
+            durSlider.ValueChanged += (s, e) => { controller.Settings.DurationMs = durSlider.Value; durVal.Text = durSlider.Value + " ms"; controller.Settings.Save(); };
+            leftCard.Controls.Add(durSlider);
+
+            leftCard.Controls.Add(CreateLabel("Amplitude / Taille de l'effet :", 18, 265));
+            Label intVal = CreateValueLabel(controller.Settings.IntensityPercent + " %", 290, 265);
+            leftCard.Controls.Add(intVal);
+            TrackBar intSlider = CreateSlider(14, 288, 340, 60, 190, controller.Settings.IntensityPercent);
+            intSlider.ValueChanged += (s, e) => { controller.Settings.IntensityPercent = intSlider.Value; intVal.Text = intSlider.Value + " %"; controller.Settings.Save(); };
+            leftCard.Controls.Add(intSlider);
+
+            Button demoBtn = CreateActionBtn("✨ Déclencher une démonstration maintenant", 18, 350, 332, 44, Color.FromArgb(0, 122, 255), () => controller.TriggerDemoTransition());
+            leftCard.Controls.Add(demoBtn);
+
+            // Right Card: 13 Color Themes + Custom Colors
+            Panel rightCard = CreateCard(404, 16, 370, 595, "🎨 Palettes de Couleurs (13 Thèmes + Custom)");
+            page.Controls.Add(rightCard);
+
+            rightCard.Controls.Add(CreateLabel("Thème de couleurs global :", 18, 46));
+            themeCombo = CreateComboBox(18, 70, 332, new string[] {
                 "🎨 Apple Intelligence (Cyan / Violet / Magenta / Or)",
                 "💎 iOS Electric Blue (Bleu / Cyan / Indigo)",
                 "🟢 Spotify Neon Green (Vert Émeraude / Menthe)",
@@ -3025,355 +4100,410 @@ namespace iCornerDuo
                 "⚪ Minimal Monochrome (Argent / Blanc Pur / Obsidienne)",
                 "🖌️ Couleurs Personnalisées (Choisir ci-dessous)"
             }, (int)controller.Settings.Theme);
-            themeCombo.SelectedIndexChanged += (s, e) =>
-            {
-                controller.Settings.Theme = (ColorTheme)themeCombo.SelectedIndex;
-                controller.RefreshAllCorners();
-                previewBox.Invalidate();
-                controller.TriggerDemoTransition();
-            };
-            col2.Controls.Add(themeCombo);
+            themeCombo.SelectedIndexChanged += (s, e) => { controller.Settings.Theme = (ColorTheme)themeCombo.SelectedIndex; controller.RefreshAllCorners(); controller.TriggerDemoTransition(); };
+            rightCard.Controls.Add(themeCombo);
 
-            // Custom Color Picker Buttons
-            col2.Controls.Add(CreateLabel("Couleurs personnalisées :", 16, 232));
-            customCol1Btn = new Button
-            {
-                Text = "Couleur 1",
-                Location = new Point(16, 254),
-                Size = new Size(150, 32),
-                FlatStyle = FlatStyle.Flat,
-                BackColor = Color.FromArgb(255, Color.FromArgb(controller.Settings.CustomColor1Argb)),
-                ForeColor = Color.Black,
-                Font = new Font("Segoe UI Semibold", 8.8f, FontStyle.Bold),
-                Cursor = Cursors.Hand
-            };
-            customCol1Btn.Click += (s, e) => PickCustomColor(1);
+            rightCard.Controls.Add(CreateLabel("Sélecteur de couleurs personnalisées :", 18, 122));
+            Button c1Btn = CreateActionBtn("🖌️ Choisir Couleur 1", 18, 148, 160, 38, Color.FromArgb(255, Color.FromArgb(controller.Settings.CustomColor1Argb)), null);
+            c1Btn.ForeColor = Color.Black;
+            c1Btn.Click += (s, e) => PickCustomColor(1, c1Btn);
 
-            customCol2Btn = new Button
-            {
-                Text = "Couleur 2",
-                Location = new Point(180, 254),
-                Size = new Size(150, 32),
-                FlatStyle = FlatStyle.Flat,
-                BackColor = Color.FromArgb(255, Color.FromArgb(controller.Settings.CustomColor2Argb)),
-                ForeColor = Color.White,
-                Font = new Font("Segoe UI Semibold", 8.8f, FontStyle.Bold),
-                Cursor = Cursors.Hand
-            };
-            customCol2Btn.Click += (s, e) => PickCustomColor(2);
-            col2.Controls.Add(customCol1Btn);
-            col2.Controls.Add(customCol2Btn);
+            Button c2Btn = CreateActionBtn("🖌️ Choisir Couleur 2", 190, 148, 160, 38, Color.FromArgb(255, Color.FromArgb(controller.Settings.CustomColor2Argb)), null);
+            c2Btn.Click += (s, e) => PickCustomColor(2, c2Btn);
+            rightCard.Controls.Add(c1Btn);
+            rightCard.Controls.Add(c2Btn);
 
-            // Duration Slider
-            col2.Controls.Add(CreateLabel("Durée de l'animation de transition :", 16, 302));
-            durationValueLabel = CreateValueLabel(controller.Settings.DurationMs + " ms", 265, 302);
-            col2.Controls.Add(durationValueLabel);
+            rightCard.Controls.Add(CreateLabel("Ambiances rapides en 1 clic :", 18, 210));
+            rightCard.Controls.Add(CreateActionBtn("🟢 Ambiance Spotify Audio Beat", 18, 238, 332, 38, Color.FromArgb(24, 155, 70), () => ApplyPreset(ColorTheme.SpotifyNeonGreen, CornerAnimationMode.AudioBeatSync)));
+            rightCard.Controls.Add(CreateActionBtn("🔴 Ambiance Apple Music Glow", 18, 286, 332, 38, Color.FromArgb(205, 35, 65), () => ApplyPreset(ColorTheme.AppleMusicRose, CornerAnimationMode.RotatingGradient)));
+            rightCard.Controls.Add(CreateActionBtn("🌈 Ambiance Cyberpunk Full RGB", 18, 334, 332, 38, Color.FromArgb(125, 45, 215), () => ApplyPreset(ColorTheme.CyberpunkRainbow, CornerAnimationMode.RotatingGradient)));
+            rightCard.Controls.Add(CreateActionBtn("❄️ Ambiance Aurore Boréale", 18, 382, 332, 38, Color.FromArgb(20, 145, 175), () => ApplyPreset(ColorTheme.ArcticAurora, CornerAnimationMode.BreathingPulse)));
 
-            TrackBar durSlider = CreateSlider(12, 322, 322, 350, 2000, controller.Settings.DurationMs);
-            durSlider.ValueChanged += (s, e) =>
-            {
-                controller.Settings.DurationMs = durSlider.Value;
-                durationValueLabel.Text = durSlider.Value + " ms";
-                controller.Settings.Save();
-            };
-            col2.Controls.Add(durSlider);
+            return page;
+        }
 
-            // Intensity Slider
-            col2.Controls.Add(CreateLabel("Taille / Amplitude des effets :", 16, 364));
-            intensityValueLabel = CreateValueLabel(controller.Settings.IntensityPercent + " %", 270, 364);
-            col2.Controls.Add(intensityValueLabel);
+        // ---------------------------------------------------------------------
+        // PAGE 3: DYNAMIC ISLAND, SYSTÈME D'APPARITION, MUSIQUE & MINUTEUR APPLE
+        // ---------------------------------------------------------------------
+        private Panel BuildPage3DynamicIslandAndTimer()
+        {
+            Panel page = CreatePageContainer();
 
-            TrackBar intSlider = CreateSlider(12, 384, 322, 60, 190, controller.Settings.IntensityPercent);
-            intSlider.ValueChanged += (s, e) =>
-            {
-                controller.Settings.IntensityPercent = intSlider.Value;
-                intensityValueLabel.Text = intSlider.Value + " %";
-                controller.Settings.Save();
-            };
-            col2.Controls.Add(intSlider);
+            Panel leftCard = CreateCard(18, 16, 370, 595, "💊 Système d'Apparition & Dynamic Island");
+            page.Controls.Add(leftCard);
 
-            // Corner Animation Speed Slider
-            col2.Controls.Add(CreateLabel("Vitesse d'animation des couleurs :", 16, 426));
-            Label speedValLbl = CreateValueLabel(controller.Settings.CornerAnimSpeed + " %", 270, 426);
-            col2.Controls.Add(speedValLbl);
-
-            TrackBar speedSlider = CreateSlider(12, 446, 322, 25, 250, controller.Settings.CornerAnimSpeed);
-            speedSlider.ValueChanged += (s, e) =>
-            {
-                controller.Settings.CornerAnimSpeed = speedSlider.Value;
-                speedValLbl.Text = speedSlider.Value + " %";
-                controller.Settings.Save();
-            };
-            col2.Controls.Add(speedSlider);
-
-            // Quick Theme Preset Buttons
-            Label presetLbl = CreateLabel("Raccourcis d'ambiances :", 16, 488);
-            col2.Controls.Add(presetLbl);
-
-            Button pSpot = CreateMiniPresetButton("🟢 Mode Spotify", 16, 512, 100, Color.FromArgb(25, 165, 75), () => ApplyQuickPreset(ColorTheme.SpotifyNeonGreen, CornerAnimationMode.AudioBeatSync));
-            Button pApple = CreateMiniPresetButton("🔴 Apple Music", 123, 512, 100, Color.FromArgb(215, 35, 65), () => ApplyQuickPreset(ColorTheme.AppleMusicRose, CornerAnimationMode.RotatingGradient));
-            Button pCyber = CreateMiniPresetButton("🌈 Full RGB", 230, 512, 100, Color.FromArgb(135, 50, 220), () => ApplyQuickPreset(ColorTheme.CyberpunkRainbow, CornerAnimationMode.RotatingGradient));
-            col2.Controls.Add(pSpot);
-            col2.Controls.Add(pApple);
-            col2.Controls.Add(pCyber);
-
-            CheckBox startupChk = CreateCheckBox("Lancer automatiquement avec Windows", 16, 565, IsStartupEnabled());
-            startupChk.CheckedChanged += (s, e) => SetStartup(startupChk.Checked);
-            col2.Controls.Add(startupChk);
-
-            // =================================================================
-            // COLUMN 3: DYNAMIC ISLAND MUSIC PLAYER (SPOTIFY / APPLE MUSIC / YOUTUBE)
-            // =================================================================
-            Panel col3 = CreateCard(742, 100, 348, 615, "💊 3. Dynamic Island Music & Hub");
-            Controls.Add(col3);
-
-            col3.Controls.Add(CreateLabel("Mode d'affichage du Dynamic Island :", 16, 42));
-            ComboBox islandModeCombo = CreateComboBox(16, 64, 314, new string[] {
-                "🟢 Toujours affiché en haut de l'écran (Recommandé)",
-                "🎵 Affiché quand une musique joue ou en transition",
+            leftCard.Controls.Add(CreateLabel("Condition d'apparition du Dynamic Island :", 18, 46));
+            ComboBox visCombo = CreateComboBox(18, 70, 332, new string[] {
+                "🟢 Toujours visible en haut de l'écran",
+                "🖱️ Apparition au bord supérieur (Hot-Edge : approche souris)",
+                "🧠 Intelligent (Apparaît si musique, minuteur, IA ou transition)",
                 "🌊 Uniquement lors du changement d'écran",
-                "❌ Désactivé"
+                "❌ Masqué"
             }, (int)controller.Settings.IslandMode);
-            islandModeCombo.SelectedIndexChanged += (s, e) =>
-            {
-                controller.Settings.IslandMode = (IslandVisibilityMode)islandModeCombo.SelectedIndex;
-                controller.Settings.Save();
-            };
-            col3.Controls.Add(islandModeCombo);
+            visCombo.SelectedIndexChanged += (s, e) => { controller.Settings.IslandMode = (IslandVisibilityMode)visCombo.SelectedIndex; controller.Settings.Save(); };
+            leftCard.Controls.Add(visCombo);
 
-            col3.Controls.Add(CreateLabel("Position multi-écrans du Dynamic Island :", 16, 104));
-            ComboBox islandPosCombo = CreateComboBox(16, 126, 314, new string[] {
+            leftCard.Controls.Add(CreateLabel("Animation d'apparition (Spawn Animation) :", 18, 114));
+            ComboBox spawnCombo = CreateComboBox(18, 138, 332, new string[] {
+                "💧 Goutte Liquide Élastique (Liquid Drop-Down)",
+                "🌊 Déploiement Horizontal Rebonds (Spring Unfold)",
+                "🌀 Portail Dimensionnel (Wormhole Pop)",
+                "⚡ Téléportation Cyber-Glitch (Neon Snap)",
+                "🔥 Éruption Solaire (Nova Bloom)"
+            }, (int)controller.Settings.SpawnAnim);
+            spawnCombo.SelectedIndexChanged += (s, e) => { controller.Settings.SpawnAnim = (IslandSpawnAnimation)spawnCombo.SelectedIndex; controller.Settings.Save(); };
+            leftCard.Controls.Add(spawnCombo);
+
+            leftCard.Controls.Add(CreateLabel("Position multi-écrans :", 18, 182));
+            ComboBox posCombo = CreateComboBox(18, 206, 332, new string[] {
                 "🖱️ Suivre l'écran actif (Glisse d'un écran à l'autre !)",
                 "🖥️ Toujours rester sur l'écran principal"
             }, (int)controller.Settings.IslandPlacement);
-            islandPosCombo.SelectedIndexChanged += (s, e) =>
-            {
-                controller.Settings.IslandPlacement = (IslandPlacementMode)islandPosCombo.SelectedIndex;
-                controller.Settings.Save();
-            };
-            col3.Controls.Add(islandPosCombo);
+            posCombo.SelectedIndexChanged += (s, e) => { controller.Settings.IslandPlacement = (IslandPlacementMode)posCombo.SelectedIndex; controller.Settings.Save(); };
+            leftCard.Controls.Add(posCombo);
 
-            col3.Controls.Add(CreateLabel("Animation du contour du Dynamic Island :", 16, 166));
-            ComboBox islandBorderCombo = CreateComboBox(16, 188, 314, new string[] {
-                "🌈 Halo Rotatif Multicolore (Apple Intelligence)",
+            leftCard.Controls.Add(CreateLabel("Animation du contour de la pilule :", 18, 250));
+            ComboBox borderCombo = CreateComboBox(18, 274, 332, new string[] {
+                "🌈 Halo Rotatif Multicolore",
                 "🎵 Halo Réactif aux Basses & à la Musique",
                 "💨 Liseré Verre Respirant Subtil",
                 "⚫ Noir Obsidienne Épuré (Sans halo externe)"
             }, (int)controller.Settings.IslandBorder);
-            islandBorderCombo.SelectedIndexChanged += (s, e) =>
+            borderCombo.SelectedIndexChanged += (s, e) => { controller.Settings.IslandBorder = (IslandBorderAnimation)borderCombo.SelectedIndex; controller.Settings.Save(); };
+            leftCard.Controls.Add(borderCombo);
+
+            leftCard.Controls.Add(CreateLabel("Taille du Dynamic Island :", 18, 318));
+            Label szVal = CreateValueLabel(controller.Settings.IslandScalePercent + " %", 290, 318);
+            leftCard.Controls.Add(szVal);
+            TrackBar szSlider = CreateSlider(14, 340, 340, 75, 155, controller.Settings.IslandScalePercent);
+            szSlider.ValueChanged += (s, e) => { controller.Settings.IslandScalePercent = szSlider.Value; szVal.Text = szSlider.Value + " %"; controller.Settings.Save(); };
+            leftCard.Controls.Add(szSlider);
+
+            CheckBox hovChk = CreateCheckBox("Ouvrir le hub complet (4 onglets) au survol souris", 18, 386, controller.Settings.IslandExpandOnHover);
+            hovChk.CheckedChanged += (s, e) => { controller.Settings.IslandExpandOnHover = hovChk.Checked; controller.Settings.Save(); };
+            leftCard.Controls.Add(hovChk);
+
+            CheckBox brandChk = CreateCheckBox("Adapter la couleur à Spotify / Apple Music / YouTube", 18, 416, controller.Settings.IslandAutoAdaptBrandColor);
+            brandChk.CheckedChanged += (s, e) => { controller.Settings.IslandAutoAdaptBrandColor = brandChk.Checked; controller.Settings.Save(); };
+            leftCard.Controls.Add(brandChk);
+
+            // Right Card: Apple Timer / Pomodoro & Music Controls
+            Panel rightCard = CreateCard(404, 16, 370, 595, "⏱️ Minuteur Style Apple & Contrôles Médias");
+            page.Controls.Add(rightCard);
+
+            rightCard.Controls.Add(CreateLabel("Lancer un Minuteur / Pomodoro dans le Dynamic Island :", 18, 46));
+            rightCard.Controls.Add(CreateActionBtn("⏱️ Minuteur 1 min", 18, 74, 160, 38, Color.FromArgb(230, 125, 10), () => controller.DynamicIsland.TimerEngine.StartCountdown(60, "1 Minute")));
+            rightCard.Controls.Add(CreateActionBtn("⏱️ Minuteur 5 min", 190, 74, 160, 38, Color.FromArgb(230, 125, 10), () => controller.DynamicIsland.TimerEngine.StartCountdown(300, "5 Minutes")));
+            rightCard.Controls.Add(CreateActionBtn("🍅 Pomodoro 25 min", 18, 120, 160, 38, Color.FromArgb(215, 55, 45), () => controller.DynamicIsland.TimerEngine.StartCountdown(1500, "Pomodoro 25m")));
+            rightCard.Controls.Add(CreateActionBtn("⏱️ Chronomètre", 190, 120, 160, 38, Color.FromArgb(45, 115, 215), () => controller.DynamicIsland.TimerEngine.SwitchToStopwatch()));
+
+            rightCard.Controls.Add(CreateActionBtn("⏯ Démarrer / Pause Minuteur", 18, 166, 215, 36, Color.FromArgb(40, 46, 68), () => controller.DynamicIsland.TimerEngine.ToggleStartPause()));
+            rightCard.Controls.Add(CreateActionBtn("🔄 Reset", 242, 166, 108, 36, Color.FromArgb(40, 46, 68), () => controller.DynamicIsland.TimerEngine.Reset()));
+
+            rightCard.Controls.Add(CreateLabel("Lecteurs Musicaux & Contrôles Directs :", 18, 224));
+            rightCard.Controls.Add(CreateActionBtn("🟢 Ouvrir Spotify", 18, 250, 106, 36, Color.FromArgb(24, 155, 70), () => controller.MediaTracker.LaunchOrFocusService("spotify")));
+            rightCard.Controls.Add(CreateActionBtn("🔴 Apple Music", 131, 250, 106, 36, Color.FromArgb(205, 35, 65), () => controller.MediaTracker.LaunchOrFocusService("applemusic")));
+            rightCard.Controls.Add(CreateActionBtn("▶️ YouTube Music", 244, 250, 106, 36, Color.FromArgb(200, 25, 45), () => controller.MediaTracker.LaunchOrFocusService("youtube")));
+
+            rightCard.Controls.Add(CreateActionBtn("⏮ Précédent", 18, 296, 106, 36, Color.FromArgb(40, 46, 68), () => NativeMethods.SendMediaKey(NativeMethods.VK_MEDIA_PREV_TRACK)));
+            rightCard.Controls.Add(CreateActionBtn("⏯ Play / Pause", 131, 296, 106, 36, Color.FromArgb(0, 122, 255), () => NativeMethods.SendMediaKey(NativeMethods.VK_MEDIA_PLAY_PAUSE)));
+            rightCard.Controls.Add(CreateActionBtn("⏭ Suivant", 244, 296, 106, 36, Color.FromArgb(40, 46, 68), () => NativeMethods.SendMediaKey(NativeMethods.VK_MEDIA_NEXT_TRACK)));
+
+            Label infoBox = new Label
             {
-                controller.Settings.IslandBorder = (IslandBorderAnimation)islandBorderCombo.SelectedIndex;
-                controller.Settings.Save();
-            };
-            col3.Controls.Add(islandBorderCombo);
-
-            // Island Size Slider
-            col3.Controls.Add(CreateLabel("Taille du Dynamic Island :", 16, 228));
-            islandSizeValueLabel = CreateValueLabel(controller.Settings.IslandScalePercent + " %", 270, 228);
-            col3.Controls.Add(islandSizeValueLabel);
-
-            TrackBar islandSizeSlider = CreateSlider(12, 248, 322, 75, 155, controller.Settings.IslandScalePercent);
-            islandSizeSlider.ValueChanged += (s, e) =>
-            {
-                controller.Settings.IslandScalePercent = islandSizeSlider.Value;
-                islandSizeValueLabel.Text = islandSizeSlider.Value + " %";
-                controller.Settings.Save();
-            };
-            col3.Controls.Add(islandSizeSlider);
-
-            CheckBox hoverExpandChk = CreateCheckBox("Ouvrir le lecteur complet au survol de la souris", 16, 288, controller.Settings.IslandExpandOnHover);
-            hoverExpandChk.CheckedChanged += (s, e) =>
-            {
-                controller.Settings.IslandExpandOnHover = hoverExpandChk.Checked;
-                controller.Settings.Save();
-            };
-            col3.Controls.Add(hoverExpandChk);
-
-            CheckBox autoBrandChk = CreateCheckBox("Adapter la couleur à l'app (Vert Spotify, Rose Apple, Rouge YT)", 16, 316, controller.Settings.IslandAutoAdaptBrandColor);
-            autoBrandChk.CheckedChanged += (s, e) =>
-            {
-                controller.Settings.IslandAutoAdaptBrandColor = autoBrandChk.Checked;
-                controller.Settings.Save();
-            };
-            col3.Controls.Add(autoBrandChk);
-
-            CheckBox clockIdleChk = CreateCheckBox("Afficher l'heure dans la pilule quand aucune musique ne joue", 16, 344, controller.Settings.IslandShowClockWhenIdle);
-            clockIdleChk.CheckedChanged += (s, e) =>
-            {
-                controller.Settings.IslandShowClockWhenIdle = clockIdleChk.Checked;
-                controller.Settings.Save();
-            };
-            col3.Controls.Add(clockIdleChk);
-
-            // Direct Media Controls & Service Launchers inside Settings too!
-            col3.Controls.Add(CreateLabel("Contrôles & Lancement Rapide des Services :", 16, 382));
-
-            Button btnSpot = CreateMiniPresetButton("🟢 Ouvrir Spotify", 16, 406, 100, Color.FromArgb(24, 150, 68), () => controller.MediaTracker.LaunchOrFocusService("spotify"));
-            Button btnApple = CreateMiniPresetButton("🔴 Apple Music", 123, 406, 100, Color.FromArgb(200, 35, 60), () => controller.MediaTracker.LaunchOrFocusService("applemusic"));
-            Button btnYT = CreateMiniPresetButton("▶️ YouTube Music", 230, 406, 100, Color.FromArgb(195, 25, 45), () => controller.MediaTracker.LaunchOrFocusService("youtube"));
-            col3.Controls.Add(btnSpot);
-            col3.Controls.Add(btnApple);
-            col3.Controls.Add(btnYT);
-
-            Button btnPrev = CreateMiniPresetButton("⏮ Précédent", 16, 446, 100, Color.FromArgb(40, 45, 66), () => NativeMethods.SendMediaKey(NativeMethods.VK_MEDIA_PREV_TRACK));
-            Button btnPlay = CreateMiniPresetButton("⏯ Play / Pause", 123, 446, 100, Color.FromArgb(0, 110, 225), () => NativeMethods.SendMediaKey(NativeMethods.VK_MEDIA_PLAY_PAUSE));
-            Button btnNext = CreateMiniPresetButton("⏭ Suivant", 230, 446, 100, Color.FromArgb(40, 45, 66), () => NativeMethods.SendMediaKey(NativeMethods.VK_MEDIA_NEXT_TRACK));
-            col3.Controls.Add(btnPrev);
-            col3.Controls.Add(btnPlay);
-            col3.Controls.Add(btnNext);
-
-            Label tipBox = new Label
-            {
-                Location = new Point(16, 490),
-                Size = new Size(314, 64),
+                Location = new Point(18, 355),
+                Size = new Size(332, 110),
                 BackColor = Color.FromArgb(28, 32, 46),
-                ForeColor = Color.FromArgb(185, 200, 230),
-                Font = new Font("Segoe UI", 8.3f, FontStyle.Regular),
-                Padding = new Padding(8),
-                Text = "💡 Survolez la pilule Dynamic Island tout en haut de votre écran avec la souris : elle s'ouvre avec égaliseur temps réel, titre en cours et boutons cliquables !"
+                ForeColor = Color.FromArgb(190, 205, 235),
+                Padding = new Padding(10),
+                Text = "💡 Le Dynamic Island possède 4 onglets interactifs quand vous le survolez :\n• 🎵 Musique (Spotify, Apple Music, YouTube)\n• ⏱️ Minuteur & Chronomètre avec anneau circulaire\n• 🦊 Compagnon Cyber interactif\n• 🤖 Assistant IA (Gemini, Claude, ChatGPT, Mistral)"
             };
-            col3.Controls.Add(tipBox);
+            rightCard.Controls.Add(infoBox);
 
-            Button minimizeBtn = new Button
-            {
-                Text = "📥 Réduire dans la barre système (Actif en fond)",
-                Location = new Point(16, 564),
-                Size = new Size(314, 38),
-                FlatStyle = FlatStyle.Flat,
-                BackColor = Color.FromArgb(42, 48, 70),
-                ForeColor = Color.FromArgb(225, 235, 255),
-                Font = new Font("Segoe UI Semibold", 9f, FontStyle.Bold),
-                Cursor = Cursors.Hand
-            };
-            minimizeBtn.FlatAppearance.BorderSize = 0;
-            minimizeBtn.Click += (s, e) => Hide();
-            col3.Controls.Add(minimizeBtn);
+            return page;
         }
 
-        private void PickCustomColor(int slot)
+        // ---------------------------------------------------------------------
+        // PAGE 4: COMPAGNON CYBER ORIGINAL (NON-APPLE)
+        // ---------------------------------------------------------------------
+        private Panel BuildPage4Companion()
         {
-            using (ColorDialog cd = new ColorDialog())
-            {
-                cd.FullOpen = true;
-                cd.Color = (slot == 1)
-                    ? Color.FromArgb(255, Color.FromArgb(controller.Settings.CustomColor1Argb))
-                    : Color.FromArgb(255, Color.FromArgb(controller.Settings.CustomColor2Argb));
+            Panel page = CreatePageContainer();
 
+            Panel leftCard = CreateCard(18, 16, 370, 595, "🦊 Choix & Comportement du Compagnon");
+            page.Controls.Add(leftCard);
+
+            leftCard.Controls.Add(CreateLabel("Espèce du Compagnon (100% Original, Non-Apple) :", 18, 46));
+            ComboBox specCombo = CreateComboBox(18, 70, 332, new string[] {
+                "❌ Aucun compagnon (Désactivé)",
+                "🦊 Kitsune Cyber-Fox (Renard Néon à queues d'énergie)",
+                "🐉 Draco Plasma-Dragon (Mini Dragon ailé cybernétique)",
+                "👾 Specter Holo-Ghost (Esprit Holographique & Anneau)",
+                "🐱 Neko Bionic-Cat (Chat Synthwave avec casque audio)",
+                "🤖 Atlas Mecha-Drone (Sphère Sci-Fi à œil laser)",
+                "🔥 Ignis Cosmic-Flame (Élémentaire de Feu Cosmique)"
+            }, (int)controller.Settings.Companion);
+            specCombo.SelectedIndexChanged += (s, e) => { controller.Settings.Companion = (CompanionSpecies)specCombo.SelectedIndex; controller.Settings.Save(); };
+            leftCard.Controls.Add(specCombo);
+
+            leftCard.Controls.Add(CreateLabel("Nom personnalisé de ton compagnon :", 18, 116));
+            TextBox nameBox = new TextBox
+            {
+                Location = new Point(18, 140),
+                Width = 332,
+                Text = controller.Settings.CompanionName,
+                BackColor = Color.FromArgb(32, 36, 52),
+                ForeColor = Color.White,
+                BorderStyle = BorderStyle.FixedSingle
+            };
+            nameBox.TextChanged += (s, e) => { controller.Settings.CompanionName = nameBox.Text; controller.Settings.Save(); };
+            leftCard.Controls.Add(nameBox);
+
+            leftCard.Controls.Add(CreateLabel("Position du compagnon sur l'écran :", 18, 182));
+            ComboBox posCombo = CreateComboBox(18, 206, 332, new string[] {
+                "🦊 Perché sur le dessus du Dynamic Island",
+                "💊 À l'intérieur de la pilule Dynamic Island",
+                "🛸 En lévitation à droite du Dynamic Island"
+            }, (int)controller.Settings.CompanionPos);
+            posCombo.SelectedIndexChanged += (s, e) => { controller.Settings.CompanionPos = (CompanionPositionMode)posCombo.SelectedIndex; controller.Settings.Save(); };
+            leftCard.Controls.Add(posCombo);
+
+            leftCard.Controls.Add(CreateLabel("Taille du compagnon :", 18, 252));
+            Label cSzVal = CreateValueLabel(controller.Settings.CompanionScalePercent + " %", 290, 252);
+            leftCard.Controls.Add(cSzVal);
+            TrackBar cSzSlider = CreateSlider(14, 274, 340, 70, 175, controller.Settings.CompanionScalePercent);
+            cSzSlider.ValueChanged += (s, e) => { controller.Settings.CompanionScalePercent = cSzSlider.Value; cSzVal.Text = cSzSlider.Value + " %"; controller.Settings.Save(); };
+            leftCard.Controls.Add(cSzSlider);
+
+            CheckBox eyeChk = CreateCheckBox("Les yeux du compagnon suivent le curseur de la souris", 18, 322, controller.Settings.CompanionFollowCursorEyes);
+            eyeChk.CheckedChanged += (s, e) => { controller.Settings.CompanionFollowCursorEyes = eyeChk.Checked; controller.Settings.Save(); };
+            leftCard.Controls.Add(eyeChk);
+
+            CheckBox danceChk = CreateCheckBox("Danse et affiche des notes ♪ quand la musique joue", 18, 352, controller.Settings.CompanionDanceToMusic);
+            danceChk.CheckedChanged += (s, e) => { controller.Settings.CompanionDanceToMusic = danceChk.Checked; controller.Settings.Save(); };
+            leftCard.Controls.Add(danceChk);
+
+            CheckBox bubChk = CreateCheckBox("Afficher les bulles de dialogue et réactions IA", 18, 382, controller.Settings.CompanionShowSpeechBubbles);
+            bubChk.CheckedChanged += (s, e) => { controller.Settings.CompanionShowSpeechBubbles = bubChk.Checked; controller.Settings.Save(); };
+            leftCard.Controls.Add(bubChk);
+
+            // Right Card: Live Companion Interactive Stage
+            Panel rightCard = CreateCard(404, 16, 370, 595, "🎮 Aperçu Vivant & Interactions");
+            page.Controls.Add(rightCard);
+
+            companionPreviewBox = new Panel { Location = new Point(18, 48), Size = new Size(332, 210), BackColor = Color.FromArgb(16, 19, 30) };
+            companionPreviewBox.Paint += (s, e) =>
+            {
+                Graphics g = e.Graphics;
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                Color[] pal = ThemeColorEngine.GetPalette(controller.Settings, controller.GlobalTimeSeconds);
+                CompanionSpecies sp = controller.Settings.Companion == CompanionSpecies.None ? CompanionSpecies.KitsuneCyberFox : controller.Settings.Companion;
+                Point screenCenter = companionPreviewBox.PointToScreen(new Point(companionPreviewBox.Width / 2, companionPreviewBox.Height / 2));
+                controller.DynamicIsland.CompanionEngine.DrawCompanion(
+                    g, new RectangleF(86, 25, 160, 160), sp, Cursor.Position, screenCenter,
+                    pal[0], pal[1 % pal.Length], controller.GlobalTimeSeconds, controller.MediaTracker.CurrentAudioPeak, true);
+            };
+            rightCard.Controls.Add(companionPreviewBox);
+
+            rightCard.Controls.Add(CreateActionBtn("⚡ Caresser / Booster le Compagnon (+15 XP)", 18, 275, 332, 40, Color.FromArgb(0, 122, 255), () => controller.DynamicIsland.CompanionEngine.InteractPetOrBoost()));
+            rightCard.Controls.Add(CreateActionBtn("💬 Faire parler le Compagnon via l'IA", 18, 325, 332, 40, Color.FromArgb(135, 50, 220), () =>
+            {
+                controller.DynamicIsland.AiEngine.SendPromptAsync(controller.Settings, "Dis une phrase courte et stylée en tant que compagnon cybernétique à ton utilisateur !", reply => controller.DynamicIsland.CompanionEngine.Say(reply, 6000));
+            }));
+
+            return page;
+        }
+
+        // ---------------------------------------------------------------------
+        // PAGE 5: MULTI-PROVIDER AI SYSTEM (GEMINI, CLAUDE, CHATGPT, MISTRAL)
+        // ---------------------------------------------------------------------
+        private Panel BuildPage5AiAssistant()
+        {
+            Panel page = CreatePageContainer();
+
+            Panel leftCard = CreateCard(18, 16, 370, 595, "🔑 Configuration des 4 API IA");
+            page.Controls.Add(leftCard);
+
+            leftCard.Controls.Add(CreateLabel("Fournisseur IA Actif :", 18, 46));
+            ComboBox provCombo = CreateComboBox(18, 70, 332, new string[] {
+                "✨ Google Gemini (Recommandé • Rapide & Gratuit)",
+                "🧠 Anthropic Claude (Claude 3.5 Sonnet / Haiku)",
+                "🟢 OpenAI ChatGPT (GPT-4o / GPT-4o-mini)",
+                "🌪️ Mistral AI (Mistral Small / Large)"
+            }, (int)controller.Settings.ActiveAiProvider);
+            provCombo.SelectedIndexChanged += (s, e) => { controller.Settings.ActiveAiProvider = (AiProvider)provCombo.SelectedIndex; controller.Settings.Save(); };
+            leftCard.Controls.Add(provCombo);
+
+            // 1. Gemini Key & Model
+            leftCard.Controls.Add(CreateLabel("Clé API Google Gemini & Modèle :", 18, 114));
+            TextBox gemKey = CreateApiInputBox(18, 136, 210, controller.Settings.GeminiApiKey, true);
+            TextBox gemMod = CreateApiInputBox(234, 136, 116, controller.Settings.GeminiModel, false);
+            gemKey.TextChanged += (s, e) => { controller.Settings.GeminiApiKey = gemKey.Text.Trim(); controller.Settings.Save(); };
+            gemMod.TextChanged += (s, e) => { controller.Settings.GeminiModel = gemMod.Text.Trim(); controller.Settings.Save(); };
+            leftCard.Controls.Add(gemKey); leftCard.Controls.Add(gemMod);
+
+            // 2. Claude Key & Model
+            leftCard.Controls.Add(CreateLabel("Clé API Anthropic Claude & Modèle :", 18, 174));
+            TextBox clKey = CreateApiInputBox(18, 196, 210, controller.Settings.ClaudeApiKey, true);
+            TextBox clMod = CreateApiInputBox(234, 196, 116, controller.Settings.ClaudeModel, false);
+            clKey.TextChanged += (s, e) => { controller.Settings.ClaudeApiKey = clKey.Text.Trim(); controller.Settings.Save(); };
+            clMod.TextChanged += (s, e) => { controller.Settings.ClaudeModel = clMod.Text.Trim(); controller.Settings.Save(); };
+            leftCard.Controls.Add(clKey); leftCard.Controls.Add(clMod);
+
+            // 3. OpenAI ChatGPT Key & Model
+            leftCard.Controls.Add(CreateLabel("Clé API OpenAI ChatGPT & Modèle :", 18, 234));
+            TextBox oaKey = CreateApiInputBox(18, 256, 210, controller.Settings.OpenAiApiKey, true);
+            TextBox oaMod = CreateApiInputBox(234, 256, 116, controller.Settings.OpenAiModel, false);
+            oaKey.TextChanged += (s, e) => { controller.Settings.OpenAiApiKey = oaKey.Text.Trim(); controller.Settings.Save(); };
+            oaMod.TextChanged += (s, e) => { controller.Settings.OpenAiModel = oaMod.Text.Trim(); controller.Settings.Save(); };
+            leftCard.Controls.Add(oaKey); leftCard.Controls.Add(oaMod);
+
+            // 4. Mistral Key & Model
+            leftCard.Controls.Add(CreateLabel("Clé API Mistral AI & Modèle :", 18, 294));
+            TextBox miKey = CreateApiInputBox(18, 316, 210, controller.Settings.MistralApiKey, true);
+            TextBox miMod = CreateApiInputBox(234, 316, 116, controller.Settings.MistralModel, false);
+            miKey.TextChanged += (s, e) => { controller.Settings.MistralApiKey = miKey.Text.Trim(); controller.Settings.Save(); };
+            miMod.TextChanged += (s, e) => { controller.Settings.MistralModel = miMod.Text.Trim(); controller.Settings.Save(); };
+            leftCard.Controls.Add(miKey); leftCard.Controls.Add(miMod);
+
+            // System Prompt
+            leftCard.Controls.Add(CreateLabel("Personnalité / Instructions du Compagnon IA :", 18, 358));
+            TextBox sysBox = new TextBox
+            {
+                Location = new Point(18, 382),
+                Size = new Size(332, 95),
+                Multiline = true,
+                Text = controller.Settings.AiSystemPrompt,
+                BackColor = Color.FromArgb(30, 34, 50),
+                ForeColor = Color.White,
+                BorderStyle = BorderStyle.FixedSingle
+            };
+            sysBox.TextChanged += (s, e) => { controller.Settings.AiSystemPrompt = sysBox.Text; controller.Settings.Save(); };
+            leftCard.Controls.Add(sysBox);
+
+            // Right Card: Live AI Console & Test
+            Panel rightCard = CreateCard(404, 16, 370, 595, "🤖 Console de Chat & Test IA en Direct");
+            page.Controls.Add(rightCard);
+
+            aiStatusLabel = new Label
+            {
+                Location = new Point(18, 48),
+                Size = new Size(332, 230),
+                BackColor = Color.FromArgb(16, 19, 30),
+                ForeColor = Color.FromArgb(225, 235, 255),
+                Padding = new Padding(12),
+                Text = controller.DynamicIsland.AiEngine.LastResponse
+            };
+            rightCard.Controls.Add(aiStatusLabel);
+
+            rightCard.Controls.Add(CreateLabel("Envoyer un message au Compagnon IA :", 18, 292));
+            aiChatTestInput = new TextBox
+            {
+                Location = new Point(18, 316),
+                Size = new Size(332, 28),
+                BackColor = Color.FromArgb(30, 34, 50),
+                ForeColor = Color.White,
+                BorderStyle = BorderStyle.FixedSingle,
+                Text = "Salut ! Présente-toi en une phrase stylée !"
+            };
+            rightCard.Controls.Add(aiChatTestInput);
+
+            Button sendAiBtn = CreateActionBtn("🚀 Envoyer à l'IA & Faire parler le Compagnon", 18, 356, 332, 42, Color.FromArgb(0, 122, 255), () =>
+            {
+                string prompt = aiChatTestInput.Text.Trim();
+                if (string.IsNullOrEmpty(prompt)) return;
+                aiStatusLabel.Text = "⏳ Connexion à " + controller.Settings.ActiveAiProvider + " en cours...";
+                controller.DynamicIsland.AiEngine.SendPromptAsync(controller.Settings, prompt, reply =>
+                {
+                    if (!IsDisposed && IsHandleCreated)
+                    {
+                        BeginInvoke((Action)(() =>
+                        {
+                            aiStatusLabel.Text = reply;
+                            controller.DynamicIsland.CompanionEngine.Say(reply, 6500);
+                        }));
+                    }
+                });
+            });
+            rightCard.Controls.Add(sendAiBtn);
+
+            return page;
+        }
+
+        private TextBox CreateApiInputBox(int x, int y, int w, string val, bool isPassword)
+        {
+            TextBox tb = new TextBox
+            {
+                Location = new Point(x, y),
+                Width = w,
+                Text = val,
+                BackColor = Color.FromArgb(30, 34, 50),
+                ForeColor = Color.White,
+                BorderStyle = BorderStyle.FixedSingle
+            };
+            if (isPassword) tb.UseSystemPasswordChar = true;
+            return tb;
+        }
+
+        private void PickCustomColor(int slot, Button btn)
+        {
+            using (ColorDialog cd = new ColorDialog { FullOpen = true })
+            {
                 if (cd.ShowDialog(this) == DialogResult.OK)
                 {
-                    if (slot == 1)
-                    {
-                        controller.Settings.CustomColor1Argb = cd.Color.ToArgb();
-                        customCol1Btn.BackColor = cd.Color;
-                    }
-                    else
-                    {
-                        controller.Settings.CustomColor2Argb = cd.Color.ToArgb();
-                        customCol2Btn.BackColor = cd.Color;
-                    }
+                    if (slot == 1) controller.Settings.CustomColor1Argb = cd.Color.ToArgb();
+                    else controller.Settings.CustomColor2Argb = cd.Color.ToArgb();
+                    btn.BackColor = cd.Color;
                     controller.Settings.Theme = ColorTheme.CustomColors;
-                    themeCombo.SelectedIndex = (int)ColorTheme.CustomColors;
+                    if (themeCombo != null) themeCombo.SelectedIndex = (int)ColorTheme.CustomColors;
                     controller.RefreshAllCorners();
-                    previewBox.Invalidate();
                 }
             }
         }
 
-        private void ApplyQuickPreset(ColorTheme theme, CornerAnimationMode cornerMode)
+        private void ApplyPreset(ColorTheme theme, CornerAnimationMode cornerMode)
         {
             controller.Settings.Theme = theme;
             controller.Settings.CornerAnim = cornerMode;
             if (themeCombo != null) themeCombo.SelectedIndex = (int)theme;
             controller.RefreshAllCorners();
-            previewBox.Invalidate();
             controller.TriggerDemoTransition();
         }
 
-        private Button CreateMiniPresetButton(string text, int x, int y, int w, Color bg, Action onClick)
+        private Panel CreatePageContainer()
+        {
+            return new Panel
+            {
+                Location = new Point(245, 78),
+                Size = new Size(805, 650),
+                BackColor = Color.FromArgb(12, 13, 19)
+            };
+        }
+
+        private Panel CreateCard(int x, int y, int w, int h, string title)
+        {
+            Panel p = new Panel { Location = new Point(x, y), Size = new Size(w, h), BackColor = Color.FromArgb(21, 23, 34) };
+            Label hdr = new Label { Text = title, Font = new Font("Segoe UI Semibold", 10.8f, FontStyle.Bold), ForeColor = Color.FromArgb(105, 205, 255), Location = new Point(16, 12), AutoSize = true };
+            p.Controls.Add(hdr);
+            return p;
+        }
+
+        private Button CreateActionBtn(string text, int x, int y, int w, int h, Color bg, Action onClick)
         {
             Button b = new Button
             {
                 Text = text,
                 Location = new Point(x, y),
-                Size = new Size(w, 32),
+                Size = new Size(w, h),
                 FlatStyle = FlatStyle.Flat,
                 BackColor = bg,
                 ForeColor = Color.White,
-                Font = new Font("Segoe UI Semibold", 8.2f, FontStyle.Bold),
+                Font = new Font("Segoe UI Semibold", 9.0f, FontStyle.Bold),
                 Cursor = Cursors.Hand
             };
             b.FlatAppearance.BorderSize = 0;
-            b.Click += (s, e) => onClick();
+            if (onClick != null) b.Click += (s, e) => onClick();
             return b;
-        }
-
-        private void PaintPreviewBox(object sender, PaintEventArgs e)
-        {
-            Graphics g = e.Graphics;
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            Rectangle r = previewBox.ClientRectangle;
-
-            Color[] palette = ThemeColorEngine.GetPalette(controller.Settings, controller.GlobalTimeSeconds);
-            using (LinearGradientBrush wallpaper = new LinearGradientBrush(r,
-                Color.FromArgb(255, 25, 45, 88),
-                Color.FromArgb(255, 78, 32, 102),
-                25f))
-            {
-                g.FillRectangle(wallpaper, r);
-            }
-
-            int previewRad = Math.Min(56, controller.Settings.CornerRadius);
-            if (controller.Settings.Enabled && previewRad > 2)
-            {
-                int sz = previewRad + 20;
-                using (Bitmap tlBmp = MonitorCorners.RenderCornerBitmap(sz, previewRad, CornerPosition.TopLeft, controller.Settings, 0.35f, palette, controller.GlobalTimeSeconds, 0.5f))
-                using (Bitmap trBmp = MonitorCorners.RenderCornerBitmap(sz, previewRad, CornerPosition.TopRight, controller.Settings, 0.35f, palette, controller.GlobalTimeSeconds, 0.5f))
-                {
-                    g.DrawImage(tlBmp, 0, 0);
-                    g.DrawImage(trBmp, r.Width - tlBmp.Width, 0);
-                }
-            }
-
-            using (Font f = new Font("Segoe UI Semibold", 8.8f, FontStyle.Bold))
-            using (SolidBrush b = new SolidBrush(Color.FromArgb(235, 255, 255, 255)))
-            {
-                string txt = "Aperçu • " + controller.Settings.CornerRadius + " px • " + controller.Settings.Theme;
-                SizeF sz = g.MeasureString(txt, f);
-                g.DrawString(txt, f, b, (r.Width - sz.Width) / 2f, (r.Height - sz.Height) / 2f + 4f);
-            }
-        }
-
-        private void UpdateMonitorSummary()
-        {
-            if (monitorsInfoLabel == null) return;
-            StringBuilder sb = new StringBuilder();
-            sb.AppendFormat("🖥 {0} écran(s) actif(s) :\n", controller.Monitors.Count);
-            for (int i = 0; i < controller.Monitors.Count; i++)
-            {
-                Rectangle b = controller.Monitors[i].Bounds;
-                sb.AppendFormat("• Écran {0} : {1}×{2} ({3},{4})\n", i + 1, b.Width, b.Height, b.X, b.Y);
-            }
-            monitorsInfoLabel.Text = sb.ToString();
-        }
-
-        private Panel CreateCard(int x, int y, int w, int h, string title)
-        {
-            Panel p = new Panel
-            {
-                Location = new Point(x, y),
-                Size = new Size(w, h),
-                BackColor = Color.FromArgb(22, 24, 35)
-            };
-            Label hdr = new Label
-            {
-                Text = title,
-                Font = new Font("Segoe UI Semibold", 10.8f, FontStyle.Bold),
-                ForeColor = Color.FromArgb(110, 205, 255),
-                Location = new Point(14, 12),
-                AutoSize = true
-            };
-            p.Controls.Add(hdr);
-            return p;
         }
 
         private TrackBar CreateSlider(int x, int y, int w, int min, int max, int val)
@@ -3386,62 +4516,30 @@ namespace iCornerDuo
                 TickStyle = TickStyle.None,
                 Location = new Point(x, y),
                 Size = new Size(w, 28),
-                BackColor = Color.FromArgb(22, 24, 35)
+                BackColor = Color.FromArgb(21, 23, 34)
             };
         }
 
         private Label CreateLabel(string text, int x, int y)
         {
-            return new Label
-            {
-                Text = text,
-                Location = new Point(x, y),
-                AutoSize = true,
-                ForeColor = Color.FromArgb(205, 212, 232)
-            };
+            return new Label { Text = text, Location = new Point(x, y), AutoSize = true, ForeColor = Color.FromArgb(205, 212, 232) };
         }
 
         private Label CreateValueLabel(string text, int x, int y)
         {
-            return new Label
-            {
-                Text = text,
-                Location = new Point(x, y),
-                AutoSize = true,
-                Font = new Font("Segoe UI Semibold", 9.2f, FontStyle.Bold),
-                ForeColor = Color.FromArgb(80, 210, 255)
-            };
+            return new Label { Text = text, Location = new Point(x, y), AutoSize = true, Font = new Font("Segoe UI Semibold", 9.2f, FontStyle.Bold), ForeColor = Color.FromArgb(80, 210, 255) };
         }
 
         private CheckBox CreateCheckBox(string text, int x, int y, bool isChecked)
         {
-            return new CheckBox
-            {
-                Text = text,
-                Location = new Point(x, y),
-                AutoSize = true,
-                Checked = isChecked,
-                ForeColor = Color.FromArgb(230, 235, 250),
-                Cursor = Cursors.Hand
-            };
+            return new CheckBox { Text = text, Location = new Point(x, y), AutoSize = true, Checked = isChecked, ForeColor = Color.FromArgb(230, 235, 250), Cursor = Cursors.Hand };
         }
 
         private ComboBox CreateComboBox(int x, int y, int w, string[] items, int selectedIndex)
         {
-            ComboBox cb = new ComboBox
-            {
-                Location = new Point(x, y),
-                Width = w,
-                DropDownStyle = ComboBoxStyle.DropDownList,
-                BackColor = Color.FromArgb(34, 38, 54),
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat
-            };
+            ComboBox cb = new ComboBox { Location = new Point(x, y), Width = w, DropDownStyle = ComboBoxStyle.DropDownList, BackColor = Color.FromArgb(32, 36, 52), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
             cb.Items.AddRange(items);
-            if (selectedIndex >= 0 && selectedIndex < items.Length)
-                cb.SelectedIndex = selectedIndex;
-            else
-                cb.SelectedIndex = 0;
+            cb.SelectedIndex = (selectedIndex >= 0 && selectedIndex < items.Length) ? selectedIndex : 0;
             return cb;
         }
 
@@ -3450,9 +4548,7 @@ namespace iCornerDuo
             try
             {
                 using (RegistryKey key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", false))
-                {
                     if (key != null) return key.GetValue("iCornerDuo") != null;
-                }
             }
             catch { }
             return false;
@@ -3466,10 +4562,8 @@ namespace iCornerDuo
                 {
                     if (key != null)
                     {
-                        if (enable)
-                            key.SetValue("iCornerDuo", "\"" + Application.ExecutablePath + "\" --tray");
-                        else
-                            key.DeleteValue("iCornerDuo", false);
+                        if (enable) key.SetValue("iCornerDuo", "\"" + Application.ExecutablePath + "\" --tray");
+                        else key.DeleteValue("iCornerDuo", false);
                     }
                 }
             }
@@ -3506,16 +4600,16 @@ namespace iCornerDuo
                 if (!startInTray)
                 {
                     controller.ShowSettingsWindow();
-                    Timer welcomeTimer = new Timer { Interval = 450 };
+                    System.Windows.Forms.Timer welcomeTimer = new System.Windows.Forms.Timer { Interval = 450 };
                     welcomeTimer.Tick += (s, e) =>
                     {
                         welcomeTimer.Stop();
                         welcomeTimer.Dispose();
                         controller.TriggerDemoTransition();
+                        controller.DynamicIsland.CompanionEngine.Say("Salut ! Survole le Dynamic Island ou clique sur moi ! ⚡", 5500);
                     };
                     welcomeTimer.Start();
                 }
-
                 Application.Run();
             }
         }
