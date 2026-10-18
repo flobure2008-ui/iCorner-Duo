@@ -2622,7 +2622,7 @@ namespace iCornerDuo
         private void SetupTrayIcon()
         {
             trayIcon = new NotifyIcon();
-            trayIcon.Text = "iCorner Duo — Bords Arrondis, Transitions & Dynamic Island Music";
+            trayIcon.Text = "iCorner Duo — Bords Arrondis & Dynamic Island";
             trayIcon.Icon = LoadAppIcon() ?? SystemIcons.Application;
             trayIcon.Visible = true;
 
