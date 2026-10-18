@@ -1,22 +1,23 @@
 <div align="center">
   <img src="icon.png" alt="iCorner Duo Icon" width="160" height="160" />
 
-  #  iCorner Duo
+  #  iCorner Duo — Pro Edition
 
-  **Bords arrondis natifs multi-écrans & transitions liquides style Apple iPhone / Universal Control pour Windows**
+  **Bords arrondis animés, Transitions inter-écrans Apple Duo & Dynamic Island Music Player (Spotify, Apple Music, YouTube) pour Windows**
 
   [![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6?style=for-the-badge&logo=windows&logoColor=white)](#)
-  [![Language](https://img.shields.io/badge/C%23-.NET%20Native%20Win32-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)](#)
-  [![Performance](https://img.shields.io/badge/Performance-60%2B%20FPS%20%7C%200%25%20Idle%20CPU-00C853?style=for-the-badge)](#)
+  [![Language](https://img.shields.io/badge/C%23-.NET%20Native%20Win32%20%2B%20CoreAudio-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)](#)
+  [![Performance](https://img.shields.io/badge/Performance-60%20FPS%20%7C%20Audio%20Reactive-00C853?style=for-the-badge)](#)
 </div>
 
 ---
 
 ## ✨ Présentation
 
-**iCorner Duo** est une application Windows ultra-légère et native (un seul exécutable autonome sans dépendance externe) qui sublime vos écrans avec :
-1. **Des angles arrondis parfaits** (courbure continue **Squircle Apple** ou arc circulaire classique) sur tous vos écrans, quelle que soit leur taille, résolution ou orientation (Ultrawide, 16:9, vertical...).
-2. **Une animation de transition fluide style Apple iPhone Duo / Universal Control** qui se déclenche automatiquement à l'endroit exact où votre souris passe d'un écran à un autre.
+**iCorner Duo (Pro Edition)** est une application Windows ultra-légère et native (un seul exécutable autonome sans dépendance externe) qui sublime vos écrans avec :
+1. **💊 Un Dynamic Island Interactif & Lecteur Musical Universel** en haut de votre écran compatible **Spotify, Apple Music, YouTube / YouTube Music, Deezer, SoundCloud, VLC**, avec égaliseur audio temps réel (Windows CoreAudio), détection du titre en cours, ouverture fluide au survol de la souris et boutons multimédias cliquables.
+2. **📐 Des Bords Arrondis Animés & Adaptatifs** (**Squircle Apple** ou **Cercle Classique**) sur tous vos écrans avec **6 modes d'animation continue** (dont la synchronisation sur les basses de votre musique !).
+3. **🌊 8 Styles de Transitions Inter-Écrans** et **13 Thèmes de Couleurs (+ Couleurs Personnalisées)** lorsque votre curseur passe d'un écran à un autre.
 
 <div align="center">
   <img src="assets/showcase_icon.jpg" alt="iCorner Duo Artwork" width="420" />
@@ -26,44 +27,44 @@
 
 ## 🚀 Fonctionnalités Principales
 
-### 📐 1. Bords Arrondis Adaptatifs Multi-Écrans
-- **Courbure Continue Squircle Apple** : Utilise la formule mathématique d'hyper-ellipse ($x^{4.2} + y^{4.2} = r^{4.2}$) identique au design matériel d'iOS et macOS, ou un **Cercle Classique**.
-- **100 % Click-Through & Invisible pour les clics** (`WS_EX_LAYERED | WS_EX_TRANSPARENT`) : Ne gêne jamais vos clics, reste au-dessus de la barre des tâches Windows, et n'apparaît pas dans `Alt+Tab`.
-- **Per-Monitor DPI Aware V2** : S'adapte automatiquement à toutes les tailles d'écrans, échelles DPI et branchements/débranchements d'écrans à chaud.
-- **Liseré Lumineux (Bezel Glow)** : Ajoute un fin reflet esthétique le long des courbes avec opacité réglable (`0 %` à `100 %`).
+### 💊 1. Dynamic Island Music Player & Live Hub
+- **Compatible Spotify, Apple Music, YouTube & Navigateurs** : Détecte automatiquement la musique ou vidéo en cours ainsi que l'application source.
+- **Égaliseur Audio Temps Réel (CoreAudio Peak Meter)** : Les barres du spectre sonore dansent en direct sur le rythme réel du son de votre PC.
+- **Expansion Fluide au Survol (Hover Morphing)** :
+  - **Mode Compact** : Vinyle rotatif animé, titre du morceau (ou horloge), et mini-spectre audio 6 barres.
+  - **Mode Étendu (au survol de la souris)** : Affiche la pochette/vinyle, le badge de la plateforme (`🟢 SPOTIFY`, `🔴 APPLE MUSIC`, `▶️ YOUTUBE`), le titre, l'artiste, un égaliseur 12 barres, les contrôles cliquables (`⏮`, `⏯`, `⏭`, `🔉`, `🔊`) et des boutons d'accès direct pour ouvrir/basculer vers **Spotify**, **Apple Music**, **YouTube Music**, changer de **Thème** ou ouvrir les **Paramètres**.
+- **Couleur Adaptative par Application** : Adapte automatiquement son halo au Vert Spotify, Rose Apple Music ou Rouge YouTube.
+- **Glissement Multi-Écrans** : Peut suivre automatiquement l'écran où se trouve votre souris ou rester fixé sur l'écran principal.
 
-### 🌊 2. Transitions Inter-Écrans Style Apple
-- **Détection de traversée au pixel près** : L'animation apparaît exactement sur la coordonnée `(X, Y)` où le curseur franchit la bordure entre deux moniteurs.
-- **Effet Magnétique de Proximité** : Lorsque le curseur s'approche d'un bord partagé entre deux écrans, le pont liquide commence subtilement à s'étirer avant même la traversée.
-- **4 Styles d'Animation Inclus** :
-  - **✨ Combo Ultime** : Pont liquide (*Liquid Bridge*) + Onde chromatique *Apple Intelligence* + *Dynamic Island* + pulsation élastique des angles de l'écran rejoint.
-  - **💧 Apple Liquid Bridge** : Goutte/pont noir organique (courbes de Bézier) qui s'étire d'un écran à l'autre avec rebond élastique (`EaseOutBack`).
-  - **🌈 Apple Intelligence Glow** : Onde lumineuse multicolore le long de la bordure traversée.
-  - **💊 Dynamic Island** : Pilule animée en haut de l'écran rejoint affichant le numéro et la résolution de l'écran actif.
-- **4 Palettes de Couleurs** :
-  - 🎨 *Apple Intelligence* (Cyan, Violet, Magenta, Or)
-  - 💎 *iOS Electric Blue* (Bleu électrique, Cyan, Indigo)
-  - 🌅 *Sunset Pro* (Corail, Rose, Pourpre, Ambre)
-  - ⚪ *Minimal Monochrome* (Argent, Blanc pur, Noir obsidienne)
+### 📐 2. Bords Arrondis & 6 Animations Continues des Angles
+- **Courbure Continue Squircle Apple** ($x^{4.2} + y^{4.2} = r^{4.2}$) ou **Cercle Classique**.
+- **6 Modes d'Animation des 4 Angles** :
+  1. ✨ **Fixe élégant** (Classique)
+  2. 🌈 **Rotation Chromatique 360°** (Dégradé tournant en continu)
+  3. 💨 **Respiration Lumineuse Douce** (*Breathing Pulse*)
+  4. 🎵 **Réactif à la Musique / Basses** (*Audio Beat Sync* : les 4 coins pulsent en rythme avec votre musique !)
+  5. ⭐ **Scintillement d'Étoiles** (*Sparkle Shimmer*)
+  6. ⚡ **Onde Néon Tournante** (*Neon Chase*)
 
-### ⚙️ 3. Centre de Contrôle & Zone de Notification (System Tray)
-- Réglage en temps réel du **rayon (`0` à `110 px`)**, des angles actifs (Haut-Gauche, Haut-Droit, Bas-Gauche, Bas-Droit), de la **durée (`350` à `1800 ms`)** et de l'**amplitude (`60 %` à `180 %`)**.
-- Bouton **« ✨ Tester la transition »** pour prévisualiser l'animation instantanément.
-- Icône dans la barre système Windows (System Tray) avec menu rapide et option **Lancer automatiquement au démarrage de Windows**.
+### 🌊 3. 8 Styles de Transitions Inter-Écrans
+- **✨ Combo Ultime Pro** (Pont Liquide + Onde Siri + Particules + Flash Angles)
+- **💧 Apple Liquid Bridge** (Pont métaballe liquide qui s'étire d'un écran à l'autre)
+- **🌈 Apple Intelligence Siri Wave** (Onde chromatique multicouche)
+- **⚡ Portail Plasma & Éclairs Électriques** (Arcs électriques sur la bordure traversée)
+- **🪐 Explosion d'Étoiles & Particules Cosmiques** (Particules projetées au passage du curseur)
+- **🌊 Onde de Choc Sonar** (Anneaux concentriques *Shockwave Ripples*)
+- **🔥 Lame Laser Néon** (Faisceau laser haute intensité)
+- **💊 Dynamic Island Bounce** (Focus sur la pilule et rebond des angles)
+
+### 🎨 4. 13 Palettes de Couleurs + Sélecteur Personnalisé
+- 🎨 *Apple Intelligence* • 💎 *iOS Electric Blue* • 🟢 *Spotify Neon Green* • 🔴 *Apple Music Rose* • ▶️ *YouTube Crimson Glow* • 🌈 *Cyberpunk RGB Rainbow (360°)* • 🌅 *Sunset Pro* • 🟣 *Ultra Violet Nebula* • 🔥 *Magma & Gold* • ❄️ *Arctic Aurora* • 🌸 *Sakura Pastel* • ⚪ *Minimal Monochrome* • 🖌️ *Couleurs Personnalisées (1 & 2)*.
 
 ---
 
 ## 📦 Installation & Utilisation
 
-### Option 1 : Lancement direct (Exécutable prêt à l'emploi)
-1. Téléchargez ou clonez ce dépôt :
+1. Clonez ce dépôt :
    ```bash
    git clone https://github.com/flobure2008-ui/iCorner-Duo.git
    ```
-2. Double-cliquez sur **`iCornerDuo.exe`** (ou sur **`Lancer_iCornerDuo.bat`**).
-
-### Option 2 : Recompiler depuis le code source (`Program.cs`)
-Aucune installation lourde n'est requise : Windows inclut nativement le compilateur C# `.NET Framework`.
-```powershell
-"C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe" /target:winexe /win32icon:"icon.ico" /out:"iCornerDuo.exe" /r:System.dll /r:System.Drawing.dll /r:System.Windows.Forms.dll "Program.cs"
-```
+2. Lancez **`iCornerDuo.exe`** (ou **`Lancer_iCornerDuo.bat`**).
