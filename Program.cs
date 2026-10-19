@@ -174,7 +174,7 @@ namespace iCornerDuo
         public int CustomColor2Argb = Color.FromArgb(255, 185, 130, 255).ToArgb();
 
         // 3. Nova Capsule & Spawn System
-        public CapsuleVisibilityMode IslandMode = CapsuleVisibilityMode.AlwaysPresent;
+        public CapsuleVisibilityMode IslandMode = CapsuleVisibilityMode.Hidden;
         public CapsuleSpawnStyle SpawnAnim = CapsuleSpawnStyle.LiquidGlassDrop;
         public CapsuleScreenPlacement IslandPlacement = CapsuleScreenPlacement.FollowActiveCursor;
         public CapsuleBorderStyle IslandBorder = CapsuleBorderStyle.FrostedGlassRim;
@@ -2359,7 +2359,6 @@ namespace iCornerDuo
         public NovaCapsuleWidget()
         {
             capsuleForm = new LayeredOverlayForm(true);
-            capsuleForm.Show();
 
             TimerEngine.OnTimerFinished += () =>
             {
@@ -2374,6 +2373,13 @@ namespace iCornerDuo
         {
             transitionBoost = 1.0f;
             ShowTransientBanner(screenName + "  •  " + res, 1900);
+        }
+
+        public void HideNow()
+        {
+            if (capsuleForm != null && capsuleForm.Visible) capsuleForm.Hide();
+            spawnFactor = 0f;
+            expandProgress = 0f;
         }
 
         public void ShowTransientBanner(string text, int durationMs)
@@ -2391,7 +2397,9 @@ namespace iCornerDuo
 
             if (!settings.Enabled || settings.IslandMode == CapsuleVisibilityMode.Hidden)
             {
-                capsuleForm.Hide();
+                if (capsuleForm.Visible) capsuleForm.Hide();
+                spawnFactor = 0f;
+                expandProgress = 0f;
                 return;
             }
 
@@ -2447,7 +2455,9 @@ namespace iCornerDuo
             if (Math.Abs(fsTarget - fsProgress) < 0.003f) fsProgress = fsTarget;
 
             bool wantVisible = true;
-            if (settings.IslandMode == CapsuleVisibilityMode.TransitionOnly)
+            if (settings.IslandMode == CapsuleVisibilityMode.Hidden)
+                wantVisible = false;
+            else if (settings.IslandMode == CapsuleVisibilityMode.TransitionOnly)
                 wantVisible = (transitionBoost > 0.02f || TimerEngine.FinishedAlertActive || trackAnim > 0f);
             else if (settings.IslandMode == CapsuleVisibilityMode.SmartContextual)
                 wantVisible = (media.IsAudioActive || realSource ||
@@ -2460,8 +2470,9 @@ namespace iCornerDuo
                 wantVisible = nearTop || expandProgress > 0.05f || transitionBoost > 0.02f || TimerEngine.FinishedAlertActive || trackAnim > 0f;
             }
 
-            // Hysteresis: stay visible 2.5 s after the last "wanted" frame => no blinking
-            if (wantVisible) lastWantVisibleTicks = nowT;
+            // Hysteresis: stay visible 2.5 s after the last "wanted" frame => no blinking (only if not hidden)
+            if (settings.IslandMode == CapsuleVisibilityMode.Hidden) lastWantVisibleTicks = 0;
+            else if (wantVisible) lastWantVisibleTicks = nowT;
             else if (nowT - lastWantVisibleTicks < 25000000L) wantVisible = true;
 
             float targetSpawn = wantVisible ? 1.0f : 0.0f;
@@ -4817,7 +4828,12 @@ namespace iCornerDuo
                 "Uniquement lors d'un changement d'écran",
                 "Masquée"
             }, (int)controller.Settings.IslandMode);
-            visCombo.SelectedIndexChanged += (s, e) => { controller.Settings.IslandMode = (CapsuleVisibilityMode)visCombo.SelectedIndex; controller.Settings.Save(); };
+            visCombo.SelectedIndexChanged += (s, e) => {
+                controller.Settings.IslandMode = (CapsuleVisibilityMode)visCombo.SelectedIndex;
+                if (controller.Settings.IslandMode == CapsuleVisibilityMode.Hidden)
+                    controller.DynamicIsland.HideNow();
+                controller.Settings.Save();
+            };
             leftCard.Controls.Add(visCombo);
 
             leftCard.Controls.Add(CreateLabel("Cinématique d'apparition :", 18, 122));
