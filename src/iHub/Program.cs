@@ -337,7 +337,7 @@ namespace iHub
                     using (WebClient wc = new WebClient())
                     {
                         wc.Headers.Add("User-Agent", "iHub-Launcher");
-                        string releaseUrl = "https://github.com/flobure2008-ui/iSuite/releases/download/v3.1.0/" + app.ExeName;
+                        string releaseUrl = "https://github.com/flobure2008-ui/iSuite/releases/download/v1.0.0/" + app.ExeName;
                         wc.DownloadFile(releaseUrl, target);
                     }
                 }

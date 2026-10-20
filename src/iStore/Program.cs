@@ -126,7 +126,7 @@ namespace iStore
                 Title = "iCorner Pure",
                 Category = "Multi-Moniteurs",
                 Developer = "iSuite Lab",
-                Version = "v3.0.0",
+                Version = "v1.0.0",
                 Rating = "★ 4.9 (1.4k)",
                 Downloads = "42k téléchargements",
                 Summary = "Arrondis d'écran organiques superellipse (n=4.2), multi-moniteurs, liseré biseauté spéculaire & 0% CPU.",
@@ -141,7 +141,7 @@ namespace iStore
                 Title = "iBridge Duo",
                 Category = "Multi-Moniteurs",
                 Developer = "iSuite Lab",
-                Version = "v3.0.0",
+                Version = "v1.0.0",
                 Rating = "★ 4.9 (890)",
                 Downloads = "28k téléchargements",
                 Summary = "Passerelle fluide de verre dépoli & halo magnétique d'approche lors du passage du curseur entre écrans.",
@@ -156,7 +156,7 @@ namespace iStore
                 Title = "iIsland Dynamic",
                 Category = "Widgets Flottants",
                 Developer = "iSuite Lab",
-                Version = "v3.0.0",
+                Version = "v1.0.0",
                 Rating = "★ 4.8 (2.1k)",
                 Downloads = "65k téléchargements",
                 Summary = "Dynamic Island liquide au sommet de l'écran avec lecteur média universel, spectre audio & minuteur Focus.",
@@ -171,7 +171,7 @@ namespace iStore
                 Title = "iMascot Celestial",
                 Category = "Widgets Flottants",
                 Developer = "iSuite Lab",
-                Version = "v3.0.0",
+                Version = "v1.0.0",
                 Rating = "★ 5.0 (3.4k)",
                 Downloads = "51k téléchargements",
                 Summary = "Compagnons célestes interactifs sculptés en cristal et verre soufflé (Lumina, Kitsune, Draco) qui suivent les yeux.",
@@ -186,7 +186,7 @@ namespace iStore
                 Title = "iSuite Master Shell",
                 Category = "Shell & Bureau",
                 Developer = "iSuite Lab",
-                Version = "v3.5.0",
+                Version = "v1.0.0",
                 Rating = "★ 5.0 (4.2k)",
                 Downloads = "88k téléchargements",
                 Summary = "Barre des tâches flottante remplaçant nativement Windows, Menu Démarrer acrylique, Centre d'actions & studio unifié.",
@@ -246,7 +246,7 @@ namespace iStore
                 Title = "iHub Fast Switcher",
                 Category = "Shell & Bureau",
                 Developer = "iSuite Lab",
-                Version = "v3.0.0",
+                Version = "v1.0.0",
                 Rating = "★ 4.9 (780)",
                 Downloads = "22k téléchargements",
                 Summary = "Lanceur rapide flottant et switcher unifié pour démarrer, arrêter ou paramétrer instantanément chaque module.",
@@ -547,7 +547,7 @@ namespace iStore
                 using (WebClient wc = new WebClient())
                 {
                     wc.Headers.Add("User-Agent", "iStore-Client");
-                    string url = "https://github.com/flobure2008-ui/iSuite/releases/download/v3.1.0/" + item.ExeName;
+                    string url = "https://github.com/flobure2008-ui/iSuite/releases/download/v1.0.0/" + item.ExeName;
                     wc.DownloadFile(url, target);
                 }
             }

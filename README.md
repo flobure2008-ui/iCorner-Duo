@@ -1,11 +1,11 @@
-# iSuite — Écosystème Modulaire Liquid Glass & Shell Windows 12 (v3.6)
+# iSuite — Écosystème Modulaire Liquid Glass & Shell Windows 12 (v1.0.0)
 
 <p align="center">
   <img src="assets/showcase_icon.jpg" alt="iSuite Liquid Glass Icon" width="220" style="border-radius: 42px; box-shadow: 0 12px 32px rgba(0, 180, 255, 0.35);" />
 </p>
 
 <p align="center">
-  <b>Écosystème unifié de personnalisation Windows en Liquid Glass.</b><br/>
+  <b>Écosystème unifié de personnalisation Windows en Liquid Glass — Version Officielle 1.0.0</b><br/>
   <i>Remplace complètement la barre des tâches native de Windows, offre 12 applications interconnectées, un Studio de Création d'Apps (iMaker), un moteur de Widgets style Rainmeter, un App Store et un installeur complet.</i>
 </p>
 
@@ -35,9 +35,20 @@ iSuite Ecosystem/
 
 ---
 
-## 🌟 Nouveautés de la v3.6
+## 🌟 Fonctionnalités Majeures de la Release 1.0.0
 
-### 1. 🛠️ `iMaker.exe` — Créez Vos Propres Applications & Widgets
+### 1. 🖥️ Remplacement Complet de la Barre des Tâches Windows (`Shell_TrayWnd`)
+- **Remplacement Intégral & Failsafe** :
+  - Masque automatiquement la barre des tâches native de Windows (`Shell_TrayWnd` et `Shell_SecondaryTrayWnd`) pour laisser place au dock flottant Windows 12 Liquid Glass.
+  - **Sécurité et restauration automatique garantie** : La barre Windows d'origine est automatiquement restaurée dès la fermeture d'iSuite, lors de l'arrêt du PC, ou en un clic via le menu contextuel du plateau système ou le bouton Failsafe.
+- **Gestion Complète des Applications Ouvertes en Direct** :
+  - Énumération en temps réel des fenêtres actives (`EnumWindows`).
+  - Puces d'applications en verre avec initiales/icônes, titre tronqué et voyant lumineux sous l'application active.
+  - **Clic gauche** : Bascule instantanée (`SetForegroundWindow`), restauration si réduite, ou réduction si déjà active.
+  - **Clic droit** : Menu contextuel pour Basculer, Réduire, Agrandir ou Fermer la fenêtre (`WM_CLOSE`).
+  - **Clic du milieu** : Fermeture rapide de la fenêtre.
+
+### 2. 🛠️ `iMaker.exe` — Créez Vos Propres Applications & Widgets
 Permet à n'importe quel utilisateur ou développeur de créer ses propres applications et widgets pour l'écosystème :
 - **Modèles de départ (Templates)** :
   - *Widget de Bureau Rainmeter* (Horloge, météo, surveillance système, données web).
@@ -50,7 +61,7 @@ Permet à n'importe quel utilisateur ou développeur de créer ses propres appli
   - **📦 Compiler & Exporter (.exe)** : Génère un fichier exécutable autonome haute performance avec l'icône de la suite.
   - **🛍️ Publier dans iStore** : Intègre automatiquement la création dans le catalogue local d'iStore dans le dossier `plugins/`.
 
-### 2. 📊 `iWidgets.exe` — Moteur de Widgets de Bureau Style Rainmeter
+### 3. 📊 `iWidgets.exe` — Moteur de Widgets de Bureau Style Rainmeter
 Un gestionnaire complet de skins et widgets avec une infinité d'options :
 - **Collection de Widgets Inclus** :
   - ⏰ **Horloge & Date Pro** : Heure grand format, impulsion fluide des secondes, date et calendrier.
@@ -64,10 +75,23 @@ Un gestionnaire complet de skins et widgets avec une infinité d'options :
   - **Curseur d'opacité et de rayon** : Personnalisez la transparence du verre de 10% à 100% et la courbure des coins.
   - **Menu contextuel direct** : Clic droit sur n'importe quel widget sur le bureau pour accéder à tous ses paramètres.
 
-### 3. 🖥️ Remplacement Complet de la Barre des Tâches Windows (`Shell_TrayWnd`)
-- Masque automatiquement la barre des tâches native de Windows pour laisser place au dock flottant Windows 12 Liquid Glass.
-- Détection et gestion complète des applications ouvertes avec miniatures, activation, minimisation et fermeture en un clic.
-- Failsafe de restauration automatique à la fermeture ou en un clic dans la zone de notification.
+### 4. 🔊 `iVolume.exe` & `iAltTab.exe`
+- **`iVolume.exe` (HUD Audio & Média Liquid Glass)** :
+  - Capsule flottante au design Apple / Windows 12 remplaçant l'OSD de volume natif de Windows.
+  - Slider de volume liquide réactif au glissement de souris et à la molette.
+  - Visualiseur de spectre audio animé en direct et contrôles Spotify / Apple Music.
+- **`iAltTab.exe` (Mission Control & Task Switcher)** :
+  - Vue plein écran en verre dépoli affichant toutes les fenêtres ouvertes sous forme de cartes Liquid Glass.
+  - **Recherche instantanée** : Tapez n'importe quelle lettre au clavier pour filtrer immédiatement la liste des fenêtres.
+  - Bouton de fermeture directe `✕` sur chaque carte.
+
+---
+
+## 🚀 Téléchargement & Installation
+
+1. Rendez-vous sur la page **[Releases v1.0.0](https://github.com/flobure2008-ui/iSuite/releases/tag/v1.0.0)**.
+2. Téléchargez **`iSuite-Setup.exe`** (installateur complet en 1 clic) ou l'exécutable de votre choix.
+3. Lancez **`iSuite-Setup.exe`** pour installer automatiquement la suite, créer les raccourcis Bureau / Menu Démarrer et configurer le lancement automatique.
 
 ---
 

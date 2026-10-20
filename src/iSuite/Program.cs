@@ -1615,7 +1615,7 @@ namespace iSuite
                 using (Font bf = new Font("Segoe UI Semibold", 8.8f, FontStyle.Bold))
                 using (SolidBrush bb = new SolidBrush(Color.White))
                 {
-                    g.DrawString("Liquid Glass v3.5", bf, bb, badge.X + 22, badge.Y + 8);
+                    g.DrawString("Liquid Glass v1.0.0", bf, bb, badge.X + 16, badge.Y + 8);
                 }
             };
             Controls.Add(header);
