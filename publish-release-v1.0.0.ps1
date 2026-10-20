@@ -1,4 +1,4 @@
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Continue"
 
 Write-Host "-> Recuperation du token GitHub..." -ForegroundColor Cyan
 $p = @('protocol=https','host=github.com','')
