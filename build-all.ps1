@@ -15,6 +15,9 @@ $apps = @(
     @{ Name = "iSuite (Master Shell & Studio)"; Src = "src\iSuite\Program.cs"; Out = "dist\iSuite.exe" },
     @{ Name = "iStore (App Marketplace)";       Src = "src\iStore\Program.cs"; Out = "dist\iStore.exe" },
     @{ Name = "iSuite-Setup (Installer Wizard)";Src = "src\iSetup\Program.cs"; Out = "dist\iSuite-Setup.exe" },
+    @{ Name = "iVolume (Liquid Glass Volume HUD)";Src = "src\iVolume\Program.cs"; Out = "dist\iVolume.exe" },
+    @{ Name = "iAltTab (Mission Control Switcher)";Src = "src\iAltTab\Program.cs"; Out = "dist\iAltTab.exe" },
+    @{ Name = "iWidgets (Desktop Glass Dashboard)";Src = "src\iWidgets\Program.cs"; Out = "dist\iWidgets.exe" },
     @{ Name = "iHub (Launcher & Dashboard)";    Src = "src\iHub\Program.cs";   Out = "dist\iHub.exe" },
     @{ Name = "iCorner (Coins Purs)";           Src = "src\iCorner\Program.cs";Out = "dist\iCorner.exe" },
     @{ Name = "iBridge (Passerelle Écrans)";    Src = "src\iBridge\Program.cs";Out = "dist\iBridge.exe" },
@@ -23,7 +26,7 @@ $apps = @(
 )
 
 Write-Host "==========================================================" -ForegroundColor Cyan
-Write-Host "  Compilation Complète de la Suite iSuite (8 Exécutables)" -ForegroundColor White
+Write-Host "  Compilation Complète de la Suite iSuite (11 Exécutables)" -ForegroundColor White
 Write-Host "==========================================================" -ForegroundColor Cyan
 
 foreach ($app in $apps) {

@@ -185,13 +185,73 @@ namespace iStore
                 Title = "iSuite Master Shell",
                 Category = "Shell & Bureau",
                 Developer = "iSuite Lab",
-                Version = "v3.0.0",
+                Version = "v3.5.0",
                 Rating = "★ 5.0 (4.2k)",
                 Downloads = "88k téléchargements",
-                Summary = "Barre des tâches flottante façon Windows 12, Menu Démarrer acrylique, Centre de Contrôle latéral et studio unifié.",
+                Summary = "Barre des tâches flottante remplaçant nativement Windows, Menu Démarrer acrylique, Centre d'actions & studio unifié.",
                 ExeName = "iSuite.exe",
                 Glyph = "❖",
                 AccentColor = Color.FromArgb(80, 150, 255)
+            });
+
+            items.Add(new StoreItem
+            {
+                Id = "iVolume",
+                Title = "iVolume Liquid HUD",
+                Category = "Widgets Flottants",
+                Developer = "iSuite Lab",
+                Version = "v1.0.0",
+                Rating = "★ 4.9 (620)",
+                Downloads = "19k téléchargements",
+                Summary = "HUD volume et lecteur multimédia liquide, visualiseur de spectre audio en direct & contrôles Apple Music / Spotify.",
+                ExeName = "iVolume.exe",
+                Glyph = "🔊",
+                AccentColor = Color.FromArgb(70, 200, 255)
+            });
+
+            items.Add(new StoreItem
+            {
+                Id = "iAltTab",
+                Title = "iAltTab Mission Control",
+                Category = "Shell & Bureau",
+                Developer = "iSuite Lab",
+                Version = "v1.0.0",
+                Rating = "★ 5.0 (1.1k)",
+                Downloads = "34k téléchargements",
+                Summary = "Sélecteur de fenêtres plein écran Liquid Glass, recherche instantanée, aperçus en cartes translucides & fermeture rapide.",
+                ExeName = "iAltTab.exe",
+                Glyph = "🗂️",
+                AccentColor = Color.FromArgb(180, 120, 255)
+            });
+
+            items.Add(new StoreItem
+            {
+                Id = "iWidgets",
+                Title = "iWidgets Desktop",
+                Category = "Widgets Flottants",
+                Developer = "iSuite Lab",
+                Version = "v1.0.0",
+                Rating = "★ 4.9 (840)",
+                Downloads = "27k téléchargements",
+                Summary = "Ensemble de widgets de bureau Liquid Glass : horloge dynamique, jauges de ressources CPU/RAM et mémos rapides.",
+                ExeName = "iWidgets.exe",
+                Glyph = "📊",
+                AccentColor = Color.FromArgb(255, 180, 80)
+            });
+
+            items.Add(new StoreItem
+            {
+                Id = "iHub",
+                Title = "iHub Fast Switcher",
+                Category = "Shell & Bureau",
+                Developer = "iSuite Lab",
+                Version = "v3.0.0",
+                Rating = "★ 4.9 (780)",
+                Downloads = "22k téléchargements",
+                Summary = "Lanceur rapide flottant et switcher unifié pour démarrer, arrêter ou paramétrer instantanément chaque module.",
+                ExeName = "iHub.exe",
+                Glyph = "⚡",
+                AccentColor = Color.FromArgb(255, 120, 160)
             });
         }
 
