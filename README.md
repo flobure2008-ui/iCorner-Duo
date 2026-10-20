@@ -1,92 +1,89 @@
-# iSuite — Écosystème Modulaire en Glassmorphisme pour Windows (v3.0)
+# iSuite — Écosystème Modulaire & Shell Windows 12 Concept Glass (v3.1)
 
 <p align="center">
   <img src="assets/showcase_icon.jpg" alt="iSuite Icon" width="220" style="border-radius: 36px;" />
 </p>
 
-**iSuite** est une collection d'applications indépendantes et ultra-légères en **Liquid Glass & Glassmorphisme** conçues pour sublimer Windows 10 et Windows 11. Chaque application est autonome, ne consomme que très peu de ressources (~0 à 2% CPU) et peut être utilisée seule ou orchestrée depuis le **Launcher Store `iHub`**.
+**iSuite** est une suite logicielle moderne et complète en **Liquid Glass & Glassmorphisme** pour Windows 10 et Windows 11. Elle réinvente l'expérience Windows en proposant un **Shell complet Windows 12 Concept Glass** (Barre des tâches flottante, Menu Démarrer acrylique, Centre d'action et de notifications), des sous-systèmes interconnectés avec zéro latence, un **Master Studio** regroupant toute la personnalisation dans une seule application, un **App Store dédié (`iStore`)** et un **Assistant d'Installation autonome (`iSuite-Setup`)**.
 
 ---
 
-## 📦 Les Applications de la Suite
+## 🏛️ Architecture de la Suite
 
 ```
-iSuite/
-├── ✦ iCorner   — Coins d'écran arrondis organiques purs (0% CPU)
-├── 🌊 iBridge   — Passerelle liquide & portail magnétique inter-écrans
-├── 💧 iIsland   — Dynamic Island flottante (médias, horloge, focus timer)
-├── ✨ iMascot   — Compagnons célestes interactifs en verre (bureau & musique)
-└── 🔮 iHub      — Le Launcher & Store pour tout installer, lancer et gérer
+iSuite Ecosystem/
+│
+├── ❖ iSuite.exe          — Moteur Central & Master Studio (Shell W12, Tâches, Start, Notifs, Corners, Bridge, Island, Mascot)
+├── 🛍️ iStore.exe         — Le Store officiel (Marketplace pour télécharger, installer et mettre à jour les modules)
+├── 📦 iSuite-Setup.exe   — L'Assistant d'Installation complet (Raccourcis Bureau/Start, auto-démarrage Windows)
+├── 🔮 iHub.exe           — Le Tableau de bord & Launcher rapide
+│
+└── 🧩 Micro-Applications Autonomes :
+    ├── ✦ iCorner.exe     — Coins d'écrans superellipse purs (0% CPU)
+    ├── 🌊 iBridge.exe     — Passerelle liquide & portails magnétiques inter-écrans
+    ├── 💧 iIsland.exe     — Dynamic Island flottante (médias, horloge, focus timer)
+    └── ✨ iMascot.exe     — Compagnons célestes de bureau (yeux réactifs, danse audio)
 ```
 
 ---
 
-### 1. ✦ iCorner — Arrondis d'Écrans Organiques
-- **Courbures continues** : Superellipse mathématique ($n=4.2$) ou Arc Circulaire classique ($n=2.0$).
-- Rayon réglable au pixel près (0 à 110 px) avec sélection indépendante des angles.
-- **Liseré spéculaire et biseau lumineux** : Rendu optique haute joaillerie avec halo d'ambiance.
-- **Modes de résonance** : Fixe dépoli (0% CPU), ondulation spectrale, respiration et synchronisation sonore native.
+## 🌟 Nouveautés Majeures de la v3.1
 
-### 2. 🌊 iBridge — Passerelle Fluide Inter-Écrans
-- Détection instantanée des traversées du curseur entre moniteurs pour les configurations multi-écrans.
-- **Halo magnétique d'approche** : Onde lumineuse et caustique qui prévient le passage d'une dalle à l'autre.
-- **7 Styles de transition** : Fusion Glassmorphique, Pont Liquide en Verre Dépoli, Onde Prismatique, Filaments Quantiques, Poussière Stellaire, Ondes Concentriques, Ligne Optique Horizon.
+### 1. 🖥️ Shell Windows 12 Concept Glass (`iSuite.exe`)
+- **Barre des Tâches Flottante** :
+  - Choix entre le style **Dock Flottant Centré** (façon Windows 12 / macOS) ou **Barre Flottante Étendue**.
+  - Rendu en verre dépoli avec reflets spéculaires, liseré biseauté et icônes rétroéclairées.
+  - Horloge temps réel avec date compacte et puce active sous le bouton Start.
+- **Menu Démarrer Acrylique Glass** :
+  - Déploiement instantané au clic sur le bouton Démarrer ou la touche Windows.
+  - Champ de recherche universel, grille de tuiles acryliques modernes (*Explorateur, Web, Paramètres, Terminal, etc.*) et profil utilisateur avec bouton d'alimentation.
+- **Centre de Contrôle & Notifications Latéral** :
+  - Panneau latéral en verre dépoli rétractable depuis le coin inférieur droit.
+  - Tuiles rapides avec bascule instantanée : **Wi-Fi**, **Bluetooth**, **Éclairage Nocturne**, **Focus / Ne Pas Déranger**.
+  - Sliders haute précision pour le **Volume Système** et la **Luminosité de l'Écran**.
+  - Cartes interactives empilées pour les notifications récentes.
 
-### 3. 💧 iIsland — Dynamic Island en Verre Liquide
-- Capsule flottante au sommet de l'écran avec dynamique d'amortissement souple (*Spring Damping*).
-- **Lecteur Média Universel** : Détection automatique Spotify, Apple Music, YouTube, Web et visualiseur de spectre audio en direct (16 barres).
-- **Minuteur Focus Pomodoro (25 min)** intégré avec commandes instantanées.
-- Horloge stylisée au repos, survol interactif et adaptation intelligente des teintes.
+### 2. 🎛️ Master Studio de Personnalisation Unifiée
+Toutes les options et réglages sont regroupés dans **une seule et unique application moderne** :
+- `🖥️ Barre des Tâches & Menu` : Mode dock/étendu, rayon d'arrondi, hauteur, horloge, icônes.
+- `🔔 Centre de Contrôle & Notifs` : Sliders audio/luminosité, tuiles d'actions rapides.
+- `✦ Coins & Dalles d'Écran` : Rayon millimétrique (0 à 110 px), profil superellipse ($n=4.2$) ou arc ($n=2.0$), liseré biseauté.
+- `🌊 Passerelle Inter-Écrans` : 7 styles de transition liquide, durée et intensité des ondes.
+- `💧 Dynamic Island` : Mode de placement, échelle, comportement au survol.
+- `✨ Mascotte Céleste` : Choix de la créature (Lumina, Kitsune, Draco, etc.), réactivité sonore et oculaire.
+- `🎨 Palettes Chromatiques` : 12 thèmes de verre unifiés appliqués instantanément sur toute la suite.
 
-### 4. ✨ iMascot — Compagnons Célestes de Bureau
-- Mascottes interactives sculptées en cristal et verre soufflé flottant librement sur votre bureau.
-- **Suivi oculaire dynamique** : Le regard de la mascotte suit votre curseur en direct.
-- **Danse au rythme de la musique** : Réactivité aux crêtes sonores de votre PC.
-- Bulles de dialogue bienveillantes et déplacement libre par glisser-déposer.
+### 3. 🛍️ iStore (`iStore.exe`)
+- Véritable **Store d'Applications** en verre avec catalogue classé par catégories (*Shell & Bureau*, *Multi-Moniteurs*, *Widgets Flottants*).
+- Fiches détaillées avec notes, nombre de téléchargements, descriptif et bouton **Installer / Ouvrir**.
+- Téléchargement et compilation à chaud directement depuis le dépôt GitHub.
 
-### 5. 🔮 iHub — Le Launcher Store Centralisé
-- Interface centrale pour visualiser l'état de chaque application (Actif avec consommation RAM en temps réel, Installé ou Disponible).
-- Boutons rapides : **Lancer**, **Arrêter**, **Ouvrir les Paramètres**, et **Démarrage automatique avec Windows**.
-- Commandes globales : **Tout Lancer** et **Tout Arrêter**.
-- Téléchargement et installation automatique des applications manquantes depuis les releases GitHub.
+### 4. 📦 Assistant d'Installation Dédié (`iSuite-Setup.exe`)
+- Installeur graphique autonome pour déployer `iSuite` proprement sur votre système :
+  - Destination automatique dans `%LocalAppData%\Programs\iSuite`.
+  - Création du raccourci Bureau et raccourci dans le Menu Démarrer de Windows.
+  - Configuration du lancement automatique au démarrage de session.
+  - Lancement immédiat à la fin de l'installation.
 
 ---
 
-## 🚀 Installation Rapide
+## ⚡ Compilation Rapide de Toute la Suite
 
-1. Téléchargez la suite ou simplement **`iHub.exe`** depuis la section **[Releases](https://github.com/flobure2008-ui/iCorner-Duo/releases)**.
-2. Lancez `iHub.exe` : depuis le hub, lancez ou installez les modules souhaités en un seul clic !
-3. Chaque application est 100% portable sans aucun installateur lourd.
-
----
-
-## 🛠️ Compilation depuis la Source (PowerShell)
-
-Pour recompiler l'intégralité de la suite (les 5 exécutables) en une seule commande :
+Un script PowerShell compile les **8 exécutables** en une seule commande avec `csc.exe` natif :
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\build-all.ps1
 ```
 
-Les exécutables autonomes sont générés instantanément dans le dossier `dist/` :
+Les exécutables sont produits dans le dossier `dist/` :
+- `dist/iSuite.exe`
+- `dist/iStore.exe`
+- `dist/iSuite-Setup.exe`
+- `dist/iHub.exe`
 - `dist/iCorner.exe`
 - `dist/iBridge.exe`
 - `dist/iIsland.exe`
 - `dist/iMascot.exe`
-- `dist/iHub.exe`
-
----
-
-## 💡 Renommer le Dépôt GitHub
-
-Pour renommer votre dépôt GitHub en **`iSuite`** :
-1. Rendez-vous sur votre dépôt : `https://github.com/flobure2008-ui/iCorner-Duo`
-2. Cliquez sur l'onglet **Settings** (Paramètres).
-3. Dans la section **Repository name**, saisissez `iSuite` et validez avec **Rename**.
-4. En local, mettez à jour l'URL distante avec :
-   ```bash
-   git remote set-url origin https://github.com/flobure2008-ui/iSuite.git
-   ```
 
 ---
 

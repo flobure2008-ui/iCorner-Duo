@@ -12,15 +12,18 @@ $icon = Join-Path $rootDir "icon.ico"
 $iconParam = if (Test-Path $icon) { "/win32icon:`"$icon`"" } else { "" }
 
 $apps = @(
-    @{ Name = "iCorner"; Src = "src\iCorner\Program.cs"; Out = "dist\iCorner.exe" },
-    @{ Name = "iBridge"; Src = "src\iBridge\Program.cs"; Out = "dist\iBridge.exe" },
-    @{ Name = "iIsland"; Src = "src\iIsland\Program.cs"; Out = "dist\iIsland.exe" },
-    @{ Name = "iMascot"; Src = "src\iMascot\Program.cs"; Out = "dist\iMascot.exe" },
-    @{ Name = "iHub";    Src = "src\iHub\Program.cs";    Out = "dist\iHub.exe" }
+    @{ Name = "iSuite (Master Shell & Studio)"; Src = "src\iSuite\Program.cs"; Out = "dist\iSuite.exe" },
+    @{ Name = "iStore (App Marketplace)";       Src = "src\iStore\Program.cs"; Out = "dist\iStore.exe" },
+    @{ Name = "iSuite-Setup (Installer Wizard)";Src = "src\iSetup\Program.cs"; Out = "dist\iSuite-Setup.exe" },
+    @{ Name = "iHub (Launcher & Dashboard)";    Src = "src\iHub\Program.cs";   Out = "dist\iHub.exe" },
+    @{ Name = "iCorner (Coins Purs)";           Src = "src\iCorner\Program.cs";Out = "dist\iCorner.exe" },
+    @{ Name = "iBridge (Passerelle Écrans)";    Src = "src\iBridge\Program.cs";Out = "dist\iBridge.exe" },
+    @{ Name = "iIsland (Dynamic Island)";       Src = "src\iIsland\Program.cs";Out = "dist\iIsland.exe" },
+    @{ Name = "iMascot (Compagnon Céleste)";    Src = "src\iMascot\Program.cs";Out = "dist\iMascot.exe" }
 )
 
 Write-Host "==========================================================" -ForegroundColor Cyan
-Write-Host "  Compilation de la suite iSuite (5 Applications Modulaires)" -ForegroundColor White
+Write-Host "  Compilation Complète de la Suite iSuite (8 Exécutables)" -ForegroundColor White
 Write-Host "==========================================================" -ForegroundColor Cyan
 
 foreach ($app in $apps) {
