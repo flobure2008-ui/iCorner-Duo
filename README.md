@@ -1,53 +1,62 @@
-# iCorner Duo — Studio Aura Glass & Mascottes Célestes (v2.3)
+# iCorner Duo — Studio Coins Organiques & Passerelle Fluide (v2.4)
 
 <p align="center">
   <img src="assets/showcase_icon.jpg" alt="iCorner Duo Icon" width="220" style="border-radius: 36px;" />
 </p>
 
-**iCorner Duo** est un studio visuel ultra-léger en **Liquid Glass & Glassmorphisme** pour Windows 10 et Windows 11. Il sculpte des coins d'écran arrondis haute précision sur toutes vos dalles, crée une **Passerelle Fluide en Verre Dépoli** lors du passage du curseur d'un moniteur à l'autre, et intègre la **Capsule Aura Glass** — un bijou d'ingénierie optique à ménisque liquide regroupant lecteur audio universel, minuteur Focus, mascottes célestes en verre sculpté et dialogue IA.
+**iCorner Duo** est un utilitaire visuel ultra-léger et moderne en **Glassmorphisme** pour Windows 10 et Windows 11. Conçu pour sublimer les configurations mono et multi-écrans, il applique des **coins d'écran arrondis organiques haute définition** sur toutes vos dalles et déploie une **passerelle liquide en verre dépoli** fluide et réactive lorsque votre curseur traverse les bordures entre vos moniteurs.
 
 ---
 
-## 🌟 Nouveautés de la v2.3
+## 🌟 Fonctionnalités Principales
 
-- 💧 **Refonte Complète : Capsule « Aura Glass »** :
-  - **Optique Liquid Glass Pure** : Rendu multi-couches exclusif avec base obsidienne liquide, ménisque spéculaire en goutte d'eau, diffusion caustique interne et liseré de réfraction chromatique 1.25px.
-  - **Dynamique d'expansion organique** avec physique d'amortissement souple (*Spring Damping*) : ouverture rapide et fermeture progressive et soyeuse.
-  - Onglets réorganisés avec icônes vives et typographie soignée : `🎵 Audio`, `⏱️ Focus`, `✨ Mascotte`, `🔮 IA`, `⚙ Paramètres`.
+- ✦ **Coins Organiques Multi-Écrans Haute Définition** :
+  - **Profils géométriques continus** : Choisissez entre la **Superellipse Hyper-Continue (n=4.2)** pour des transitions de bordure invisibles ou l'**Arc Circulaire Classique (n=2.0)**.
+  - Rayon de courbure réglable en temps réel de 0 à 110 px avec aperçu spéculaire instantané.
+  - Activation/désactivation indépendante de chaque angle (Haut-Gauche, Haut-Droit, Bas-Gauche, Bas-Droit).
+  - **Liseré spéculaire et biseau lumineux** : Rendu optique avec bordure biseautée et halo d'ambiance personnalisables en opacité et épaisseur.
+  - **Modes de résonance dynamique** : Verre dépoli fixe (0% CPU), ondulation spectrale prisme, respiration atmosphérique douce, onde boréale ou pulsation synchronisée sur le son système.
 
-- ✨ **Mascottes Célestes en Verre Ciselé (Design Haute Joaillerie)** :
-  - Métamorphose artistique complète : adieu les dessins approximatifs, place à de superbes **sculptures célestes en cristal et verre soufflé** aux reflets spectraux et aux yeux en nébuleuse cosmique :
-    - ✨ **Lumina** : Sphère d'énergie stellaire ceinte de doubles anneaux gyroscopiques 3D en or blanc et platine avec micro-étoiles en diamant orbitantes.
-    - 🦊 **Kitsune** : Renard boréal avec panache de lumière arctique ondoyante en soie vaporeuse, oreilles en quartz aurore et diadème frontal céleste.
-    - 💎 **Draco** : Wyverne géométrique taillée en diamant avec facettes de cristal prismatique, cornes en quartz pur et cœur en rubis incandescent.
-    - 🫧 **Nyx** : Goutte d'opale stellaire iridescente en apesanteur avec trois perles planétaires en spirale logarithmique d'or.
-    - 🐾 **Kuro-Neko** : Silhouette féline en verre fumé d'obsidienne pure avec intérieur d'oreilles en améthyste précieuse, halo de poussière astrale et yeux galaxie profonds.
-    - 🔮 **Axiom** : Sphère en saphir poli enchâssée dans une monture en titane brossé avec anneau équatorial gradué holographique et prisme optique réactif.
+- 🌊 **Passerelle Liquide Inter-Écrans (Multi-Monitor Bridge)** :
+  - Détection automatique et instantanée du passage du curseur d'un moniteur vers un autre.
+  - **Effet magnétique à l'approche de la bordure** : Une onde de verre lumineuse et caustique apparaît lorsque le curseur s'approche de la jonction entre deux écrans.
+  - **8 Styles visuels de transition** :
+    - *Fusion Glassmorphique* (Pont Liquide + Halo Prismatique + Poussière Stellaire)
+    - *Pont Liquide en Verre Dépoli*
+    - *Onde Prismatique Atmosphérique*
+    - *Filaments Quantiques*
+    - *Nuage de Poussière Stellaire*
+    - *Résonance Concentrique (Ripples)*
+    - *Ligne Optique Horizon*
+    - *Pulsation des Angles Cibles Uniquement*
+  - Durée et amplitude de l'onde entièrement configurables.
 
-- 🔲 **Arrondis Harmonieux Intégraux dans l'Interface des Paramètres** :
-  - **Zéro angle droit** : Tous les champs de saisie de texte (`GlassRoundedInput`), listes déroulantes (`GlassRoundedComboBox`), conteneurs d'aperçu temps réel (`GlassRoundedBox`), panneaux de statut et cartes (`GlassCardPanel`) bénéficient désormais de rayons de courbure ultra-doux (14px à 20px) avec liseré de verre biseauté et reflets spéculaires.
-  - Interface douce, cohérente et épurée digne d'un studio de design professionnel.
+- 🎨 **12 Palettes Chromatiques en Verre Dépoli** :
+  - *Prisme Éther* (Cyan glacé, Lavande, Rose poudré, Ambre doux)
+  - *Verre Givre & Argent Pur*
+  - *Océan Polaire* (Azur, Cyan néon, Indigo)
+  - *Émeraude & Menthe Givrée*
+  - *Velours Rubis & Corail*
+  - *Ambre Solaire & Champagne Chaud*
+  - *Aurore Boréale Nocturne*
+  - *Brume Ultraviolette*
+  - *Fleur de Sakura Pastel*
+  - *Monochrome Obsidienne & Titane Fumé*
+  - *Spectre Chromatique Continu (360°)*
+  - *Palette Personnalisée* (sélecteur de 2 teintes RVB au choix)
 
-- 🎨 **Rubriques de Navigation Renommées** :
-  - `✦ Dalles & Courbures` : Rayon millimétrique, courbures hyper-continues et aperçu spéculaire en direct.
-  - `🌊 Passerelle Fluide` : Transitions inter-écrans liquides, effets magnétiques et 12 palettes chromatiques.
-  - `💧 Capsule Aura Glass` : Ménisque liquide, cinématiques d'apparition, suivi d'écran et studio audio.
-  - `✨ Mascottes Célestes` : Miroir astral, sélection d'entités, réactivité oculaire et résonances.
-  - `🔮 Intelligence & Dialogue` : Connecteurs directs Gemini, Claude, ChatGPT et Mistral.
-
-- 🛡️ **Zéro-Scintillement & Compatibilité Audio Maximale** :
-  - Double-buffering matériel natif et style `WS_EX_COMPOSITED` garantissant une fluidité absolue à 60 FPS sans aucun scintillement.
-  - Détection automatique et couleur signature d'Apple Music, Spotify, YouTube Music, Deezer, Tidal, SoundCloud, VLC.
-  - Animation festive de notes musicales flottantes (*♪ ♫ ♬*) lors des changements de chanson.
-  - Morphing adaptatif en mode plein écran (ruban d'ambiance ultra-fin de 2 px).
+- 🔲 **Interface Studio Entièrement Courbée (Zéro Angle Droit)** :
+  - Design cohérent avec commutateurs arrondis, curseurs tactiles, listes déroulantes et cartes en verre biseauté.
+  - **Zéro scintillement (`WS_EX_COMPOSITED`)** et double-buffering intégral.
+  - Intégration dans la barre des tâches système (systray) avec démarrage automatique optionnel avec Windows.
 
 ---
 
-## Installation & Exécution Rapide
+## 🚀 Installation & Utilisation
 
-1. Téléchargez **`iCornerDuo.exe`** ou l'archive zip depuis la section **[Releases](https://github.com/flobure2008-ui/iCorner-Duo/releases)**.
-2. Lancez `iCornerDuo.exe` — exécutable portable sans dépendance externe.
-3. Survolez la capsule en haut de l'écran pour explorer les onglets, ou cliquez sur `⚙` pour ouvrir le studio complet.
+1. Téléchargez la dernière version **`iCornerDuo.exe`** depuis la section **[Releases](https://github.com/flobure2008-ui/iCorner-Duo/releases)**.
+2. Lancez `iCornerDuo.exe` : c'est un exécutable portable autonome ne nécessitant aucune installation.
+3. Configurez vos arrondis et vos transitions dans le studio, puis réduisez-le en tâche de fond dans la zone de notification.
 
 ### Compilation depuis la source (PowerShell)
 
@@ -57,6 +66,6 @@
 
 ---
 
-## Licence
+## 📜 Licence
 
-Distribué sous licence MIT.
+Projet distribué sous licence MIT.
