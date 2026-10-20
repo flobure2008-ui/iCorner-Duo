@@ -6,6 +6,7 @@ using System.Drawing.Drawing2D;
 using System.IO;
 using System.Net;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -253,6 +254,84 @@ namespace iStore
                 Glyph = "⚡",
                 AccentColor = Color.FromArgb(255, 120, 160)
             });
+
+            items.Add(new StoreItem
+            {
+                Id = "iMaker",
+                Title = "iMaker App Studio",
+                Category = "Outils & Création",
+                Developer = "iSuite Lab",
+                Version = "v1.0.0",
+                Rating = "★ 5.0 (Nouveau)",
+                Downloads = "12k téléchargements",
+                Summary = "Studio de développement visuel pour créer vos propres applications et widgets Rainmeter Liquid Glass en 1 clic.",
+                ExeName = "iMaker.exe",
+                Glyph = "🛠️",
+                AccentColor = Color.FromArgb(140, 60, 200)
+            });
+
+            // Charge automatiquement les applications personnalisées créées par l'utilisateur
+            LoadUserPlugins();
+        }
+
+        private void LoadUserPlugins()
+        {
+            try
+            {
+                string appDir = Path.GetDirectoryName(Application.ExecutablePath);
+                string pluginsDir = Path.Combine(appDir, "plugins");
+                if (!Directory.Exists(pluginsDir)) pluginsDir = Path.Combine(appDir, "..", "plugins");
+                if (Directory.Exists(pluginsDir))
+                {
+                    string[] jsonFiles = Directory.GetFiles(pluginsDir, "*.json");
+                    foreach (string jf in jsonFiles)
+                    {
+                        try
+                        {
+                            string text = File.ReadAllText(jf, Encoding.UTF8);
+                            string id = ReadJsonVal(text, "Id");
+                            string title = ReadJsonVal(text, "Title");
+                            string cat = ReadJsonVal(text, "Category");
+                            string dev = ReadJsonVal(text, "Developer");
+                            string sum = ReadJsonVal(text, "Summary");
+                            string exe = ReadJsonVal(text, "ExeName");
+                            string glyph = ReadJsonVal(text, "Glyph");
+
+                            if (!string.IsNullOrEmpty(id) && !items.Exists(it => it.Id == id))
+                            {
+                                items.Add(new StoreItem
+                                {
+                                    Id = id,
+                                    Title = title,
+                                    Category = string.IsNullOrEmpty(cat) ? "Créations Utilisateur" : cat,
+                                    Developer = string.IsNullOrEmpty(dev) ? "Utilisateur" : dev,
+                                    Version = "v1.0.0",
+                                    Rating = "★ 5.0 (Perso)",
+                                    Downloads = "Création locale",
+                                    Summary = sum,
+                                    ExeName = exe,
+                                    Glyph = string.IsNullOrEmpty(glyph) ? "💎" : glyph,
+                                    AccentColor = Color.FromArgb(80, 215, 255)
+                                });
+                            }
+                        }
+                        catch { }
+                    }
+                }
+            }
+            catch { }
+        }
+
+        private string ReadJsonVal(string json, string key)
+        {
+            string pat = "\"" + key + "\":";
+            int idx = json.IndexOf(pat, StringComparison.OrdinalIgnoreCase);
+            if (idx < 0) return "";
+            int start = idx + pat.Length;
+            while (start < json.Length && (json[start] == ' ' || json[start] == '"')) start++;
+            int end = json.IndexOfAny(new char[] { '"', ',', '}', '\r', '\n' }, start);
+            if (end < 0) end = json.Length;
+            return json.Substring(start, end - start).Trim();
         }
 
         private void BuildUI()
@@ -278,11 +357,35 @@ namespace iStore
                     g.DrawString("Découvrez, installez et mettez à jour les composants de la suite modulaire", sf, gray, 26, 48);
                 }
             };
+
+            Button devBtn = new Button
+            {
+                Text = "🛠️ Créer une App (iMaker)",
+                Location = new Point(Width - 250, 22),
+                Size = new Size(210, 36),
+                BackColor = Color.FromArgb(130, 50, 200),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI Semibold", 9.2f, FontStyle.Bold),
+                Cursor = Cursors.Hand
+            };
+            devBtn.FlatAppearance.BorderSize = 0;
+            devBtn.Click += (s, e) =>
+            {
+                string appDir = Path.GetDirectoryName(Application.ExecutablePath);
+                string makerPath = Path.Combine(appDir, "iMaker.exe");
+                if (!File.Exists(makerPath)) makerPath = Path.Combine(appDir, "dist", "iMaker.exe");
+                if (!File.Exists(makerPath)) makerPath = Path.Combine(appDir, "..", "dist", "iMaker.exe");
+                if (File.Exists(makerPath)) Process.Start(makerPath);
+                else MessageBox.Show("iMaker Studio est disponible dans le dossier dist/iMaker.exe", "iMaker", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            };
+            header.Controls.Add(devBtn);
+
             Controls.Add(header);
 
             // Filter Category Tabs
             Panel catBar = new Panel { Location = new Point(0, 80), Size = new Size(Width, 48), BackColor = Color.FromArgb(12, 14, 22) };
-            string[] cats = new string[] { "Tous", "Shell & Bureau", "Multi-Moniteurs", "Widgets Flottants" };
+            string[] cats = new string[] { "Tous", "Shell & Bureau", "Multi-Moniteurs", "Widgets Flottants", "Outils & Création" };
             int catX = 24;
             for (int i = 0; i < cats.Length; i++)
             {

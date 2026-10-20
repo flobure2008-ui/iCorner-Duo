@@ -341,7 +341,7 @@ namespace iSetup
                     string appDir = Path.GetDirectoryName(Application.ExecutablePath);
 
                     string[] binaries = new string[] {
-                        "iSuite.exe", "iStore.exe", "iVolume.exe", "iAltTab.exe", "iWidgets.exe", "iCorner.exe", "iBridge.exe", "iIsland.exe", "iMascot.exe", "iHub.exe"
+                        "iSuite.exe", "iStore.exe", "iMaker.exe", "iWidgets.exe", "iVolume.exe", "iAltTab.exe", "iCorner.exe", "iBridge.exe", "iIsland.exe", "iMascot.exe", "iHub.exe"
                     };
 
                     foreach (var bin in binaries)

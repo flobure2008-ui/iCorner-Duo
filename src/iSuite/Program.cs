@@ -1861,9 +1861,10 @@ namespace iSuite
             AddHeading(p, "🛍️ iStore • Catalogue des Outils de Personnalisation Windows");
 
             string[] apps = new string[] {
+                "iMaker|Studio de création pour concevoir vos propres applications et skins|iMaker.exe",
+                "iWidgets|Studio de Widgets Rainmeter Liquid Glass & Gestionnaire de skins|iWidgets.exe",
                 "iVolume|HUD Audio & Lecteur Liquid Glass flottant|iVolume.exe",
                 "iAltTab|Mission Control & Switcher de fenêtres plein écran|iAltTab.exe",
-                "iWidgets|Horloge, Jauges CPU/RAM & Notes Liquid Glass de bureau|iWidgets.exe",
                 "iCorner|Coins d'écran arrondis ultra-doux & Aura luminescente|iCorner.exe",
                 "iBridge|Passerelle visuelle et portail fluide multi-écrans|iBridge.exe",
                 "iIsland|Capsule multimédia Dynamic Island façon macOS / iOS|iIsland.exe",
