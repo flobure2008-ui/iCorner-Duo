@@ -67,6 +67,13 @@ Toutes les options et réglages sont regroupés dans **une seule et unique appli
 
 ---
 
+## 🚀 Téléchargement & Installation
+
+1. Téléchargez **`iSuite-Setup.exe`** ou **`iSuite.exe`** depuis la section **[Releases](https://github.com/flobure2008-ui/iSuite/releases)**.
+2. Lancez **`iSuite-Setup.exe`** pour installer automatiquement la suite, créer les raccourcis Bureau / Menu Démarrer et configurer le démarrage automatique.
+
+---
+
 ## ⚡ Compilation Rapide de Toute la Suite
 
 Un script PowerShell compile les **8 exécutables** en une seule commande avec `csc.exe` natif :

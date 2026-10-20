@@ -384,7 +384,7 @@ namespace iStore
                 using (WebClient wc = new WebClient())
                 {
                     wc.Headers.Add("User-Agent", "iStore-Client");
-                    string url = "https://github.com/flobure2008-ui/iCorner-Duo/releases/download/v3.0.0/" + item.ExeName;
+                    string url = "https://github.com/flobure2008-ui/iSuite/releases/download/v3.1.0/" + item.ExeName;
                     wc.DownloadFile(url, target);
                 }
             }
