@@ -60,6 +60,49 @@ namespace iAltTab
 
         [DllImport("user32.dll")]
         public static extern bool SetProcessDPIAware();
+
+        [DllImport("dwmapi.dll")]
+        public static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
+
+        [DllImport("user32.dll")]
+        public static extern int SetWindowCompositionAttribute(IntPtr hwnd, ref WindowCompositionAttributeData data);
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct WindowCompositionAttributeData { public int Attribute; public IntPtr Data; public int SizeOfData; }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct AccentPolicy { public int AccentState; public int AccentFlags; public int GradientColor; public int AnimationId; }
+
+        public static void EnableWindowGlassBlur(IntPtr handle, Color tintColor, byte opacity)
+        {
+            try
+            {
+                int dark = 1;
+                DwmSetWindowAttribute(handle, 20, ref dark, 4);
+                int round = 2;
+                DwmSetWindowAttribute(handle, 33, ref round, 4);
+                int backdrop = 3;
+                DwmSetWindowAttribute(handle, 38, ref backdrop, 4);
+            }
+            catch { }
+
+            try
+            {
+                var policy = new AccentPolicy
+                {
+                    AccentState = 4,
+                    AccentFlags = 2,
+                    GradientColor = (opacity << 24) | (tintColor.B << 16) | (tintColor.G << 8) | tintColor.R
+                };
+                int size = Marshal.SizeOf(policy);
+                IntPtr pPolicy = Marshal.AllocHGlobal(size);
+                Marshal.StructureToPtr(policy, pPolicy, false);
+                var data = new WindowCompositionAttributeData { Attribute = 19, Data = pPolicy, SizeOfData = size };
+                SetWindowCompositionAttribute(handle, ref data);
+                Marshal.FreeHGlobal(pPolicy);
+            }
+            catch { }
+        }
     }
 
     public class WindowEntry
@@ -103,6 +146,12 @@ namespace iAltTab
                 cp.ExStyle |= 0x02000000; // WS_EX_COMPOSITED
                 return cp;
             }
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            NativeMethods.EnableWindowGlassBlur(Handle, Color.FromArgb(8, 10, 16), 235);
         }
 
         private void RefreshWindows()

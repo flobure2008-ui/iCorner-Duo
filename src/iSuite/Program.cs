@@ -13,7 +13,7 @@ using Microsoft.Win32;
 namespace iSuite
 {
     // =========================================================================
-    // ENUMS
+    // ENUMS & THEMES
     // =========================================================================
     public enum TaskbarStyle { FloatingDock = 0, ExtendedBar = 1 }
     public enum CurveGeometry { HyperbolicSquircle = 0, CircularArc = 1 }
@@ -33,20 +33,20 @@ namespace iSuite
     // =========================================================================
     public class SuiteSettings
     {
-        // 1. Taskbar & Start Menu (Windows 12 Concept Glass)
+        // 1. Taskbar & Shell
         public bool TaskbarEnabled = true;
-        public bool ReplaceWindowsTaskbar = true; // Hides native Windows Shell_TrayWnd
+        public bool ReplaceWindowsTaskbar = true; // Completely replaces Windows Shell_TrayWnd
         public TaskbarStyle BarStyle = TaskbarStyle.FloatingDock;
         public int TaskbarHeight = 58;
         public int TaskbarCornerRadius = 20;
-        public int TaskbarOpacity = 242;
+        public int TaskbarOpacity = 240;
         public bool TaskbarShowRunningApps = true;
         public bool TaskbarShowClock = true;
         public bool TaskbarShowActionCenterBtn = true;
 
         public bool StartMenuEnabled = true;
-        public int StartMenuWidth = 540;
-        public int StartMenuHeight = 560;
+        public int StartMenuWidth = 560;
+        public int StartMenuHeight = 580;
 
         // 2. Action & Notification Center
         public bool ActionCenterEnabled = true;
@@ -175,8 +175,8 @@ namespace iSuite
             {
                 if (!File.Exists(SettingsPath)) return s;
                 string json = File.ReadAllText(SettingsPath, Encoding.UTF8);
-                s.TaskbarEnabled = ReadBool(json, "TaskbarEnabled", s.TaskbarEnabled);
-                s.ReplaceWindowsTaskbar = ReadBool(json, "ReplaceWindowsTaskbar", s.ReplaceWindowsTaskbar);
+                s.TaskbarEnabled = ReadBool(json, "TaskbarEnabled", true);
+                s.ReplaceWindowsTaskbar = ReadBool(json, "ReplaceWindowsTaskbar", true);
                 s.BarStyle = (TaskbarStyle)ReadInt(json, "BarStyle", (int)s.BarStyle);
                 s.TaskbarHeight = ReadInt(json, "TaskbarHeight", s.TaskbarHeight);
                 s.TaskbarCornerRadius = ReadInt(json, "TaskbarCornerRadius", s.TaskbarCornerRadius);
@@ -256,7 +256,7 @@ namespace iSuite
     }
 
     // =========================================================================
-    // GLASS COLOR ENGINE & LIQUID SHADERS
+    // GLASS COLOR ENGINE & SHADERS
     // =========================================================================
     public static class GlassThemeEngine
     {
@@ -342,10 +342,10 @@ namespace iSuite
                     g.FillPath(sheen, path);
 
                 // 3. Specular top refraction line
-                RectangleF topRefract = new RectangleF(rect.X + 2, rect.Y + 1, rect.Width - 4, rect.Height * 0.45f);
+                RectangleF topRefract = new RectangleF(rect.X + 2, rect.Y + 1, rect.Width - 4, Math.Max(2, rect.Height * 0.45f));
                 if (topRefract.Width > 4 && topRefract.Height > 2)
                 {
-                    using (LinearGradientBrush topGrad = new LinearGradientBrush(topRefract, Color.FromArgb((int)(40 * borderAlphaRatio), 255, 255, 255), Color.FromArgb(0, 255, 255, 255), LinearGradientMode.Vertical))
+                    using (LinearGradientBrush topGrad = new LinearGradientBrush(topRefract, Color.FromArgb((int)(45 * borderAlphaRatio), 255, 255, 255), Color.FromArgb(0, 255, 255, 255), LinearGradientMode.Vertical))
                     using (GraphicsPath topPath = CreateRoundedRect(topRefract, cornerRadius * 0.8f))
                     {
                         g.FillPath(topGrad, topPath);
@@ -353,7 +353,7 @@ namespace iSuite
                 }
 
                 // 4. Dynamic glowing chromatic glass rim border
-                using (LinearGradientBrush rimGrad = new LinearGradientBrush(rect, Color.FromArgb((int)(95 * borderAlphaRatio), Interpolate(Color.White, accentTint, 0.4f)), Color.FromArgb((int)(32 * borderAlphaRatio), accentTint), 60f))
+                using (LinearGradientBrush rimGrad = new LinearGradientBrush(rect, Color.FromArgb((int)(105 * borderAlphaRatio), Interpolate(Color.White, accentTint, 0.4f)), Color.FromArgb((int)(38 * borderAlphaRatio), accentTint), 60f))
                 using (Pen rimPen = new Pen(rimGrad, 1.25f))
                 {
                     g.DrawPath(rimPen, path);
@@ -378,7 +378,7 @@ namespace iSuite
     }
 
     // =========================================================================
-    // NATIVE WIN32 INTEROP & REAL TASKBAR REPLACEMENT
+    // NATIVE WIN32 INTEROP & REAL DWM GLASS + TASKBAR REPLACEMENT
     // =========================================================================
     public static class NativeMethods
     {
@@ -405,10 +405,20 @@ namespace iSuite
         public const int SW_MINIMIZE = 6;
         public const int SW_RESTORE = 9;
 
-        public static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
         public const uint SWP_NOMOVE = 0x0002;
         public const uint SWP_NOSIZE = 0x0001;
         public const uint SWP_NOACTIVATE = 0x0010;
+        public const uint SWP_NOZORDER = 0x0004;
+        public const uint SWP_HIDEWINDOW = 0x0080;
+        public const uint SWP_SHOWWINDOW = 0x0040;
+
+        public const uint SPI_SETWORKAREA = 0x002F;
+        public const uint SPI_GETWORKAREA = 0x0030;
+        public const uint SPIF_SENDCHANGE = 0x02;
+        public const uint SPIF_UPDATEINIFILE = 0x01;
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct RECT { public int left; public int top; public int right; public int bottom; }
 
         [StructLayout(LayoutKind.Sequential)]
         public struct POINT { public int X; public int Y; public POINT(int x, int y) { X = x; Y = y; } }
@@ -418,6 +428,12 @@ namespace iSuite
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct BLENDFUNCTION { public byte BlendOp; public byte BlendFlags; public byte SourceConstantAlpha; public byte AlphaFormat; }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct WindowCompositionAttributeData { public int Attribute; public IntPtr Data; public int SizeOfData; }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct AccentPolicy { public int AccentState; public int AccentFlags; public int GradientColor; public int AnimationId; }
 
         [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
         public static extern bool UpdateLayeredWindow(IntPtr hwnd, IntPtr hdcDst, ref POINT pptDst, ref SIZE psize, IntPtr hdcSrc, ref POINT pprSrc, int crKey, ref BLENDFUNCTION pblend, int dwFlags);
@@ -457,6 +473,12 @@ namespace iSuite
 
         [DllImport("dwmapi.dll")]
         public static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
+
+        [DllImport("user32.dll")]
+        public static extern int SetWindowCompositionAttribute(IntPtr hwnd, ref WindowCompositionAttributeData data);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern bool SystemParametersInfo(uint uiAction, uint uiParam, ref RECT pvParam, uint fWinIni);
 
         [DllImport("user32.dll", SetLastError = true)]
         public static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
@@ -511,19 +533,78 @@ namespace iSuite
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
 
+        // Activates true DWM Acrylic / Mica glass blur on Windows 10/11
+        public static void EnableWindowGlassBlur(IntPtr handle, Color tintColor, byte opacity)
+        {
+            try
+            {
+                int dark = 1;
+                DwmSetWindowAttribute(handle, 20, ref dark, 4);
+                int round = 2; // Rounded corners
+                DwmSetWindowAttribute(handle, 33, ref round, 4);
+                int backdrop = 3; // Acrylic backdrop
+                DwmSetWindowAttribute(handle, 38, ref backdrop, 4);
+            }
+            catch { }
+
+            try
+            {
+                var policy = new AccentPolicy
+                {
+                    AccentState = 4, // ACCENT_ENABLE_ACRYLICBLURBEHIND
+                    AccentFlags = 2,
+                    GradientColor = (opacity << 24) | (tintColor.B << 16) | (tintColor.G << 8) | tintColor.R
+                };
+                int size = Marshal.SizeOf(policy);
+                IntPtr pPolicy = Marshal.AllocHGlobal(size);
+                Marshal.StructureToPtr(policy, pPolicy, false);
+                var data = new WindowCompositionAttributeData
+                {
+                    Attribute = 19, // WCA_ACCENT_POLICY
+                    Data = pPolicy,
+                    SizeOfData = size
+                };
+                SetWindowCompositionAttribute(handle, ref data);
+                Marshal.FreeHGlobal(pPolicy);
+            }
+            catch { }
+        }
+
+        // Reliable replacement of Windows native Taskbar
         public static void SetWindowsTaskbarVisible(bool visible)
         {
             try
             {
                 IntPtr primary = FindWindow("Shell_TrayWnd", null);
                 if (primary != IntPtr.Zero)
+                {
                     ShowWindow(primary, visible ? SW_SHOW : SW_HIDE);
+                    SetWindowPos(primary, IntPtr.Zero, 0, 0, 0, 0, 
+                        SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | (visible ? SWP_SHOWWINDOW : SWP_HIDEWINDOW));
+                }
+
+                IntPtr startBtn = FindWindow("Button", "Start");
+                if (startBtn != IntPtr.Zero)
+                {
+                    ShowWindow(startBtn, visible ? SW_SHOW : SW_HIDE);
+                }
 
                 IntPtr secondary = IntPtr.Zero;
                 while ((secondary = FindWindowEx(IntPtr.Zero, secondary, "Shell_SecondaryTrayWnd", null)) != IntPtr.Zero)
                 {
                     ShowWindow(secondary, visible ? SW_SHOW : SW_HIDE);
+                    SetWindowPos(secondary, IntPtr.Zero, 0, 0, 0, 0, 
+                        SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | (visible ? SWP_SHOWWINDOW : SWP_HIDEWINDOW));
                 }
+
+                // Adjust desktop work area
+                Screen primaryScreen = Screen.PrimaryScreen;
+                RECT workArea = new RECT();
+                workArea.left = primaryScreen.Bounds.Left;
+                workArea.top = primaryScreen.Bounds.Top;
+                workArea.right = primaryScreen.Bounds.Right;
+                workArea.bottom = visible ? (primaryScreen.Bounds.Bottom - 48) : primaryScreen.Bounds.Bottom;
+                SystemParametersInfo(SPI_SETWORKAREA, 0, ref workArea, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
             }
             catch { }
         }
@@ -536,6 +617,9 @@ namespace iSuite
         }
     }
 
+    // =========================================================================
+    // AUDIO PEAK METER
+    // =========================================================================
     [ComImport, Guid("BCDE0395-E52F-467C-8E3D-C4579291692E")]
     internal class MMDeviceEnumeratorComObject { }
 
@@ -589,6 +673,9 @@ namespace iSuite
         }
     }
 
+    // =========================================================================
+    // LAYERED OVERLAY FORM (ZERO FLICKER)
+    // =========================================================================
     public class LayeredOverlayForm : Form
     {
         private bool isClickThrough;
@@ -643,7 +730,7 @@ namespace iSuite
     }
 
     // =========================================================================
-    // WINDOWS 12 CONCEPT GLASS TASKBAR (REPLACES NATIVE WINDOWS TASKBAR)
+    // WINDOWS 12 CONCEPT GLASS TASKBAR (REPLACES WINDOWS TASKBAR)
     // =========================================================================
     public class GlassTaskbarWidget : IDisposable
     {
@@ -692,7 +779,7 @@ namespace iSuite
             pinnedIcons.Add(new PinnedIcon { Glyph = "📁", Tooltip = "Explorateur de fichiers", OnClick = () => { try { Process.Start("explorer.exe"); } catch { } } });
             pinnedIcons.Add(new PinnedIcon { Glyph = "🌐", Tooltip = "Navigateur Web", OnClick = () => { try { Process.Start("https://google.com"); } catch { } } });
             pinnedIcons.Add(new PinnedIcon { Glyph = "💻", Tooltip = "Terminal PowerShell", OnClick = () => { try { Process.Start("powershell.exe"); } catch { } } });
-            pinnedIcons.Add(new PinnedIcon { Glyph = "⚙️", Tooltip = "iSuite Master Studio", OnClick = () => { if (OnSettingsClicked != null) OnSettingsClicked(); } });
+            pinnedIcons.Add(new PinnedIcon { Glyph = "⚙️", Tooltip = "iSuite Creative Studio", OnClick = () => { if (OnSettingsClicked != null) OnSettingsClicked(); } });
 
             taskbarForm.MouseDown += (s, e) =>
             {
@@ -805,7 +892,7 @@ namespace iSuite
                 long exStyle = NativeMethods.GetWindowLongPtr(hWnd, NativeMethods.GWL_EXSTYLE).ToInt64();
                 if ((exStyle & NativeMethods.WS_EX_TOOLWINDOW) != 0) return true;
 
-                IntPtr owner = NativeMethods.GetWindow(hWnd, 4 /* GW_OWNER */);
+                IntPtr owner = NativeMethods.GetWindow(hWnd, 4);
                 if (owner != IntPtr.Zero && (exStyle & NativeMethods.WS_EX_APPWINDOW) == 0) return true;
 
                 list.Add(new RunningAppInfo
@@ -839,7 +926,7 @@ namespace iSuite
                 : (screenBounds.Width - 32);
 
             int barX = screenBounds.Left + (screenBounds.Width - barW) / 2;
-            int barY = screenBounds.Bottom - barH - (settings.BarStyle == TaskbarStyle.FloatingDock ? 14 : 0);
+            int barY = screenBounds.Bottom - barH - (settings.BarStyle == TaskbarStyle.FloatingDock ? 10 : 0);
 
             barBounds = new Rectangle(barX, barY, barW, barH);
 
@@ -913,7 +1000,7 @@ namespace iSuite
                     int appChipWidth = 110;
                     for (int i = 0; i < runningApps.Count; i++)
                     {
-                        if (curX + appChipWidth > barW - trayWidth - 10) break; // Don't overflow tray
+                        if (curX + appChipWidth > barW - trayWidth - 10) break;
 
                         RunningAppInfo app = runningApps[i];
                         Rectangle ar = new Rectangle(curX, (barH - 36) / 2, appChipWidth, 36);
@@ -921,7 +1008,6 @@ namespace iSuite
                         bool hov = isInside && ar.Contains(relMouse);
                         if (hov) hoveredRunningIdx = i;
 
-                        // Chip background
                         using (GraphicsPath ap = GlassThemeEngine.CreateRoundedRect(ar, 8f))
                         {
                             Color chipBg = app.IsActive 
@@ -937,7 +1023,7 @@ namespace iSuite
                             }
                         }
 
-                        // App Initial Badge / Icon
+                        // App Badge
                         Rectangle badgeRect = new Rectangle(ar.X + 6, ar.Y + 7, 22, 22);
                         using (GraphicsPath bp = GlassThemeEngine.CreateRoundedRect(badgeRect, 6f))
                         using (SolidBrush bb = new SolidBrush(Color.FromArgb(80, 20, 26, 40)))
@@ -953,7 +1039,7 @@ namespace iSuite
                             g.DrawString(initial, bf, txtB, badgeRect.X + (badgeRect.Width - bsz.Width) / 2f, badgeRect.Y + (badgeRect.Height - bsz.Height) / 2f);
                         }
 
-                        // App Title (Truncated)
+                        // App Title
                         string dispTitle = app.Title;
                         if (dispTitle.Length > 9) dispTitle = dispTitle.Substring(0, 8) + "…";
                         using (Font tf = new Font("Segoe UI", 8.5f))
@@ -978,7 +1064,7 @@ namespace iSuite
                     }
                 }
 
-                // --- 3. SYSTEM TRAY & ACTION CENTER & CLOCK ---
+                // --- 3. SYSTEM TRAY & CLOCK ---
                 int rightPos = barW - 14;
 
                 // Clock
@@ -1024,7 +1110,7 @@ namespace iSuite
                     rightPos -= 42;
                 }
 
-                // Status Icons: WiFi + Volume
+                // Status Icon: WiFi
                 using (Font sf = new Font("Segoe UI", 9.5f))
                 using (SolidBrush sb = new SolidBrush(Color.FromArgb(190, 205, 230)))
                 {
@@ -1042,7 +1128,6 @@ namespace iSuite
         }
     }
 
-    // Extension method helper for rounded rectangle fill
     public static class GraphicsExtensions
     {
         public static void FillRoundedRectangle(this Graphics g, Brush brush, float x, float y, float w, float h, float r)
@@ -1080,7 +1165,7 @@ namespace iSuite
             get
             {
                 CreateParams cp = base.CreateParams;
-                cp.ExStyle |= 0x02000000; // WS_EX_COMPOSITED
+                cp.ExStyle |= 0x02000000;
                 return cp;
             }
         }
@@ -1088,14 +1173,7 @@ namespace iSuite
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
-            try
-            {
-                int dark = 1;
-                NativeMethods.DwmSetWindowAttribute(Handle, 20, ref dark, 4);
-                int round = 2;
-                NativeMethods.DwmSetWindowAttribute(Handle, 33, ref round, 4);
-            }
-            catch { }
+            NativeMethods.EnableWindowGlassBlur(Handle, Color.FromArgb(12, 16, 26), 235);
         }
 
         public void Toggle(Point anchor)
@@ -1115,7 +1193,7 @@ namespace iSuite
 
             RectangleF r = new RectangleF(1, 1, Width - 2, Height - 2);
             Color accent = Color.FromArgb(70, 185, 255);
-            GlassThemeEngine.DrawFrostedGlassSurface(g, r, 20f, BackColor, accent, 246, 1.0f);
+            GlassThemeEngine.DrawFrostedGlassSurface(g, r, 20f, BackColor, accent, 235, 1.0f);
 
             // Search Bar
             RectangleF searchRect = new RectangleF(28, 24, Width - 56, 42);
@@ -1140,24 +1218,24 @@ namespace iSuite
                 g.DrawString("Applications Épinglées (Windows 12 Glass)", hf, hb, 30, 86);
             }
 
-            // App Grid (6 pinned modern glass cards)
-            string[] appNames = new string[] { "iSuite Studio", "Explorateur", "Terminal", "Paramètres", "iStore", "Apple Music" };
-            string[] appIcons = new string[] { "⚙️", "📁", "💻", "🛠️", "🛍️", "🎵" };
+            // App Grid
+            string[] appNames = new string[] { "iSuite Studio", "Explorateur", "Terminal", "iMaker", "iStore", "iWidgets" };
+            string[] appIcons = new string[] { "⚙️", "📁", "💻", "🛠️", "🛍️", "📊" };
 
             int startX = 30;
             int startY = 118;
-            int cardW = 145;
-            int cardH = 78;
+            int cardW = 155;
+            int cardH = 80;
 
             for (int i = 0; i < 6; i++)
             {
                 int col = i % 3;
                 int row = i / 3;
-                RectangleF cardRect = new RectangleF(startX + col * (cardW + 20), startY + row * (cardH + 16), cardW, cardH);
+                RectangleF cardRect = new RectangleF(startX + col * (cardW + 16), startY + row * (cardH + 16), cardW, cardH);
 
                 using (GraphicsPath cp = GlassThemeEngine.CreateRoundedRect(cardRect, 12f))
-                using (SolidBrush cb = new SolidBrush(Color.FromArgb(16, 255, 255, 255)))
-                using (Pen cpen = new Pen(Color.FromArgb(32, 255, 255, 255), 1.0f))
+                using (SolidBrush cb = new SolidBrush(Color.FromArgb(18, 255, 255, 255)))
+                using (Pen cpen = new Pen(Color.FromArgb(38, 255, 255, 255), 1.0f))
                 {
                     g.FillPath(cb, cp);
                     g.DrawPath(cpen, cp);
@@ -1166,46 +1244,19 @@ namespace iSuite
                 using (Font icf = new Font("Segoe UI", 16f))
                 using (SolidBrush icb = new SolidBrush(Color.White))
                 {
-                    g.DrawString(appIcons[i], icf, icb, cardRect.X + 16, cardRect.Y + 12);
+                    g.DrawString(appIcons[i], icf, icb, cardRect.X + 16, cardRect.Y + 14);
                 }
 
-                using (Font nmf = new Font("Segoe UI Semibold", 8.8f, FontStyle.Bold))
+                using (Font nmf = new Font("Segoe UI Semibold", 9f, FontStyle.Bold))
                 using (SolidBrush nmb = new SolidBrush(Color.FromArgb(220, 230, 248)))
                 {
-                    g.DrawString(appNames[i], nmf, nmb, cardRect.X + 16, cardRect.Y + 48);
-                }
-            }
-
-            // Recommended Section Header
-            using (Font hf = new Font("Segoe UI Semibold", 10.5f, FontStyle.Bold))
-            using (SolidBrush hb = new SolidBrush(Color.White))
-            {
-                g.DrawString("Recommandés & Écosystème Connecté", hf, hb, 30, 310);
-            }
-
-            string[] recents = new string[] {
-                "iVolume • HUD Audio & Lecteur Liquid Glass",
-                "iAltTab • Mission Control & Switcher de Fenêtres",
-                "iWidgets • Tableau de bord widgets flottants"
-            };
-
-            for (int i = 0; i < recents.Length; i++)
-            {
-                RectangleF rr = new RectangleF(30, 342 + i * 44, Width - 60, 36);
-                using (GraphicsPath rp = GlassThemeEngine.CreateRoundedRect(rr, 8f))
-                using (SolidBrush rb = new SolidBrush(Color.FromArgb(12, 255, 255, 255)))
-                    g.FillPath(rb, rp);
-
-                using (Font rf = new Font("Segoe UI", 8.8f))
-                using (SolidBrush rtxtb = new SolidBrush(Color.FromArgb(200, 215, 240)))
-                {
-                    g.DrawString(recents[i], rf, rtxtb, rr.X + 14, rr.Y + 9);
+                    g.DrawString(appNames[i], nmf, nmb, cardRect.X + 16, cardRect.Y + 50);
                 }
             }
 
             // Bottom Profile / Power Bar
             RectangleF bottomBar = new RectangleF(0, Height - 62, Width, 62);
-            using (SolidBrush bbb = new SolidBrush(Color.FromArgb(30, 8, 10, 16)))
+            using (SolidBrush bbb = new SolidBrush(Color.FromArgb(40, 8, 10, 16)))
                 g.FillRectangle(bbb, bottomBar);
 
             using (Font pf = new Font("Segoe UI Semibold", 9.5f, FontStyle.Bold))
@@ -1243,7 +1294,7 @@ namespace iSuite
             get
             {
                 CreateParams cp = base.CreateParams;
-                cp.ExStyle |= 0x02000000; // WS_EX_COMPOSITED
+                cp.ExStyle |= 0x02000000;
                 return cp;
             }
         }
@@ -1251,14 +1302,7 @@ namespace iSuite
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
-            try
-            {
-                int dark = 1;
-                NativeMethods.DwmSetWindowAttribute(Handle, 20, ref dark, 4);
-                int round = 2;
-                NativeMethods.DwmSetWindowAttribute(Handle, 33, ref round, 4);
-            }
-            catch { }
+            NativeMethods.EnableWindowGlassBlur(Handle, Color.FromArgb(12, 16, 26), 235);
         }
 
         public void Toggle(Rectangle screenBounds)
@@ -1278,7 +1322,7 @@ namespace iSuite
 
             RectangleF r = new RectangleF(1, 1, Width - 2, Height - 2);
             Color accent = Color.FromArgb(70, 185, 255);
-            GlassThemeEngine.DrawFrostedGlassSurface(g, r, 20f, BackColor, accent, 246, 1.0f);
+            GlassThemeEngine.DrawFrostedGlassSurface(g, r, 20f, BackColor, accent, 235, 1.0f);
 
             // Title
             using (Font tf = new Font("Segoe UI Semibold", 12f, FontStyle.Bold))
@@ -1287,7 +1331,7 @@ namespace iSuite
                 g.DrawString("Centre de Contrôle & Actions", tf, wb, 24, 20);
             }
 
-            // Quick Action Tiles (Wi-Fi, Bluetooth, Night Light, Focus)
+            // Quick Action Tiles
             string[] toggles = new string[] { "📶 Wi-Fi (Actif)", "ᛒ Bluetooth (Connecté)", "🌙 Éclairage Nocturne", "🎯 Focus / Ne Pas Déranger" };
             bool[] states = new bool[] { settings.QuickToggleWifi, settings.QuickToggleBluetooth, settings.QuickToggleNightLight, settings.QuickToggleFocus };
 
@@ -1325,39 +1369,6 @@ namespace iSuite
                 g.DrawString(string.Format("☀️ Luminosité Écran ({0}%)", settings.SystemBrightness), lf, lb, 26, sliderY + 60);
                 DrawTrackSlider(g, 24, sliderY + 84, Width - 48, settings.SystemBrightness / 100f, Color.FromArgb(255, 200, 80));
             }
-
-            // Notification Stack Header
-            int notifY = sliderY + 140;
-            using (Font nh = new Font("Segoe UI Semibold", 10.5f, FontStyle.Bold))
-            using (SolidBrush wb = new SolidBrush(Color.White))
-            {
-                g.DrawString("Notifications Récentes", nh, wb, 24, notifY);
-            }
-
-            // Sample Glass Notification Cards
-            string[] notifs = new string[] {
-                "iSuite • La barre Windows native est remplacée",
-                "Spotify • En cours de lecture sur vos enceintes",
-                "Système • Mode Windows 12 Concept Glass 60 FPS"
-            };
-
-            for (int i = 0; i < notifs.Length; i++)
-            {
-                RectangleF nr = new RectangleF(24, notifY + 32 + i * 58, Width - 48, 48);
-                using (GraphicsPath np = GlassThemeEngine.CreateRoundedRect(nr, 12f))
-                using (SolidBrush nb = new SolidBrush(Color.FromArgb(16, 255, 255, 255)))
-                using (Pen npen = new Pen(Color.FromArgb(30, 255, 255, 255), 1.0f))
-                {
-                    g.FillPath(nb, np);
-                    g.DrawPath(npen, np);
-                }
-
-                using (Font nf = new Font("Segoe UI", 8.8f))
-                using (SolidBrush ntb = new SolidBrush(Color.FromArgb(210, 225, 245)))
-                {
-                    g.DrawString(notifs[i], nf, ntb, nr.X + 14, nr.Y + 14);
-                }
-            }
         }
 
         private void DrawTrackSlider(Graphics g, float x, float y, float w, float ratio, Color accent)
@@ -1365,19 +1376,14 @@ namespace iSuite
             RectangleF track = new RectangleF(x, y, w, 18);
             using (GraphicsPath tp = GlassThemeEngine.CreateRoundedRect(track, 9f))
             using (SolidBrush tb = new SolidBrush(Color.FromArgb(25, 255, 255, 255)))
-            {
                 g.FillPath(tb, tp);
-            }
 
             float fillW = Math.Max(18f, w * ratio);
             RectangleF fillRect = new RectangleF(x, y, fillW, 18);
             using (GraphicsPath fp = GlassThemeEngine.CreateRoundedRect(fillRect, 9f))
             using (SolidBrush fb = new SolidBrush(accent))
-            {
                 g.FillPath(fb, fp);
-            }
 
-            // Knob
             using (SolidBrush kb = new SolidBrush(Color.White))
                 g.FillEllipse(kb, x + fillW - 16, y + 1, 16, 16);
         }
@@ -1398,6 +1404,7 @@ namespace iSuite
         private NotifyIcon trayIcon;
         private MasterStudioForm studioForm;
         private long startTicks = DateTime.UtcNow.Ticks;
+        private long lastTaskbarCheck = 0;
 
         public MasterOverlayController()
         {
@@ -1421,10 +1428,10 @@ namespace iSuite
 
             Taskbar.OnSettingsClicked += ShowStudioWindow;
 
-            // Safe replacement of Windows native taskbar
+            // Immediately enforce native taskbar replacement
             ApplyWindowsTaskbarReplacement();
 
-            // Always restore native taskbars on app exit or crash
+            // Safety restoration handlers on app exit or crash
             Application.ApplicationExit += (s, e) => NativeMethods.SetWindowsTaskbarVisible(true);
             AppDomain.CurrentDomain.ProcessExit += (s, e) => NativeMethods.SetWindowsTaskbarVisible(true);
 
@@ -1455,6 +1462,21 @@ namespace iSuite
             AudioMeter.UpdateTick();
             Color[] pal = GlassThemeEngine.GetPalette(Settings, t);
 
+            // Continuously enforce taskbar replacement
+            long now = DateTime.UtcNow.Ticks;
+            if (now - lastTaskbarCheck > 10000000) // check every 1s
+            {
+                lastTaskbarCheck = now;
+                if (Settings.TaskbarEnabled && Settings.ReplaceWindowsTaskbar)
+                {
+                    IntPtr hTray = NativeMethods.FindWindow("Shell_TrayWnd", null);
+                    if (hTray != IntPtr.Zero && NativeMethods.IsWindowVisible(hTray))
+                    {
+                        NativeMethods.SetWindowsTaskbarVisible(false);
+                    }
+                }
+            }
+
             Point cursorPt = Point.Empty;
             NativeMethods.POINT rawPt;
             if (NativeMethods.GetCursorPos(out rawPt)) cursorPt = new Point(rawPt.X, rawPt.Y);
@@ -1465,12 +1487,12 @@ namespace iSuite
         private void SetupTray()
         {
             trayIcon = new NotifyIcon();
-            trayIcon.Text = "iSuite — Studio Master & Shell Glass";
+            trayIcon.Text = "iSuite — Creative Studio & Shell Glass";
             trayIcon.Icon = SystemIcons.Application;
             trayIcon.Visible = true;
 
             ContextMenuStrip menu = new ContextMenuStrip();
-            ToolStripMenuItem studioItem = new ToolStripMenuItem("Ouvrir iSuite Master Studio");
+            ToolStripMenuItem studioItem = new ToolStripMenuItem("Ouvrir iSuite Creative Studio");
             studioItem.Font = new Font(studioItem.Font, FontStyle.Bold);
             studioItem.Click += (s, e) => ShowStudioWindow();
 
@@ -1494,7 +1516,7 @@ namespace iSuite
                 Settings.Save();
             };
 
-            ToolStripMenuItem restoreWinItem = new ToolStripMenuItem("Restaurer la barre des tâches Windows (Failsafe)");
+            ToolStripMenuItem restoreWinItem = new ToolStripMenuItem("Restaurer la barre Windows (Failsafe)");
             restoreWinItem.Click += (s, e) => NativeMethods.SetWindowsTaskbarVisible(true);
 
             ToolStripMenuItem exitItem = new ToolStripMenuItem("Quitter iSuite");
@@ -1537,7 +1559,65 @@ namespace iSuite
     }
 
     // =========================================================================
-    // MASTER STUDIO FORM (ALL PERSONALIZATION IN ONE GLORIOUS APP)
+    // CUSTOM ADOBE / IOS STYLE TOGGLE SWITCH
+    // =========================================================================
+    public class GlassToggleSwitch : Control
+    {
+        private bool isChecked = false;
+        public event EventHandler CheckedChanged;
+
+        public bool Checked
+        {
+            get { return isChecked; }
+            set 
+            { 
+                if (isChecked != value) 
+                { 
+                    isChecked = value; 
+                    Invalidate(); 
+                    if (CheckedChanged != null) CheckedChanged(this, EventArgs.Empty); 
+                } 
+            }
+        }
+
+        public GlassToggleSwitch()
+        {
+            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.SupportsTransparentBackColor, true);
+            Size = new Size(48, 24);
+            BackColor = Color.Transparent;
+            Cursor = Cursors.Hand;
+        }
+
+        protected override void OnClick(EventArgs e)
+        {
+            base.OnClick(e);
+            Checked = !Checked;
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            Graphics g = e.Graphics;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+
+            RectangleF r = new RectangleF(1, 1, Width - 2, Height - 2);
+            using (GraphicsPath path = GlassThemeEngine.CreateRoundedRect(r, r.Height / 2f))
+            {
+                Color trackBg = isChecked ? Color.FromArgb(40, 150, 255) : Color.FromArgb(40, 50, 70);
+                using (SolidBrush tb = new SolidBrush(trackBg))
+                    g.FillPath(tb, path);
+                using (Pen tp = new Pen(isChecked ? Color.FromArgb(110, 215, 255) : Color.FromArgb(65, 80, 110), 1.2f))
+                    g.DrawPath(tp, path);
+            }
+
+            float knobX = isChecked ? (Width - Height + 3) : 3;
+            RectangleF knob = new RectangleF(knobX, 3, Height - 6, Height - 6);
+            using (SolidBrush kb = new SolidBrush(Color.White))
+                g.FillEllipse(kb, knob);
+        }
+    }
+
+    // =========================================================================
+    // MASTER STUDIO FORM — ADOBE CREATIVE SUITE & ARTCRAFT LEVEL UI
     // =========================================================================
     public class MasterStudioForm : Form
     {
@@ -1549,17 +1629,17 @@ namespace iSuite
         public MasterStudioForm(MasterOverlayController ctrl)
         {
             controller = ctrl;
-            Text = "iSuite — Master Studio & Personnalisation Complète";
-            Size = new Size(1060, 750);
+            Text = "iSuite — Creative Studio & Shell Windows 12 Glass";
+            Size = new Size(1120, 780);
             StartPosition = FormStartPosition.CenterScreen;
-            BackColor = Color.FromArgb(11, 13, 20);
+            BackColor = Color.FromArgb(12, 14, 22);
             ForeColor = Color.White;
             Font = new Font("Segoe UI", 9.2f);
             FormBorderStyle = FormBorderStyle.FixedSingle;
             MaximizeBox = false;
             DoubleBuffered = true;
 
-            BuildMasterStudio();
+            BuildCreativeStudioUI();
         }
 
         protected override CreateParams CreateParams
@@ -1567,7 +1647,7 @@ namespace iSuite
             get
             {
                 CreateParams cp = base.CreateParams;
-                cp.ExStyle |= 0x02000000; // WS_EX_COMPOSITED
+                cp.ExStyle |= 0x02000000;
                 return cp;
             }
         }
@@ -1575,66 +1655,74 @@ namespace iSuite
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
-            try
-            {
-                int dark = 1;
-                NativeMethods.DwmSetWindowAttribute(Handle, 20, ref dark, 4);
-                int round = 2;
-                NativeMethods.DwmSetWindowAttribute(Handle, 33, ref round, 4);
-            }
-            catch { }
+            NativeMethods.EnableWindowGlassBlur(Handle, Color.FromArgb(10, 13, 20), 235);
         }
 
-        private void BuildMasterStudio()
+        private void BuildCreativeStudioUI()
         {
-            // Header
-            Panel header = new Panel { Dock = DockStyle.Top, Height = 74, BackColor = Color.FromArgb(14, 18, 28) };
+            // 1. TOP HEADER (Adobe Creative Cloud / Artcraft style)
+            Panel header = new Panel { Dock = DockStyle.Top, Height = 78, BackColor = Color.FromArgb(14, 17, 26) };
             header.Paint += (s, e) =>
             {
                 Graphics g = e.Graphics; g.SmoothingMode = SmoothingMode.AntiAlias;
                 Rectangle r = header.ClientRectangle;
-                using (LinearGradientBrush grad = new LinearGradientBrush(r, Color.FromArgb(14, 18, 28), Color.FromArgb(22, 16, 32), 0f))
+                using (LinearGradientBrush grad = new LinearGradientBrush(r, Color.FromArgb(13, 16, 26), Color.FromArgb(18, 14, 30), 0f))
                     g.FillRectangle(grad, r);
 
-                Color[] pal = GlassThemeEngine.GetPalette(controller.Settings, controller.GlobalTimeSeconds);
+                using (Pen sep = new Pen(Color.FromArgb(35, 45, 70), 1f))
+                    g.DrawLine(sep, 0, header.Height - 1, header.Width, header.Height - 1);
+
+                // Branding
                 using (Font tf = new Font("Segoe UI Semibold", 16f, FontStyle.Bold))
-                using (SolidBrush tb = new SolidBrush(Color.White))
+                using (Font sf = new Font("Segoe UI", 9.0f))
+                using (SolidBrush wb = new SolidBrush(Color.White))
+                using (SolidBrush ab = new SolidBrush(Color.FromArgb(90, 200, 255)))
+                using (SolidBrush gb = new SolidBrush(Color.FromArgb(160, 175, 205)))
                 {
-                    g.DrawString("iSuite", tf, tb, 26, 12);
-                }
-
-                using (Font sf = new Font("Segoe UI", 9.5f))
-                using (SolidBrush sb = new SolidBrush(Color.FromArgb(160, 175, 205)))
-                {
-                    g.DrawString("Écosystème Unifié de Personnalisation Windows 12 Glass", sf, sb, 28, 44);
-                }
-
-                // Decorative chromatic glass emblem badge
-                RectangleF badge = new RectangleF(Width - 180, 20, 140, 34);
-                GlassThemeEngine.DrawFrostedGlassSurface(g, badge, 10f, Color.FromArgb(20, 24, 38), pal[0], 220, 1f);
-                using (Font bf = new Font("Segoe UI Semibold", 8.8f, FontStyle.Bold))
-                using (SolidBrush bb = new SolidBrush(Color.White))
-                {
-                    g.DrawString("Liquid Glass v1.0.0", bf, bb, badge.X + 16, badge.Y + 8);
+                    g.DrawString("iSuite", tf, wb, 24, 14);
+                    SizeF sz = g.MeasureString("iSuite", tf);
+                    g.DrawString("Creative Studio", tf, ab, 24 + sz.Width + 4, 14);
+                    g.DrawString("Suite de personnalisation Liquid Glass & Shell Windows 12 v1.0.0", sf, gb, 26, 46);
                 }
             };
+
+            // Header Action Buttons
+            Button btnRestoreWin = new Button
+            {
+                Text = "🔄 Restaurer Barre Windows",
+                Location = new Point(Width - 270, 22),
+                Size = new Size(230, 34),
+                BackColor = Color.FromArgb(35, 45, 68),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI Semibold", 8.8f, FontStyle.Bold),
+                Cursor = Cursors.Hand
+            };
+            btnRestoreWin.FlatAppearance.BorderSize = 0;
+            btnRestoreWin.Click += (s, e) =>
+            {
+                NativeMethods.SetWindowsTaskbarVisible(true);
+                MessageBox.Show("Barre des tâches native de Windows restaurée avec succès !", "iSuite Failsafe", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            };
+            header.Controls.Add(btnRestoreWin);
+
             Controls.Add(header);
 
-            // Left Navigation Sidebar
-            Panel sidebar = new Panel { Dock = DockStyle.Left, Width = 230, BackColor = Color.FromArgb(13, 15, 23) };
+            // 2. LEFT SIDEBAR (Adobe Creative Cloud style)
+            Panel sidebar = new Panel { Dock = DockStyle.Left, Width = 250, BackColor = Color.FromArgb(12, 15, 24) };
             Controls.Add(sidebar);
 
-            // Main Content Area
-            Panel contentContainer = new Panel { Dock = DockStyle.Fill, BackColor = Color.FromArgb(11, 13, 20) };
+            // 3. MAIN CONTENT CONTAINER
+            Panel contentContainer = new Panel { Dock = DockStyle.Fill, BackColor = Color.FromArgb(10, 12, 18) };
             Controls.Add(contentContainer);
 
             string[] tabs = new string[] {
                 "❖ Barre & Shell",
-                "🔲 Arrondis d'Écran",
-                "🌉 Passerelle Écrans",
-                "💊 Capsule Dynamique",
+                "🔲 Arrondis d'Écran Pro",
+                "🌉 Passerelle Multi-Écrans",
+                "💊 Dynamic Island",
                 "✨ Mascottes Célestes",
-                "🎨 Thèmes & Verre",
+                "🎨 Thèmes & Palettes Verre",
                 "🛍️ Modules & Store"
             };
 
@@ -1649,7 +1737,7 @@ namespace iSuite
                     Height = 48,
                     FlatStyle = FlatStyle.Flat,
                     ForeColor = (i == 0) ? Color.White : Color.FromArgb(170, 185, 215),
-                    BackColor = (i == 0) ? Color.FromArgb(28, 36, 56) : Color.Transparent,
+                    BackColor = (i == 0) ? Color.FromArgb(28, 38, 62) : Color.Transparent,
                     Font = new Font("Segoe UI Semibold", 9.5f, (i == 0) ? FontStyle.Bold : FontStyle.Regular),
                     Cursor = Cursors.Hand
                 };
@@ -1659,7 +1747,6 @@ namespace iSuite
                 navButtons[i] = btn;
             }
 
-            // Create Tab Pages
             pages[0] = BuildPageShell();
             pages[1] = BuildPageCorners();
             pages[2] = BuildPageBridge();
@@ -1682,7 +1769,7 @@ namespace iSuite
             for (int i = 0; i < 7; i++)
             {
                 pages[i].Visible = (i == idx);
-                navButtons[i].BackColor = (i == idx) ? Color.FromArgb(28, 36, 56) : Color.Transparent;
+                navButtons[i].BackColor = (i == idx) ? Color.FromArgb(28, 38, 62) : Color.Transparent;
                 navButtons[i].ForeColor = (i == idx) ? Color.White : Color.FromArgb(170, 185, 215);
                 navButtons[i].Font = new Font("Segoe UI Semibold", 9.5f, (i == idx) ? FontStyle.Bold : FontStyle.Regular);
             }
@@ -1690,7 +1777,54 @@ namespace iSuite
 
         private Panel CreatePage()
         {
-            return new Panel { AutoScroll = true, BackColor = Color.FromArgb(11, 13, 20), Padding = new Padding(28) };
+            return new Panel { AutoScroll = true, BackColor = Color.FromArgb(10, 12, 18), Padding = new Padding(28) };
+        }
+
+        private Panel CreateCard(Panel parent, string title, int y, int height)
+        {
+            Panel card = new Panel
+            {
+                Location = new Point(24, y),
+                Size = new Size( parent.Width > 100 ? parent.Width - 68 : 780, height),
+                BackColor = Color.FromArgb(16, 20, 32),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
+            };
+            card.Paint += (s, e) =>
+            {
+                Graphics g = e.Graphics; g.SmoothingMode = SmoothingMode.AntiAlias;
+                RectangleF r = new RectangleF(1, 1, card.Width - 2, card.Height - 2);
+                using (GraphicsPath p = GlassThemeEngine.CreateRoundedRect(r, 12f))
+                {
+                    using (SolidBrush bg = new SolidBrush(Color.FromArgb(240, 14, 18, 28)))
+                        g.FillPath(bg, p);
+                    using (Pen rim = new Pen(Color.FromArgb(40, 50, 75), 1.2f))
+                        g.DrawPath(rim, p);
+                }
+
+                using (Font tf = new Font("Segoe UI Semibold", 10.5f, FontStyle.Bold))
+                using (SolidBrush tb = new SolidBrush(Color.FromArgb(90, 205, 255)))
+                {
+                    g.DrawString(title, tf, tb, 20, 16);
+                }
+            };
+            parent.Controls.Add(card);
+            return card;
+        }
+
+        private void AddSettingRow(Panel card, string label, string desc, Control control, int y)
+        {
+            Label lbl = new Label { Text = label, Location = new Point(20, y), AutoSize = true, Font = new Font("Segoe UI Semibold", 9.5f, FontStyle.Bold), ForeColor = Color.White };
+            card.Controls.Add(lbl);
+
+            if (!string.IsNullOrEmpty(desc))
+            {
+                Label dlbl = new Label { Text = desc, Location = new Point(20, y + 20), AutoSize = true, Font = new Font("Segoe UI", 8.5f), ForeColor = Color.FromArgb(150, 168, 198) };
+                card.Controls.Add(dlbl);
+            }
+
+            control.Location = new Point(card.Width - control.Width - 24, y + 4);
+            control.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            card.Controls.Add(control);
         }
 
         private Panel BuildPageShell()
@@ -1698,45 +1832,47 @@ namespace iSuite
             Panel p = CreatePage();
             AddHeading(p, "❖ Barre des Tâches & Shell Windows 12 Glass");
 
-            CheckBox enChk = CreateCheckBox(p, "Activer la barre des tâches flottante Liquid Glass", 28, 65, controller.Settings.TaskbarEnabled);
-            enChk.CheckedChanged += (s, e) => 
-            { 
-                controller.Settings.TaskbarEnabled = enChk.Checked; 
-                controller.ApplyWindowsTaskbarReplacement();
-                controller.Settings.Save(); 
-            };
+            Panel card1 = CreateCard(p, "Configuration de la Barre des Tâches", 65, 200);
 
-            CheckBox repChk = CreateCheckBox(p, "Remplacer complètement la barre des tâches native de Windows (Shell_TrayWnd)", 28, 100, controller.Settings.ReplaceWindowsTaskbar);
-            repChk.Font = new Font("Segoe UI Semibold", 9.5f, FontStyle.Bold);
-            repChk.ForeColor = Color.FromArgb(110, 215, 255);
-            repChk.CheckedChanged += (s, e) =>
+            GlassToggleSwitch swTaskbar = new GlassToggleSwitch { Checked = controller.Settings.TaskbarEnabled };
+            swTaskbar.CheckedChanged += (s, e) =>
             {
-                controller.Settings.ReplaceWindowsTaskbar = repChk.Checked;
+                controller.Settings.TaskbarEnabled = swTaskbar.Checked;
                 controller.ApplyWindowsTaskbarReplacement();
                 controller.Settings.Save();
             };
+            AddSettingRow(card1, "Activer le Dock Flottant Liquid Glass", "Affiche la barre de navigation moderne Windows 12 en verre liquide.", swTaskbar, 48);
 
-            Button restoreBtn = new Button { Text = "Restaurer la barre native Windows (Failsafe)", Location = new Point(28, 135), Size = new Size(320, 32), BackColor = Color.FromArgb(35, 45, 65), FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 9f) };
-            restoreBtn.Click += (s, e) => { NativeMethods.SetWindowsTaskbarVisible(true); MessageBox.Show("Barre des tâches native de Windows restaurée !", "iSuite Failsafe", MessageBoxButtons.OK, MessageBoxIcon.Information); };
-            p.Controls.Add(restoreBtn);
+            GlassToggleSwitch swReplace = new GlassToggleSwitch { Checked = controller.Settings.ReplaceWindowsTaskbar };
+            swReplace.CheckedChanged += (s, e) =>
+            {
+                controller.Settings.ReplaceWindowsTaskbar = swReplace.Checked;
+                controller.ApplyWindowsTaskbarReplacement();
+                controller.Settings.Save();
+            };
+            AddSettingRow(card1, "Remplacer complètement la barre des tâches native de Windows", "Masque Shell_TrayWnd pour laisser place exclusivement au dock iSuite (avec failsafe).", swReplace, 100);
 
-            CheckBox appsChk = CreateCheckBox(p, "Afficher les applications ouvertes en direct avec bascule et miniature", 28, 180, controller.Settings.TaskbarShowRunningApps);
-            appsChk.CheckedChanged += (s, e) => { controller.Settings.TaskbarShowRunningApps = appsChk.Checked; controller.Settings.Save(); };
+            GlassToggleSwitch swApps = new GlassToggleSwitch { Checked = controller.Settings.TaskbarShowRunningApps };
+            swApps.CheckedChanged += (s, e) =>
+            {
+                controller.Settings.TaskbarShowRunningApps = swApps.Checked;
+                controller.Settings.Save();
+            };
+            AddSettingRow(card1, "Afficher les applications ouvertes en direct", "Énumère les fenêtres actives avec puces en verre et voyant lumineux sous l'app active.", swApps, 150);
 
-            CheckBox clkChk = CreateCheckBox(p, "Afficher l'horloge et la date liquide", 28, 215, controller.Settings.TaskbarShowClock);
-            clkChk.CheckedChanged += (s, e) => { controller.Settings.TaskbarShowClock = clkChk.Checked; controller.Settings.Save(); };
+            Panel card2 = CreateCard(p, "Dimensions & Propriétés du Verre", 280, 200);
 
-            AddLabel(p, "Hauteur de la barre :", 28, 260);
-            TrackBar hBar = CreateTrack(p, 28, 285, 360, 44, 76, controller.Settings.TaskbarHeight);
-            hBar.ValueChanged += (s, e) => { controller.Settings.TaskbarHeight = hBar.Value; controller.Settings.Save(); };
+            TrackBar trkH = new TrackBar { Minimum = 46, Maximum = 78, Value = controller.Settings.TaskbarHeight, Width = 220 };
+            trkH.ValueChanged += (s, e) => { controller.Settings.TaskbarHeight = trkH.Value; controller.Settings.Save(); };
+            AddSettingRow(card2, "Hauteur de la barre des tâches (px)", "Ajuste l'épaisseur du dock flottant.", trkH, 48);
 
-            AddLabel(p, "Rayon des coins arrondis (Glass Squircle) :", 28, 335);
-            TrackBar rBar = CreateTrack(p, 28, 360, 360, 10, 32, controller.Settings.TaskbarCornerRadius);
-            rBar.ValueChanged += (s, e) => { controller.Settings.TaskbarCornerRadius = rBar.Value; controller.Settings.Save(); };
+            TrackBar trkR = new TrackBar { Minimum = 10, Maximum = 32, Value = controller.Settings.TaskbarCornerRadius, Width = 220 };
+            trkR.ValueChanged += (s, e) => { controller.Settings.TaskbarCornerRadius = trkR.Value; controller.Settings.Save(); };
+            AddSettingRow(card2, "Rayon des coins arrondis (Squircle)", "Courbure fluide façon Apple / Windows 12.", trkR, 100);
 
-            AddLabel(p, "Opacité du verre acrylique :", 28, 410);
-            TrackBar opBar = CreateTrack(p, 28, 435, 360, 160, 255, controller.Settings.TaskbarOpacity);
-            opBar.ValueChanged += (s, e) => { controller.Settings.TaskbarOpacity = opBar.Value; controller.Settings.Save(); };
+            TrackBar trkOp = new TrackBar { Minimum = 150, Maximum = 255, Value = controller.Settings.TaskbarOpacity, Width = 220 };
+            trkOp.ValueChanged += (s, e) => { controller.Settings.TaskbarOpacity = trkOp.Value; controller.Settings.Save(); };
+            AddSettingRow(card2, "Opacité du verre Liquid Glass", "Translucidité du verre acrylique dépoli.", trkOp, 150);
 
             return p;
         }
@@ -1744,21 +1880,21 @@ namespace iSuite
         private Panel BuildPageCorners()
         {
             Panel p = CreatePage();
-            AddHeading(p, "🔲 Arrondis d'Écran Matériel Liquid Glass");
+            AddHeading(p, "🔲 Arrondis d'Écran Pro Liquid Glass");
 
-            CheckBox enChk = CreateCheckBox(p, "Activer les coins d'écran ultra-doux façon macOS / Pro Display", 28, 65, controller.Settings.CornersEnabled);
-            enChk.CheckedChanged += (s, e) => { controller.Settings.CornersEnabled = enChk.Checked; controller.Settings.Save(); };
+            Panel card = CreateCard(p, "Coins d'Écran Matériel Superellipse", 65, 230);
 
-            AddLabel(p, "Rayon de courbure des coins d'écran :", 28, 110);
-            TrackBar rBar = CreateTrack(p, 28, 135, 360, 12, 64, controller.Settings.CornerRadius);
-            rBar.ValueChanged += (s, e) => { controller.Settings.CornerRadius = rBar.Value; controller.Settings.Save(); };
+            GlassToggleSwitch swCorners = new GlassToggleSwitch { Checked = controller.Settings.CornersEnabled };
+            swCorners.CheckedChanged += (s, e) => { controller.Settings.CornersEnabled = swCorners.Checked; controller.Settings.Save(); };
+            AddSettingRow(card, "Activer les coins d'écran ultra-doux", "Adoucit les angles vifs des moniteurs façon Apple Pro Display XDR (0% CPU).", swCorners, 48);
 
-            AddLabel(p, "Géométrie de courbe :", 28, 185);
-            ComboBox geomCombo = CreateCombo(p, 28, 210, 360, new string[] { "Squircle Hyperbolique iOS (Courbure continue G2)", "Arc Circulaire Standard" }, (int)controller.Settings.Curve);
-            geomCombo.SelectedIndexChanged += (s, e) => { controller.Settings.Curve = (CurveGeometry)geomCombo.SelectedIndex; controller.Settings.Save(); };
+            TrackBar trkR = new TrackBar { Minimum = 12, Maximum = 64, Value = controller.Settings.CornerRadius, Width = 220 };
+            trkR.ValueChanged += (s, e) => { controller.Settings.CornerRadius = trkR.Value; controller.Settings.Save(); };
+            AddSettingRow(card, "Rayon de courbure des coins", "Taille de l'arrondi organique en pixels.", trkR, 100);
 
-            CheckBox glowChk = CreateCheckBox(p, "Halo chromatique liquide de bordure d'écran (Bezel Glow)", 28, 260, controller.Settings.CornerBezelGlow);
-            glowChk.CheckedChanged += (s, e) => { controller.Settings.CornerBezelGlow = glowChk.Checked; controller.Settings.Save(); };
+            GlassToggleSwitch swGlow = new GlassToggleSwitch { Checked = controller.Settings.CornerBezelGlow };
+            swGlow.CheckedChanged += (s, e) => { controller.Settings.CornerBezelGlow = swGlow.Checked; controller.Settings.Save(); };
+            AddSettingRow(card, "Halo chromatique de bordure (Bezel Glow)", "Lueur néon diffuse épousant les bords de la dalle.", swGlow, 155);
 
             return p;
         }
@@ -1766,22 +1902,19 @@ namespace iSuite
         private Panel BuildPageBridge()
         {
             Panel p = CreatePage();
-            AddHeading(p, "🌉 Passerelle Visuelle Fluide Multi-Écrans");
+            AddHeading(p, "🌉 Passerelle Fluide Multi-Écrans");
 
-            CheckBox enChk = CreateCheckBox(p, "Activer la passerelle visuelle inter-écrans", 28, 65, controller.Settings.BridgeEnabled);
-            enChk.CheckedChanged += (s, e) => { controller.Settings.BridgeEnabled = enChk.Checked; controller.Settings.Save(); };
+            Panel card = CreateCard(p, "Transitions & Portails Magnétiques", 65, 180);
 
-            AddLabel(p, "Effet de transition du curseur :", 28, 110);
-            ComboBox stCombo = CreateCombo(p, 28, 135, 360, new string[] {
-                "Morphing Verre Fluide (Goutte de Mercure / Apple)",
-                "Pont Liquid Glass Luminescent",
-                "Onde Prismatique Boréale",
-                "Portail Arc Quantique",
-                "Nuée de Poussière Stellaire",
-                "Résonance Sonore & Ondes Liquides",
-                "Ligne d'Horizon Laser Néon"
-            }, (int)controller.Settings.BridgeStyle);
-            stCombo.SelectedIndexChanged += (s, e) => { controller.Settings.BridgeStyle = (PortalTransitionStyle)stCombo.SelectedIndex; controller.Settings.Save(); };
+            GlassToggleSwitch swBridge = new GlassToggleSwitch { Checked = controller.Settings.BridgeEnabled };
+            swBridge.CheckedChanged += (s, e) => { controller.Settings.BridgeEnabled = swBridge.Checked; controller.Settings.Save(); };
+            AddSettingRow(card, "Activer la passerelle visuelle inter-écrans", "Onde lumineuse et goutte de mercure lorsque la souris traverse deux écrans.", swBridge, 48);
+
+            ComboBox cmbStyle = new ComboBox { Width = 240, DropDownStyle = ComboBoxStyle.DropDownList };
+            cmbStyle.Items.AddRange(new string[] { "Morphing Verre Fluide", "Pont Luminescent", "Onde Boréale", "Portail Arc Quantique", "Poussière Stellaire" });
+            cmbStyle.SelectedIndex = Math.Min(4, (int)controller.Settings.BridgeStyle);
+            cmbStyle.SelectedIndexChanged += (s, e) => { controller.Settings.BridgeStyle = (PortalTransitionStyle)cmbStyle.SelectedIndex; controller.Settings.Save(); };
+            AddSettingRow(card, "Style de transition", "Animation liquide lors du passage inter-dalles.", cmbStyle, 105);
 
             return p;
         }
@@ -1791,15 +1924,15 @@ namespace iSuite
             Panel p = CreatePage();
             AddHeading(p, "💊 Dynamic Island / Capsule Multimédia");
 
-            CheckBox enChk = CreateCheckBox(p, "Activer la capsule Dynamic Island", 28, 65, controller.Settings.IslandEnabled);
-            enChk.CheckedChanged += (s, e) => { controller.Settings.IslandEnabled = enChk.Checked; controller.Settings.Save(); };
+            Panel card = CreateCard(p, "Comportement de la Capsule Flottante", 65, 180);
 
-            CheckBox expChk = CreateCheckBox(p, "Déployer en carte multimédia au survol de la souris", 28, 105, controller.Settings.IslandExpandOnHover);
-            expChk.CheckedChanged += (s, e) => { controller.Settings.IslandExpandOnHover = expChk.Checked; controller.Settings.Save(); };
+            GlassToggleSwitch swIsland = new GlassToggleSwitch { Checked = controller.Settings.IslandEnabled };
+            swIsland.CheckedChanged += (s, e) => { controller.Settings.IslandEnabled = swIsland.Checked; controller.Settings.Save(); };
+            AddSettingRow(card, "Activer la Dynamic Island", "Pilule liquide au sommet de l'écran avec lecteur média et horloge.", swIsland, 48);
 
-            AddLabel(p, "Positionnement écran :", 28, 145);
-            ComboBox posCombo = CreateCombo(p, 28, 170, 360, new string[] { "Suivre l'écran du curseur actif", "Toujours au sommet de l'écran principal" }, (int)controller.Settings.IslandPlacement);
-            posCombo.SelectedIndexChanged += (s, e) => { controller.Settings.IslandPlacement = (CapsuleScreenPlacement)posCombo.SelectedIndex; controller.Settings.Save(); };
+            GlassToggleSwitch swExp = new GlassToggleSwitch { Checked = controller.Settings.IslandExpandOnHover };
+            swExp.CheckedChanged += (s, e) => { controller.Settings.IslandExpandOnHover = swExp.Checked; controller.Settings.Save(); };
+            AddSettingRow(card, "Déployer au survol de la souris", "Affiche la carte musicale étendue au survol.", swExp, 105);
 
             return p;
         }
@@ -1809,19 +1942,17 @@ namespace iSuite
             Panel p = CreatePage();
             AddHeading(p, "✨ Mascottes Célestes de Bureau");
 
-            CheckBox enChk = CreateCheckBox(p, "Afficher la mascotte céleste sur le bureau", 28, 65, controller.Settings.MascotEnabled);
-            enChk.CheckedChanged += (s, e) => { controller.Settings.MascotEnabled = enChk.Checked; controller.Settings.Save(); };
+            Panel card = CreateCard(p, "Créatures en Cristal & Verre Soufflé", 65, 180);
 
-            AddLabel(p, "Créature céleste :", 28, 110);
-            ComboBox entCombo = CreateCombo(p, 28, 135, 360, new string[] {
-                "Lumina (Orbe stellaire aux anneaux gyroscopiques)",
-                "Kitsune (Renard boréal en soie céleste)",
-                "Draco (Wyverne géométrique taillée en diamant)",
-                "Nyx (Goutte d'opale stellaire)",
-                "Kuro-Neko (Silhouettte féline en obsidienne)",
-                "Axiom (Sphère saphir et titane)"
-            }, (int)controller.Settings.MascotEntity);
-            entCombo.SelectedIndexChanged += (s, e) => { controller.Settings.MascotEntity = (CompanionEntity)entCombo.SelectedIndex; controller.Settings.Save(); };
+            GlassToggleSwitch swMascot = new GlassToggleSwitch { Checked = controller.Settings.MascotEnabled };
+            swMascot.CheckedChanged += (s, e) => { controller.Settings.MascotEnabled = swMascot.Checked; controller.Settings.Save(); };
+            AddSettingRow(card, "Afficher la mascotte sur le bureau", "Créature interactive qui suit le curseur des yeux et réagit à la musique.", swMascot, 48);
+
+            ComboBox cmbEnt = new ComboBox { Width = 240, DropDownStyle = ComboBoxStyle.DropDownList };
+            cmbEnt.Items.AddRange(new string[] { "Lumina (Orbe gyroscopique)", "Kitsune (Renard boréal)", "Draco (Wyverne diamant)", "Nyx (Goutte opale)", "Kuro-Neko (Félin obsidienne)" });
+            cmbEnt.SelectedIndex = Math.Min(4, (int)controller.Settings.MascotEntity);
+            cmbEnt.SelectedIndexChanged += (s, e) => { controller.Settings.MascotEntity = (CompanionEntity)cmbEnt.SelectedIndex; controller.Settings.Save(); };
+            AddSettingRow(card, "Créature céleste", "Sélectionnez votre compagnon de bureau.", cmbEnt, 105);
 
             return p;
         }
@@ -1829,28 +1960,28 @@ namespace iSuite
         private Panel BuildPageTheme()
         {
             Panel p = CreatePage();
-            AddHeading(p, "🎨 Palettes Chromatiques & Thèmes Verre");
+            AddHeading(p, "🎨 Thèmes & Palettes Chromatiques");
 
-            AddLabel(p, "Thème chromatique unifié pour toute la suite :", 28, 65);
-            ComboBox thCombo = CreateCombo(p, 28, 90, 420, new string[] {
-                "Prisme Éther (Cyan Glacé / Lavande / Rose)",
+            Panel card = CreateCard(p, "Style Visuel Unifié de l'Écosystème", 65, 180);
+
+            ComboBox thCombo = new ComboBox { Width = 280, DropDownStyle = ComboBoxStyle.DropDownList };
+            thCombo.Items.AddRange(new string[] {
+                "Prisme Éther (Cyan / Lavande / Rose)",
                 "Verre Givre & Argent Pur",
-                "Océan Polaire (Azur / Cyan / Indigo)",
+                "Océan Polaire (Azur / Cyan)",
                 "Émeraude & Menthe Givrée",
                 "Velours Rubis & Corail",
-                "Ambre Solaire & Champagne",
-                "Aurore Boréale Nocturne",
-                "Brume Ultraviolette",
-                "Fleur de Sakura Pastel",
-                "Monochrome Obsidienne & Titane",
-                "Spectre Chromatique Continu 360°",
-                "Palette Personnalisée"
-            }, (int)controller.Settings.Theme);
+                "Ambre Solaire & Or",
+                "Aurore Boréale",
+                "Brume Ultraviolette"
+            });
+            thCombo.SelectedIndex = Math.Min(7, (int)controller.Settings.Theme);
             thCombo.SelectedIndexChanged += (s, e) => { controller.Settings.Theme = (GlassColorPalette)thCombo.SelectedIndex; controller.Settings.Save(); };
+            AddSettingRow(card, "Palette de Verre Unifiée", "Applique le profil chromatique à toute la suite.", thCombo, 48);
 
-            Button saveBtn = new Button { Text = "Enregistrer la Configuration", Location = new Point(28, 180), Size = new Size(240, 40), BackColor = Color.FromArgb(40, 120, 230), FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI Semibold", 9.5f, FontStyle.Bold) };
-            saveBtn.Click += (s, e) => { controller.Settings.Save(); MessageBox.Show("Configuration enregistrée avec succès !", "iSuite Studio", MessageBoxButtons.OK, MessageBoxIcon.Information); };
-            p.Controls.Add(saveBtn);
+            Button btnSave = new Button { Text = "Enregistrer la Configuration", Location = new Point(20, 115), Size = new Size(220, 36), BackColor = Color.FromArgb(40, 130, 245), FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI Semibold", 9.2f, FontStyle.Bold) };
+            btnSave.Click += (s, e) => { controller.Settings.Save(); MessageBox.Show("Configuration sauvegardée avec succès !", "iSuite Studio", MessageBoxButtons.OK, MessageBoxIcon.Information); };
+            card.Controls.Add(btnSave);
 
             return p;
         }
@@ -1858,7 +1989,7 @@ namespace iSuite
         private Panel BuildPageStore()
         {
             Panel p = CreatePage();
-            AddHeading(p, "🛍️ iStore • Catalogue des Outils de Personnalisation Windows");
+            AddHeading(p, "🛍️ iStore • Catalogue des Applications Modulaires");
 
             string[] apps = new string[] {
                 "iMaker|Studio de création pour concevoir vos propres applications et skins|iMaker.exe",
@@ -1879,12 +2010,12 @@ namespace iSuite
                 string desc = parts[1];
                 string exe = parts[2];
 
-                Panel item = new Panel { Location = new Point(28, startY + i * 72), Size = new Size(720, 62), BackColor = Color.FromArgb(18, 22, 34) };
+                Panel item = new Panel { Location = new Point(24, startY + i * 72), Size = new Size(780, 62), BackColor = Color.FromArgb(16, 20, 32), Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right };
                 item.Paint += (s, e) =>
                 {
                     Graphics g = e.Graphics; g.SmoothingMode = SmoothingMode.AntiAlias;
                     RectangleF r = new RectangleF(1, 1, item.Width - 2, item.Height - 2);
-                    GlassThemeEngine.DrawFrostedGlassSurface(g, r, 10f, Color.FromArgb(16, 20, 30), Color.FromArgb(70, 180, 255), 230, 0.8f);
+                    GlassThemeEngine.DrawFrostedGlassSurface(g, r, 10f, Color.FromArgb(14, 18, 28), Color.FromArgb(70, 180, 255), 230, 0.8f);
 
                     using (Font tf = new Font("Segoe UI Semibold", 10.5f, FontStyle.Bold))
                     using (SolidBrush tb = new SolidBrush(Color.White))
@@ -1895,7 +2026,7 @@ namespace iSuite
                         g.DrawString(desc, df, db, 18, 34);
                 };
 
-                Button runBtn = new Button { Text = "Lancer", Location = new Point(610, 14), Size = new Size(95, 34), BackColor = Color.FromArgb(40, 120, 230), FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI Semibold", 8.8f, FontStyle.Bold) };
+                Button runBtn = new Button { Text = "Lancer", Location = new Point(item.Width - 110, 14), Size = new Size(95, 34), BackColor = Color.FromArgb(40, 120, 230), FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI Semibold", 8.8f, FontStyle.Bold), Anchor = AnchorStyles.Top | AnchorStyles.Right };
                 runBtn.Click += (s, e) =>
                 {
                     string dir = Path.GetDirectoryName(Application.ExecutablePath);
@@ -1913,37 +2044,8 @@ namespace iSuite
 
         private void AddHeading(Panel p, string text)
         {
-            Label l = new Label { Text = text, Location = new Point(24, 20), AutoSize = true, Font = new Font("Segoe UI Semibold", 13.5f, FontStyle.Bold), ForeColor = Color.White };
+            Label l = new Label { Text = text, Location = new Point(24, 20), AutoSize = true, Font = new Font("Segoe UI Semibold", 14f, FontStyle.Bold), ForeColor = Color.White };
             p.Controls.Add(l);
-        }
-
-        private void AddLabel(Panel p, string text, int x, int y)
-        {
-            Label l = new Label { Text = text, Location = new Point(x, y), AutoSize = true, Font = new Font("Segoe UI", 9.2f), ForeColor = Color.FromArgb(180, 195, 220) };
-            p.Controls.Add(l);
-        }
-
-        private CheckBox CreateCheckBox(Panel p, string text, int x, int y, bool isChecked)
-        {
-            CheckBox cb = new CheckBox { Text = text, Location = new Point(x, y), AutoSize = true, Checked = isChecked, Font = new Font("Segoe UI", 9.2f), ForeColor = Color.White };
-            p.Controls.Add(cb);
-            return cb;
-        }
-
-        private TrackBar CreateTrack(Panel p, int x, int y, int w, int min, int max, int val)
-        {
-            TrackBar tb = new TrackBar { Location = new Point(x, y), Size = new Size(w, 45), Minimum = min, Maximum = max, Value = Math.Max(min, Math.Min(max, val)) };
-            p.Controls.Add(tb);
-            return tb;
-        }
-
-        private ComboBox CreateCombo(Panel p, int x, int y, int w, string[] items, int selIdx)
-        {
-            ComboBox cb = new ComboBox { Location = new Point(x, y), Size = new Size(w, 30), DropDownStyle = ComboBoxStyle.DropDownList, Font = new Font("Segoe UI", 9.2f) };
-            cb.Items.AddRange(items);
-            if (selIdx >= 0 && selIdx < cb.Items.Count) cb.SelectedIndex = selIdx;
-            p.Controls.Add(cb);
-            return cb;
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
